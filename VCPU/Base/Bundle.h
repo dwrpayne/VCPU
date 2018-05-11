@@ -8,7 +8,6 @@ It doesn't really exist and can't be modified.
 If you reconnect its wires, you have to reconnect the components that are using it.
 ****************/
 
-
 template <unsigned int N>
 class Bundle 
 {
@@ -17,6 +16,15 @@ public:
 	Bundle(std::initializer_list<const Wire*> list)
 	{
 		Connect(list);
+	}
+
+	// Splits a single wire into an n-way Bundle.
+	explicit Bundle(const Wire& wire)
+	{
+		for (int i = 0; i < N; ++i)
+		{
+			wires[i] = &wire;
+		}
 	}
 
 	void Connect(std::initializer_list<const Wire*> list)
