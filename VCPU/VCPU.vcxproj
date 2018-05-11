@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>Base;Functional;Gates;Memory</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,11 +122,15 @@
     <ClCompile Include="Base\Bundle.cpp" />
     <ClCompile Include="Base\Component.cpp" />
     <ClCompile Include="Base\Wire.cpp" />
+    <ClCompile Include="Functional\ALU.cpp" />
+    <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
     <ClCompile Include="Gates\NandGate.cpp" />
     <ClCompile Include="Gates\NorGate.cpp" />
     <ClCompile Include="Gates\OrGate.cpp" />
+    <ClCompile Include="Gates\XorGate.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory\DFlipFlop.cpp" />
     <ClCompile Include="Memory\JKFlipFlop.cpp" />
     <ClCompile Include="Memory\Register.cpp" />
@@ -136,11 +141,14 @@
     <ClInclude Include="Base\Bundle.h" />
     <ClInclude Include="Base\Component.h" />
     <ClInclude Include="Base\Wire.h" />
+    <ClInclude Include="Functional\ALU.h" />
+    <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Gates\AndGate.h" />
     <ClInclude Include="Gates\Inverter.h" />
     <ClInclude Include="Gates\NandGate.h" />
     <ClInclude Include="Gates\NorGate.h" />
     <ClInclude Include="Gates\OrGate.h" />
+    <ClInclude Include="Gates\XorGate.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />
     <ClInclude Include="Memory\Register.h" />

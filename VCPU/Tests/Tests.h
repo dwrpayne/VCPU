@@ -7,12 +7,14 @@
 #include "OrGate.h"
 #include "NandGate.h"
 #include "NorGate.h"
+#include "XorGate.h"
 #include "Inverter.h"
 #include "SRLatch.h"
 #include "JKFlipFlop.h"
 #include "DFlipFlop.h"
 #include "Bundle.h"
 #include "Register.h"
+#include "FullAdder.h"
 
 
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -45,6 +47,24 @@ bool TestNorGate(const Wire& a, const Wire& b)
 	test.Connect(a, b);
 	test.Update();
 	return test.Out().On() != (a.On() || b.On());
+}
+
+bool TestXorGate(const Wire& a, const Wire& b)
+{
+	XorGate test;
+	test.Connect(a, b);
+	test.Update();
+	return test.Out().On() == (a.On() ^ b.On());
+}
+
+bool TestFullAdder(const Wire& a, const Wire& b, const Wire& c)
+{
+	FullAdder test;
+	test.Connect(a, b, c);
+	test.Update();
+	bool success = ((int)test.S().On() == ((int)a.On() + (int)b.On() + (int)c.On()) % 2);
+	success &= (test.Cout().On() == ((int)a.On() + (int)b.On() + (int)c.On()) >= 2);
+	return success;
 }
 
 bool TestInverter(const Wire& a)
@@ -303,10 +323,12 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, FAIL_ONLY);
 	RUN_TEST(TestSRLatch, FAIL_ONLY);
 	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);	
 	return success;
 }
