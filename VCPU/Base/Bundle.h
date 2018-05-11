@@ -46,15 +46,16 @@ public:
 	const int width = N;
 
 #ifdef DEBUG
-	unsigned int Read() const
+	int Read() const
 	{
-		unsigned int n = 0;
-		for (int i = 0; i < N; i++)
+		int n = 0;
+		bool negative = Get(0).On();
+		for (int i = 1; i < N; i++)
 		{
-			n += Get(i).On() ? 1 : 0;
 			n *= 2;
+			n += (negative ^ Get(i).On()) ? 1 : 0;
 		}
-		return n/2;
+		return (negative ? -1 : 1) * n - (int)negative;
 	}
 #endif
 

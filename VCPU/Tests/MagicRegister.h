@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 #include <vector>
 #include "Component.h"
 #include "Wire.h"
@@ -39,14 +40,20 @@ public:
 
 	const int width = N;
 
-	void Write(unsigned int n)
+	void Write(int n)
 	{
 		value = n;
-		for (int i = N - 1; i >= 0; i--)
+
+		bool negative = n < 0;
+		n = abs(n) - (int)negative;
+
+		assert(n <= pow(2, N));
+		for (int i = N - 1; i >= 1; i--)
 		{
-			wires[i].Set(n % 2);
+			wires[i].Set(negative ^ (bool)(n % 2));
 			n /= 2;
 		}
+		wires[0].Set(negative);
 	}
 
 private:
