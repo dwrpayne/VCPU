@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Wire">
+    <DisplayString Condition="!state">{{0!{id}}}</DisplayString>
+    <DisplayString Condition="state">{{1!{id}}}</DisplayString>
+  </Type>
+  <Type Name="AndGate">
+    <DisplayString>{{A={(int)in1->state}, B={(int)in2->state}, out={(int)out.state}}}</DisplayString>
+  </Type>
+  <Type Name="OrGate">
+    <DisplayString>{{A={(int)in1->state}, B={(int)in2->state}, out={(int)out.state}}}</DisplayString>
+  </Type>
+  <Type Name="NandGate">
+    <DisplayString>{{A={(int)and.in1->state}, B={(int)and.in2->state}, out={(int)inv.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="NorGate">
+    <DisplayString>{{A={(int)or.in1->state}, B={(int)or.in2->state}, out={(int)inv.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="DFlipFlop">
+    <DisplayString>{{D={(int)invD.in->state}, E={(int)nandD.and.in2->state}, Q={(int)nandR.inv.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="Register&lt;8&gt;">
+    <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits=
+{(int)bits[0].nandR.inv.out.state}
+{(int)bits[1].nandR.inv.out.state}
+{(int)bits[2].nandR.inv.out.state}
+{(int)bits[3].nandR.inv.out.state}
+{(int)bits[4].nandR.inv.out.state}
+{(int)bits[5].nandR.inv.out.state}
+{(int)bits[6].nandR.inv.out.state}
+{(int)bits[7].nandR.inv.out.state}}}</DisplayString>
+  </Type>
+</AutoVisualizer>

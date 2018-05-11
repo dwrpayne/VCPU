@@ -2,19 +2,18 @@
 #include <vector>
 #include "Wire.h"
 
-// A bundle of wires
+/***************
+A Bundle is a way to collect some wires and hand them to another component.
+It doesn't really exist and can't be modified. 
+If you reconnect its wires, you have to reconnect the components that are using it.
+****************/
+
 
 template <unsigned int N>
 class Bundle 
 {
 public:
-	Bundle()
-	{
-		for (int i = 0; i < N; i++)
-		{
-			wires.push_back(&WIRE_DISCONNECTED);
-		}
-	}
+	Bundle() {}
 	Bundle(std::initializer_list<const Wire*> list)
 	{
 		Connect(list);
@@ -22,26 +21,43 @@ public:
 
 	void Connect(std::initializer_list<const Wire*> list)
 	{
-		wires.clear();
+		int i = 0;
 		for (const auto& wire : list)
 		{
-			wires.push_back(wire);
+			wires[i++] = wire;
 		}
 	}
 
-	const Wire& Get(unsigned int n)
+	void Connect(int n, const Wire& wire)
+	{
+		wires[n] = &wire;
+	}
+
+	const Wire& Get(unsigned int n) const 
 	{
 		return *wires[n];
 	}
 
-	const Wire& operator[](unsigned int n)
+	const Wire& operator[](unsigned int n) const 
 	{
 		return Get(n);
 	}
 
 	const int width = N;
 
-private:
-	std::vector<const Wire*> wires;
-};
+#ifdef DEBUG
+	unsigned int Read() const
+	{
+		unsigned int n = 0;
+		for (int i = 0; i < N; i++)
+		{
+			n += Get(i).On() ? 1 : 0;
+			n *= 2;
+		}
+		return n/2;
+	}
+#endif
 
+private:
+	std::array<const Wire*, N> wires;
+};

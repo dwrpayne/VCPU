@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <cmath>
+#include "TestHelpers.h"
+#include "MagicRegister.h"
 #include "AndGate.h"
 #include "OrGate.h"
 #include "NandGate.h"
@@ -9,37 +11,9 @@
 #include "SRLatch.h"
 #include "JKFlipFlop.h"
 #include "DFlipFlop.h"
+#include "Bundle.h"
+#include "Register.h"
 
-enum Verbosity
-{
-	SILENT,
-	FAIL_ONLY,
-	VERBOSE
-};
-
-#define WIRE(b) (b ? WIRE_ON : WIRE_OFF)
-
-
-void print() {
-	std::cout << std::endl;
-}
-template<class T, class... Args>
-void print(T t1, Args... args) {
-	std::cout << t1 << " ";
-	print(args...);
-}
-
-template<typename FuncType, typename ...Args>
-bool Test(Verbosity verbosity, FuncType && func, Args && ...args)
-{
-	bool pass = func(args...);
-	if (verbosity == VERBOSE || (verbosity == FAIL_ONLY && !pass))
-	{
-		std::cout << "\t" << (pass ? "PASS: " : "FAIL: ") << " for input ";
-		print(args...);
-	}
-	return pass;
-}
 
 bool TestAndGate(const Wire& a, const Wire& b)
 {
@@ -82,16 +56,6 @@ bool TestInverter(const Wire& a)
 	return out != a.On();
 }
 
-bool TestState(int i, const Wire& wire, bool state, Verbosity verbosity)
-{
-	bool pass = wire.On() == state;
-	if (verbosity == VERBOSE || (verbosity == FAIL_ONLY && !pass))
-	{
-		std::cout << i << ".\t" << (pass ? "PASS: " : "FAIL: ") << std::endl;
-	}
-	return pass;
-}
-
 bool TestSRLatch(Verbosity verbosity)
 {
 	SRLatch test;
@@ -103,35 +67,35 @@ bool TestSRLatch(Verbosity verbosity)
 	bool success = true;
 
 	int i = 0;
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 	test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	return success;
 }
@@ -148,75 +112,75 @@ bool TestJKFlipFlop(Verbosity verbosity)
 	bool success = true;
 
 	int i = 0;
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 	test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_ON); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_ON); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	return success;
 }
@@ -232,86 +196,104 @@ bool TestDFlipFlop(Verbosity verbosity)
 	bool success = true;
 
 	int i = 0;
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_ON); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_ON); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_ON, WIRE_ON); test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
-	
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
 	return success;
 }
 
-bool TestOneWireComponent(bool(*test_func)(const Wire&), Verbosity verbosity)
+bool TestBundle(Verbosity verbosity)
 {
 	bool success = true;
-	success &= Test(verbosity, test_func, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON);
+	int i = 0;
+
+	Bundle<4> test1({ &WIRE_OFF, &WIRE_OFF, &WIRE_OFF, &WIRE_ON });
+	success &= TestState<unsigned int>(i++, 1, test1.Read(), verbosity);
+
+	Bundle<4> test2({ &WIRE_OFF, &WIRE_ON, &WIRE_OFF, &WIRE_ON });
+	success &= TestState<unsigned int>(i++, 5, test2.Read(), verbosity);
+
+	Bundle<4> test3({ &WIRE_OFF, &WIRE_ON, &WIRE_ON, &WIRE_OFF });
+	success &= TestState<unsigned int>(i++, 6, test3.Read(), verbosity);
+
+	Bundle<4> test4({ &WIRE_ON, &WIRE_ON, &WIRE_ON, &WIRE_ON });
+	success &= TestState<unsigned int>(i++, 15, test4.Read(), verbosity);
+
 	return success;
 }
 
-bool TestTwoWireComponent(bool(*test_func)(const Wire&, const Wire&), Verbosity verbosity)
+bool TestRegister(Verbosity verbosity)
 {
 	bool success = true;
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON);
+	int i = 0;
+
+	Register<8> reg;
+	MagicRegister<8> data;
+	Wire load(true);
+	reg.Connect(data.Out(), load);
+	data.Write(0);
+	reg.Update();
+	unsigned int prevval = 0;
+	for (unsigned int val : { 0, 1, 121, 202, 255 })
+	{
+		data.Write(val);
+		load.Set(false);
+		reg.Update();
+		success &= TestState(i++, prevval, reg.Out().Read(), verbosity);
+
+		load.Set(true);
+		reg.Update();
+		success &= TestState(i++, val, reg.Out().Read(), verbosity);
+		prevval = val;
+	}
+
+	load.Set(true);
+	data.Write(256);
+	reg.Update();
+	success &= TestState<unsigned int>(i++, 0, reg.Out().Read(), verbosity);
+
 	return success;
 }
-
-bool TestThreeWireComponent(bool(*test_func)(const Wire&, const Wire&, const Wire&), Verbosity verbosity)
-{
-	bool success = true;
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON, WIRE_ON);
-	return success;
-}
-
-#define RUN_AUTO_TEST(runner, unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= runner(unit_test, v);
-#define RUN_TEST(unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= unit_test(v);
 
 bool RunAllTests()
 {
@@ -324,5 +306,7 @@ bool RunAllTests()
 	RUN_TEST(TestSRLatch, FAIL_ONLY);
 	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
+	RUN_TEST(TestBundle, FAIL_ONLY);
+	RUN_TEST(TestRegister, FAIL_ONLY);
 	return success;
 }
