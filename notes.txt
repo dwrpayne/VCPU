@@ -3,9 +3,13 @@ VCPU Notes
 Components cannot be moved, ever, since other components have references to their output wires. No std::vectors.
 
 Component:
-	Constructor() - afterwards, guarantees that output pins are instantiated and have a fixed location.
-	Connect() - accept input pins, wire the component together. afterwards, it's fully functional.
-	Update() - propagate logic from input to output pins. This is one clock tick but current flows end-to-end
+	* Constructor()
+		- afterwards, guarantees that output pins are instantiated and have a fixed location.
+		- optionally do internal wiring between subcomponents. This makes for more efficient Connect().
+		
+	* Connect() - accept input pins, wire the component together. afterwards, it's fully functional.
+	
+	* Update() - propagate logic from input to output pins. This is one clock tick but current flows end-to-end
 
 What does class Component have?
 	* Update()
