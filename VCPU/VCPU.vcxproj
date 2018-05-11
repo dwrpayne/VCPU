@@ -115,40 +115,39 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AndGate.cpp" />
-    <ClCompile Include="Bundle.cpp" />
-    <ClCompile Include="MagicRegister.cpp" />
-    <ClCompile Include="Component.cpp" />
-    <ClCompile Include="DFlipFlop.cpp" />
-    <ClCompile Include="Inverter.cpp" />
-    <ClCompile Include="JKFlipFlop.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="NandGate.cpp" />
-    <ClCompile Include="NorGate.cpp" />
-    <ClCompile Include="OrGate.cpp" />
-    <ClCompile Include="Register.cpp" />
-    <ClCompile Include="SRLatch.cpp" />
-    <ClCompile Include="Wire.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AndGate.h" />
-    <ClInclude Include="Bundle.h" />
-    <ClInclude Include="MagicRegister.h" />
-    <ClInclude Include="Component.h" />
-    <ClInclude Include="DFlipFlop.h" />
-    <ClInclude Include="Inverter.h" />
-    <ClInclude Include="JKFlipFlop.h" />
-    <ClInclude Include="NandGate.h" />
-    <ClInclude Include="NorGate.h" />
-    <ClInclude Include="OrGate.h" />
-    <ClInclude Include="Register.h" />
-    <ClInclude Include="SRLatch.h" />
-    <ClInclude Include="TestHelpers.h" />
-    <ClInclude Include="Tests.h" />
-    <ClInclude Include="Wire.h" />
-  </ItemGroup>
-  <ItemGroup>
     <Natvis Include="VCPU.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Base\Bundle.cpp" />
+    <ClCompile Include="Base\Component.cpp" />
+    <ClCompile Include="Base\Wire.cpp" />
+    <ClCompile Include="Gates\AndGate.cpp" />
+    <ClCompile Include="Gates\Inverter.cpp" />
+    <ClCompile Include="Gates\NandGate.cpp" />
+    <ClCompile Include="Gates\NorGate.cpp" />
+    <ClCompile Include="Gates\OrGate.cpp" />
+    <ClCompile Include="Memory\DFlipFlop.cpp" />
+    <ClCompile Include="Memory\JKFlipFlop.cpp" />
+    <ClCompile Include="Memory\Register.cpp" />
+    <ClCompile Include="Memory\SRLatch.cpp" />
+    <ClCompile Include="Tests\MagicRegister.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Base\Bundle.h" />
+    <ClInclude Include="Base\Component.h" />
+    <ClInclude Include="Base\Wire.h" />
+    <ClInclude Include="Gates\AndGate.h" />
+    <ClInclude Include="Gates\Inverter.h" />
+    <ClInclude Include="Gates\NandGate.h" />
+    <ClInclude Include="Gates\NorGate.h" />
+    <ClInclude Include="Gates\OrGate.h" />
+    <ClInclude Include="Memory\DFlipFlop.h" />
+    <ClInclude Include="Memory\JKFlipFlop.h" />
+    <ClInclude Include="Memory\Register.h" />
+    <ClInclude Include="Memory\SRLatch.h" />
+    <ClInclude Include="Tests\MagicRegister.h" />
+    <ClInclude Include="Tests\TestHelpers.h" />
+    <ClInclude Include="Tests\Tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
