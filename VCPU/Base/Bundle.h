@@ -57,8 +57,8 @@ public:
 	int Read() const
 	{
 		int n = 0;
-		bool negative = Get(0).On();
-		for (int i = 1; i < N; i++)
+		bool negative = Get(N-1).On();
+		for (int i = N-2; i >= 0; --i)
 		{
 			n *= 2;
 			n += (negative ^ Get(i).On()) ? 1 : 0;

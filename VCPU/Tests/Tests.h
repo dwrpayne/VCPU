@@ -277,16 +277,16 @@ bool TestBundle(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	Bundle<4> test1({ &WIRE_OFF, &WIRE_OFF, &WIRE_OFF, &WIRE_ON });
+	Bundle<4> test1({ &WIRE_ON, &WIRE_OFF, &WIRE_OFF, &WIRE_OFF });
 	success &= TestState(i++, 1, test1.Read(), verbosity);
 
-	Bundle<4> test2({ &WIRE_OFF, &WIRE_ON, &WIRE_OFF, &WIRE_ON });
+	Bundle<4> test2({ &WIRE_ON, &WIRE_OFF, &WIRE_ON, &WIRE_OFF });
 	success &= TestState(i++, 5, test2.Read(), verbosity);
 
 	Bundle<4> test3({ &WIRE_ON, &WIRE_ON, &WIRE_ON, &WIRE_ON });
 	success &= TestState(i++, -1, test3.Read(), verbosity);
 
-	Bundle<4> test4({ &WIRE_ON, &WIRE_OFF, &WIRE_ON, &WIRE_ON });
+	Bundle<4> test4({ &WIRE_ON, &WIRE_ON, &WIRE_OFF, &WIRE_ON });
 	success &= TestState(i++, -5, test4.Read(), verbosity);
 
 	return success;

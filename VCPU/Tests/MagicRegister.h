@@ -48,12 +48,12 @@ public:
 		n = abs(n) - (int)negative;
 
 		assert(n <= pow(2, N));
-		for (int i = N - 1; i >= 1; i--)
+		for (int i = 0; i < N - 1; i++)
 		{
 			wires[i].Set(negative ^ (bool)(n % 2));
 			n /= 2;
 		}
-		wires[0].Set(negative);
+		wires[N-1].Set(negative);
 	}
 
 private:
