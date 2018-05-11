@@ -9,7 +9,7 @@ If you reconnect its wires, you have to reconnect the components that are using 
 ****************/
 
 template <unsigned int N>
-class Bundle 
+class Bundle
 {
 public:
 	Bundle() {}
@@ -26,7 +26,7 @@ public:
 			wires[i] = &wire;
 		}
 	}
-
+	
 	void Connect(std::initializer_list<const Wire*> list)
 	{
 		int i = 0;
@@ -34,6 +34,17 @@ public:
 		{
 			wires[i++] = wire;
 		}
+	}
+
+	template <unsigned int start, unsigned int end>
+	const Bundle<end-start> Range() const 
+	{
+		Bundle<end - start> out;
+		for (int i = start; i < end; i++)
+		{
+			out.Connect(i - start, Get(i));
+		}
+		return out;
 	}
 
 	void Connect(int n, const Wire& wire)
@@ -50,6 +61,13 @@ public:
 	{
 		return Get(n);
 	}
+
+	template <unsigned int U=N, typename = typename std::enable_if<N==1, const >::type>
+	operator const Wire&() const
+	{
+		return Get(0);
+	}
+
 
 	const int width = N;
 
@@ -70,3 +88,4 @@ public:
 private:
 	std::array<const Wire*, N> wires;
 };
+

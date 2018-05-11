@@ -17,6 +17,7 @@
 #include "Register.h"
 #include "FullAdder.h"
 #include "Adder.h"
+#include "Multiplexer.h"
 
 
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -353,6 +354,30 @@ bool TestAdder(Verbosity verbosity)
 	return success;
 }
 
+bool TestMultiplexer2(const Wire& a)
+{
+	Multiplexer<2> test;
+	test.Connect({ &WIRE_ON, &WIRE_OFF }, a);
+	test.Update();
+	return test.Out().On() != a.On();	
+}
+
+bool TestMultiplexer4(const Wire& a, const Wire& b)
+{
+	Multiplexer<4> test;
+	test.Connect({ &WIRE_OFF, &WIRE_ON, &WIRE_ON, &WIRE_OFF }, { &a, &b });
+	test.Update();
+	return test.Out().On() == (a.On() ^ b.On());
+}
+
+bool TestMultiplexer8(const Wire& a, const Wire& b, const Wire& c)
+{
+	Multiplexer<8> test;
+	test.Connect({ &WIRE_ON, &WIRE_OFF, &WIRE_ON, &WIRE_OFF, &WIRE_ON, &WIRE_OFF, &WIRE_ON, &WIRE_OFF }, { &a, &b, &c });
+	test.Update();
+	return test.Out().On() != a.On();
+}
+
 bool RunAllTests()
 {
 	bool success = true;
@@ -370,5 +395,8 @@ bool RunAllTests()
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
 	RUN_TEST(TestAdder, FAIL_ONLY);
+	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
 	return success;
 }

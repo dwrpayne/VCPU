@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Base;Functional;Gates;Memory</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -120,9 +120,10 @@
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Base\Bundle.cpp" />
-    <ClCompile Include="Base\Component.cpp" />
-    <ClCompile Include="Base\Wire.cpp" />
+    <ClCompile Include="Control\Bundle.cpp" />
+    <ClCompile Include="Control\Component.cpp" />
+    <ClCompile Include="Control\Multiplexer.cpp" />
+    <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="Functional\Adder.cpp" />
     <ClCompile Include="Functional\ALU.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
@@ -140,9 +141,10 @@
     <ClCompile Include="Tests\MagicRegister.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Base\Bundle.h" />
-    <ClInclude Include="Base\Component.h" />
-    <ClInclude Include="Base\Wire.h" />
+    <ClInclude Include="Control\Bundle.h" />
+    <ClInclude Include="Control\Component.h" />
+    <ClInclude Include="Control\Multiplexer.h" />
+    <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\FullAdder.h" />
