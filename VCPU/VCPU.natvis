@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <Type Name="Wire">
-    <DisplayString Condition="!state">{{0!{id}}}</DisplayString>
-    <DisplayString Condition="state">{{1!{id}}}</DisplayString>
+    <DisplayString Condition="!state">{{0 ! {id}}}</DisplayString>
+    <DisplayString Condition="state">{{1 ! {id}}}</DisplayString>
   </Type>
   <Type Name="AndGate">
     <DisplayString>{{A={(int)in1->state}, B={(int)in2->state}, out={(int)out.state}}}</DisplayString>
@@ -18,6 +18,9 @@
   </Type>
   <Type Name="DFlipFlop">
     <DisplayString>{{D={(int)invD.in->state}, E={(int)nandD.and.in2->state}, Q={(int)nandR.inv.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="FullAdder">
+    <DisplayString>{{A={(int)andIn.in1->state}, B={(int)andIn.in2->state}, C={(int)andOut.in2->state}}}</DisplayString>
   </Type>
   <Type Name="Register&lt;8&gt;">
     <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits=

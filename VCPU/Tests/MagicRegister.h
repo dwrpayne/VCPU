@@ -15,7 +15,7 @@ It can't be connected to input wires from the VCPU.
 #if DEBUG
 
 template <unsigned int N>
-class MagicRegister
+class MagicRegister //: public Bundle<N>
 {
 public:
 	MagicRegister() 
@@ -58,7 +58,7 @@ public:
 
 private:
 	std::array<Wire, N> wires;
-	unsigned int value;
+	int value;
 	Bundle<N> out;
 };
 #endif

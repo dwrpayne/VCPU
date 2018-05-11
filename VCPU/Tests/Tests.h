@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <cmath>
+#include <map>
 #include "TestHelpers.h"
 #include "MagicRegister.h"
 #include "AndGate.h"
@@ -15,6 +16,7 @@
 #include "Bundle.h"
 #include "Register.h"
 #include "FullAdder.h"
+#include "Adder.h"
 
 
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -325,6 +327,32 @@ bool TestRegister(Verbosity verbosity)
 	return success;
 }
 
+bool TestAdder(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	Adder<8> adder;
+	MagicRegister<8> a_reg;
+	MagicRegister<8> b_reg;
+	Wire mode(false);
+	adder.Connect(a_reg.Out(), b_reg.Out(), mode);
+
+	for (const auto& [a, b] : std::map<int,int>({ { -64, -64 },{ 0, 0 },{ 11, 116 },{ 4, -121 } }))
+	{
+		a_reg.Write(a);
+		b_reg.Write(b);
+		mode.Set(false);
+		adder.Update();
+		success &= TestState(i++, a + b, adder.S().Read(), verbosity);
+
+		mode.Set(true);
+		adder.Update();
+		success &= TestState(i++, a - b, adder.S().Read(), verbosity);
+	}
+	return success;
+}
+
 bool RunAllTests()
 {
 	bool success = true;
@@ -341,5 +369,6 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
+	RUN_TEST(TestAdder, FAIL_ONLY);
 	return success;
 }
