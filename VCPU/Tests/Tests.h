@@ -76,6 +76,16 @@ bool TestInverter(const Wire& a)
 	return out != a.On();
 }
 
+bool TestInverter3(const Wire& a, const Wire& b, const Wire& c)
+{
+	InverterN<3> test;
+	test.Connect({ &a, &b, &c });
+	test.Update();
+	return (test.Out()[0].On() != a.On()) &&
+		   (test.Out()[1].On() != b.On()) &&
+		   (test.Out()[2].On() != c.On());
+}
+
 bool TestSRLatch(Verbosity verbosity)
 {
 	SRLatch test;
@@ -319,6 +329,7 @@ bool RunAllTests()
 {
 	bool success = true;
 	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
@@ -329,6 +340,6 @@ bool RunAllTests()
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);	
+	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
 	return success;
 }
