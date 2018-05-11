@@ -34,3 +34,6 @@
 # Build folders
 Debug/
 Release/
+
+# Visual Studio
+.vs/

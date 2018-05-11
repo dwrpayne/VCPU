@@ -1,0 +1,16 @@
+VCPU Notes
+
+Components cannot be moved, ever, since other components have references to their output wires. No std::vectors.
+
+Component:
+	Constructor() - afterwards, guarantees that output pins are instantiated and have a fixed location.
+	Connect() - accept input pins, wire the component together. afterwards, it's fully functional.
+	Update() - propagate logic from input to output pins. This is one clock tick but current flows end-to-end
+
+What does class Component have?
+	* Update()
+	* Draw()
+	* Cost()
+	* static int id?
+	
+A "Bundle" is a way to collect some wires and hand them to another component. It doesn't really exist and can't be modified. If you reconnect its wires, you have to reconnect the components that are using it.
