@@ -4,7 +4,6 @@ void OrGate::Connect(const Wire& a, const Wire& b)
 {
 	in1 = &a;
 	in2 = &b;
-	Update();
 }
 
 void OrGate::Update()

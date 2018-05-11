@@ -6,7 +6,6 @@
 class SRLatch :	public Component
 {
 public:
-	SRLatch(const Wire& s, const Wire& r);
 	void Connect(const Wire& s, const Wire& r);
 	void Update();
 

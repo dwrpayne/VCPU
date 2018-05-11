@@ -43,31 +43,41 @@ bool Test(Verbosity verbosity, FuncType && func, Args && ...args)
 
 bool TestAndGate(const Wire& a, const Wire& b)
 {
-	AndGate test(a, b);
-	return test.Out.On() == (a.On() && b.On());
+	AndGate test;
+	test.Connect(a, b);
+	test.Update();
+	return test.Out().On() == (a.On() && b.On());
 }
 
 bool TestOrGate(const Wire& a, const Wire& b)
 {
-	OrGate test(a, b);
+	OrGate test;
+	test.Connect(a, b);
+	test.Update();
 	return test.Out().On() == (a.On() || b.On());
 }
 
 bool TestNandGate(const Wire& a, const Wire& b)
 {
-	NandGate test(a, b);
+	NandGate test;
+	test.Connect(a, b);
+	test.Update();
 	return test.Out().On() != (a.On() && b.On());
 }
 
 bool TestNorGate(const Wire& a, const Wire& b)
 {
-	NorGate test(a, b);
+	NorGate test;
+	test.Connect(a, b);
+	test.Update();
 	return test.Out().On() != (a.On() || b.On());
 }
 
 bool TestInverter(const Wire& a)
 {
-	Inverter test(a);
+	Inverter test;
+	test.Connect(a);
+	test.Update();
 	bool out = test.Out().On();
 	return out != a.On();
 }
@@ -84,7 +94,9 @@ bool TestState(int i, const Wire& wire, bool state, Verbosity verbosity)
 
 bool TestSRLatch(Verbosity verbosity)
 {
-	SRLatch test(WIRE_OFF, WIRE_OFF);
+	SRLatch test;
+	test.Connect(WIRE_OFF, WIRE_ON); 
+	test.Update();
 	const Wire& q = test.Q();
 	const Wire& notq = test.NotQ();
 
@@ -94,26 +106,26 @@ bool TestSRLatch(Verbosity verbosity)
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_OFF);
+	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_OFF);
+	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 	test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_OFF);
+	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
@@ -126,7 +138,10 @@ bool TestSRLatch(Verbosity verbosity)
 
 bool TestJKFlipFlop(Verbosity verbosity)
 {
-	JKFlipFlop test(WIRE_OFF, WIRE_ON);
+	JKFlipFlop test;
+	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Update();
+	test.Update();
 	const Wire& q = test.Q();
 	const Wire& notq = test.NotQ();
 
@@ -136,46 +151,46 @@ bool TestJKFlipFlop(Verbosity verbosity)
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_OFF);
+	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_OFF);
+	test.Connect(WIRE_ON, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 	test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_OFF);
+	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
+
+	test.Update();
+	success &= TestState(i++, q, false, verbosity);
+	success &= TestState(i++, notq, true, verbosity);
+
+	test.Connect(WIRE_ON, WIRE_ON); test.Update();
+	success &= TestState(i++, q, true, verbosity);
+	success &= TestState(i++, notq, false, verbosity);
 
 	test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_ON);
-	success &= TestState(i++, q, true, verbosity);
-	success &= TestState(i++, notq, false, verbosity);
-
-	test.Update();
-	success &= TestState(i++, q, false, verbosity);
-	success &= TestState(i++, notq, true, verbosity);
-
 	test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_OFF);
+	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
@@ -183,23 +198,23 @@ bool TestJKFlipFlop(Verbosity verbosity)
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_ON);
+	test.Connect(WIRE_ON, WIRE_ON); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_ON);
+	test.Connect(WIRE_ON, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_OFF);
+	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_OFF);
+	test.Connect(WIRE_OFF, WIRE_OFF); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
@@ -208,7 +223,9 @@ bool TestJKFlipFlop(Verbosity verbosity)
 
 bool TestDFlipFlop(Verbosity verbosity)
 {
-	DFlipFlop test(WIRE_OFF, WIRE_OFF);
+	DFlipFlop test;
+	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Update();
 	const Wire& q = test.Q();
 	const Wire& notq = test.NotQ();
 
@@ -218,19 +235,19 @@ bool TestDFlipFlop(Verbosity verbosity)
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_ON);
+	test.Connect(WIRE_ON, WIRE_ON); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_ON);
+	test.Connect(WIRE_ON, WIRE_ON); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_ON, WIRE_ON);
+	test.Connect(WIRE_ON, WIRE_ON); test.Update();
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
@@ -242,7 +259,7 @@ bool TestDFlipFlop(Verbosity verbosity)
 	success &= TestState(i++, q, true, verbosity);
 	success &= TestState(i++, notq, false, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
@@ -250,7 +267,7 @@ bool TestDFlipFlop(Verbosity verbosity)
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 
-	test.Connect(WIRE_OFF, WIRE_ON);
+	test.Connect(WIRE_OFF, WIRE_ON); test.Update();
 	success &= TestState(i++, q, false, verbosity);
 	success &= TestState(i++, notq, true, verbosity);
 

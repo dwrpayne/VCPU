@@ -9,12 +9,10 @@
 class AndGate : public Component
 {
 public:
-	AndGate();
-	AndGate(const Wire& a, const Wire& b);
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out;
+	const Wire& Out() { return out; }
 
 private:
 	const Wire* in1;

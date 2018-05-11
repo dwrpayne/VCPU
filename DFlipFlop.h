@@ -6,7 +6,7 @@
 class DFlipFlop : public Component
 {
 public:
-	DFlipFlop(const Wire& d, const Wire& e);
+	void Connect(const Wire& d, const Wire& e);
 	void Update();
 
 	const Wire& Q() { return nandR.Out(); }

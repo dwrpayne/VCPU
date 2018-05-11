@@ -6,7 +6,6 @@
 class OrGate : public Component
 {
 public:
-	OrGate(const Wire& a, const Wire& b) { Connect(a, b); }
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 

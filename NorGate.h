@@ -8,7 +8,6 @@
 class NorGate : public Component
 {
 public:
-	NorGate(const Wire& a, const Wire& b);
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 

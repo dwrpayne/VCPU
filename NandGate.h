@@ -8,7 +8,6 @@
 class NandGate : public Component
 {
 public:
-	NandGate(const Wire& a, const Wire& b);
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 

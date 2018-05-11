@@ -5,7 +5,6 @@
 class Inverter : public Component
 {
 public:
-	Inverter(const Wire& a) { Connect(a); }
 	void Connect(const Wire& a);
 	void Update();
 

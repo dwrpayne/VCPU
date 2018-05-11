@@ -7,7 +7,7 @@
 class JKFlipFlop : public Component
 {
 public:
-	JKFlipFlop(const Wire& j, const Wire& k);
+	void Connect(const Wire& j, const Wire& k);
 	void Update();
 
 	const Wire& Q() { return latch.Q(); }
