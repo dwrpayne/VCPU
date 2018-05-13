@@ -50,7 +50,7 @@ inline void Counter<N>::Connect(const Bundle<N>& data, const Wire & load)
 	}
 	for (int i = 0; i < N; ++i)
 	{
-		bits[0].Connect(loadMux.Out()[i], loadMux.Out()[i]);
+		bits[i].Connect(inputs[i], inputs[i]);
 	}
 }
 

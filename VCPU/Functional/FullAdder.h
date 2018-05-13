@@ -23,3 +23,47 @@ private:
 	AndGate andOut;
 	OrGate orGate;
 };
+
+template <unsigned int N>
+class FullAdderN : public Component
+{
+public:
+	FullAdderN();
+	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Wire& cin);
+	void Update();
+
+	const Bundle<N>& Out() { return sum; }
+	const Wire& Cout() { return adders[N - 1].Cout(); }
+
+private:
+	std::array<FullAdder, N> adders;
+	Bundle<N> sum;
+};
+
+template<unsigned int N>
+inline FullAdderN<N>::FullAdderN()
+{
+	for (int i = 0; i < N; ++i)
+	{
+		sum.Connect(i, adders[i].S());
+	}
+}
+
+template<unsigned int N>
+inline void FullAdderN<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Wire& cin)
+{
+	for (int i = 0; i < N; ++i)
+	{
+		const Wire& in = (i > 0 ? adders[i - 1].Cout() : cin);
+		adders[i].Connect(a[i], b[i], in);
+	}
+}
+
+template<unsigned int N>
+inline void FullAdderN<N>::Update()
+{
+	for (int i = 0; i < N; ++i)
+	{
+		adders[i].Update();
+	}
+}
