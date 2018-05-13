@@ -122,6 +122,7 @@
   <ItemGroup>
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
+    <ClCompile Include="Functional\CPU.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
+    <ClInclude Include="Functional\CPU.h" />
     <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Gates\AndGate.h" />
     <ClInclude Include="Gates\Inverter.h" />
@@ -153,7 +155,9 @@
     <ClInclude Include="Gates\XorGate.h" />
     <ClInclude Include="Memory\Counter.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />
+    <ClInclude Include="Memory\InsRegister.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />
+    <ClInclude Include="Memory\Memory.h" />
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />

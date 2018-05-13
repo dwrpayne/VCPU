@@ -57,6 +57,9 @@
     <ClCompile Include="Control\Wire.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Functional\CPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -132,6 +135,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Memory\Counter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Functional\CPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\Memory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\InsRegister.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
