@@ -124,6 +124,7 @@
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Decoder.cpp" />
     <ClCompile Include="Control\Multiplexer.cpp" />
+    <ClCompile Include="Control\MuxBundle.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="Functional\Adder.cpp" />
     <ClCompile Include="Functional\ALU.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
     <ClInclude Include="Control\Multiplexer.h" />
+    <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />

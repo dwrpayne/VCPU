@@ -11,7 +11,10 @@ public:
 	bool On() const { return state; }
 
 	friend std::ostream& operator<<(std::ostream& os, const Wire& dt);
-	
+
+	static const Wire OFF;
+	static const Wire ON;
+
 private:
 	static int id_counter;
 	int id;
@@ -19,6 +22,3 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& os, const Wire& dt);
-
-extern const Wire WIRE_ON;
-extern const Wire WIRE_OFF;

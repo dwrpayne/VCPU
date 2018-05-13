@@ -32,12 +32,14 @@ public:
 
 	explicit MagicBundle(int n)
 	{
+		assert((unsigned int)(abs(n) + (int)(n >= 0)) <= pow2(N-1));
 		Init();
 		Write(n);
 	}
 
 	explicit MagicBundle(unsigned int n)
 	{
+		assert(n < pow2(N));
 		Init();
 		Write(n);
 	}

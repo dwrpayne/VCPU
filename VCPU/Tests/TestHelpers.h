@@ -12,7 +12,7 @@ enum Verbosity
 };
 
 #ifdef DEBUG
-#define CHOOSE_WIRE(b) (b ? WIRE_ON : WIRE_OFF)
+#define CHOOSE_WIRE(b) (b ? Wire::ON : Wire::OFF)
 #endif
 
 #define RUN_AUTO_TEST(runner, unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= runner(unit_test, v);
@@ -43,32 +43,32 @@ bool Test(Verbosity verbosity, FuncType && func, Args && ...args)
 bool TestOneWireComponent(bool(*test_func)(const Wire&), Verbosity verbosity)
 {
 	bool success = true;
-	success &= Test(verbosity, test_func, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON);
+	success &= Test(verbosity, test_func, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::ON);
 	return success;
 }
 
 bool TestTwoWireComponent(bool(*test_func)(const Wire&, const Wire&), Verbosity verbosity)
 {
 	bool success = true;
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON);
+	success &= Test(verbosity, test_func, Wire::OFF, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::ON, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::OFF, Wire::ON);
+	success &= Test(verbosity, test_func, Wire::ON, Wire::ON);
 	return success;
 }
 
 bool TestThreeWireComponent(bool(*test_func)(const Wire&, const Wire&, const Wire&), Verbosity verbosity)
 {
 	bool success = true;
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON, WIRE_ON);
+	success &= Test(verbosity, test_func, Wire::OFF, Wire::OFF, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::ON, Wire::OFF, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::OFF, Wire::ON, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::ON, Wire::ON, Wire::OFF);
+	success &= Test(verbosity, test_func, Wire::OFF, Wire::OFF, Wire::ON);
+	success &= Test(verbosity, test_func, Wire::ON, Wire::OFF, Wire::ON);
+	success &= Test(verbosity, test_func, Wire::OFF, Wire::ON, Wire::ON);
+	success &= Test(verbosity, test_func, Wire::ON, Wire::ON, Wire::ON);
 	return success;
 }
 
@@ -89,7 +89,7 @@ bool TestState(int i, T val1, T val2, Verbosity verbosity)
 	bool pass = val1 == val2;
 	if (verbosity == VERBOSE || (verbosity == FAIL_ONLY && !pass))
 	{
-		std::cout << i << ".\t" << (pass ? "PASS: " : "FAIL: ") << std::endl;
+		std::cout << i << ".\t" << (pass ? "PASS: " : "FAIL: ") << "Expecting " << val1 << ", got " << val2 << std::endl;
 	}
 	return pass;
 }

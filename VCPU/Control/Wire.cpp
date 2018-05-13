@@ -1,8 +1,8 @@
 #include "Wire.h"
 
-static const Wire WIRE_OFF(false);
-static const Wire WIRE_ON(true);
 int Wire::id_counter = 0;
+const Wire Wire::OFF(false);
+const Wire Wire::ON(true);
 
 std::ostream& operator<<(std::ostream& os, const Wire& w)
 {

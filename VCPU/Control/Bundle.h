@@ -13,6 +13,8 @@ class Bundle
 {
 public:
 	static const int WIDTH = N;
+	static const Bundle<N> OFF;
+	static const Bundle<N> ON;
 
 	Bundle() {}
 	Bundle(std::initializer_list<const Wire*> list)
@@ -114,3 +116,6 @@ std::ostream& operator<<(std::ostream& os, const Bundle<N>& b)
 	}
 	return os;
 }
+
+template<unsigned int N> const Bundle<N> Bundle<N>::OFF(Wire::OFF);
+template<unsigned int N> const Bundle<N> Bundle<N>::ON(Wire::ON);
