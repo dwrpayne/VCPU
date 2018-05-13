@@ -4,45 +4,45 @@
 #include "Bundle.h"
 #include "Multiplexer.h"
 
-template <unsigned int WIDTH, unsigned int N>
+template <unsigned int N, unsigned int Ninput>
 class MuxBundle : public Component
 {
 public:
-	static const unsigned int BITS = bits(N);
+	static const unsigned int BITS = bits(Ninput);
 	MuxBundle();
-	void Connect(const std::array<Bundle<WIDTH>, N> in, const Bundle<BITS>& sel);
+	void Connect(const std::array<Bundle<N>, Ninput> in, const Bundle<BITS>& sel);
 
 	template <typename = typename std::enable_if<BITS==1, const>::type>
-	void Connect(const std::array<Bundle<WIDTH>, N> in, const Wire& sel)
+	void Connect(const std::array<Bundle<N>, Ninput> in, const Wire& sel)
 	{
 		Connect(in, Bundle<BITS>(sel));
 	}
 
 	void Update();
 
-	const Bundle<WIDTH>& Out() { return out; }
+	const Bundle<N>& Out() { return out; }
 
 private:
-	Multiplexer<N> muxes[WIDTH];
-	Bundle<WIDTH> out;
+	Multiplexer<Ninput> muxes[N];
+	Bundle<N> out;
 };
 
-template <unsigned int WIDTH, unsigned int N>
-inline MuxBundle<WIDTH, N>::MuxBundle()
+template <unsigned int N, unsigned int Ninput>
+inline MuxBundle<N, Ninput>::MuxBundle()
 {
-	for (int i = 0; i < WIDTH; i++)
+	for (int i = 0; i < N; i++)
 	{
 		out.Connect(i, muxes[i].Out());
 	}
 }
 
-template <unsigned int WIDTH, unsigned int N>
-inline void MuxBundle<WIDTH, N>::Connect(const std::array<Bundle<WIDTH>, N> in, const Bundle<BITS>& sel)
+template <unsigned int N, unsigned int Ninput>
+inline void MuxBundle<N, Ninput>::Connect(const std::array<Bundle<N>, Ninput> in, const Bundle<BITS>& sel)
 {
-	for (int i = 0; i < WIDTH; i++)
+	for (int i = 0; i < N; i++)
 	{
-		Bundle<N> muxin;
-		for (int input = 0; input < N; input++)
+		Bundle<Ninput> muxin;
+		for (int input = 0; input < Ninput; input++)
 		{
 			muxin.Connect(input, in[input][i]);
 		}
@@ -50,10 +50,10 @@ inline void MuxBundle<WIDTH, N>::Connect(const std::array<Bundle<WIDTH>, N> in, 
 	}
 }
 
-template <unsigned int WIDTH, unsigned int N>
-inline void MuxBundle<WIDTH, N>::Update()
+template <unsigned int N, unsigned int Ninput>
+inline void MuxBundle<N, Ninput>::Update()
 {
-	for (int i = 0; i < WIDTH; i++)
+	for (int i = 0; i < N; i++)
 	{
 		muxes[i].Update();
 	}
