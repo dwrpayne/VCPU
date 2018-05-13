@@ -16,11 +16,11 @@ public:
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
 
-	void Connect(const AddrBundle& addr1, const AddrBundle& addr2, const AddrBundle& addrw, const DataBundle& data, const Wire& read, const Wire& write);
+	void Connect(const AddrBundle& addr1, const AddrBundle& addr2, const AddrBundle& addrw, const DataBundle& data, const Wire& write);
 	void Update();
 
-	const DataBundle& Out1() { return out1Enable.Out(); }
-	const DataBundle& Out2() { return out2Enable.Out(); }
+	const DataBundle& Out1() { return out1Mux.Out(); }
+	const DataBundle& Out2() { return out2Mux.Out(); }
 
 private:
 	Decoder<NReg> addrwDecoder;
@@ -28,11 +28,10 @@ private:
 	std::array<Register<N>, NReg> registers;
 
 	MuxBundle<N, NReg> out1Mux, out2Mux;
-	MultiGate<AndGate, N> out1Enable, out2Enable;
 };
 
 template<unsigned int N, unsigned int NReg>
-inline void RegisterFile<N, NReg>::Connect(const AddrBundle & addr1, const AddrBundle & addr2, const AddrBundle& addrw, const DataBundle & data, const Wire& read, const Wire& write)
+inline void RegisterFile<N, NReg>::Connect(const AddrBundle & addr1, const AddrBundle & addr2, const AddrBundle& addrw, const DataBundle & data, const Wire& write)
 {
 	addrwDecoder.Connect(addrw);
 	writeEnable.Connect(addrwDecoder.Out(), Bundle<NReg>(write));
@@ -45,8 +44,6 @@ inline void RegisterFile<N, NReg>::Connect(const AddrBundle & addr1, const AddrB
 	}
 	out1Mux.Connect(regOuts, addr1);
 	out2Mux.Connect(regOuts, addr2);
-	out1Enable.Connect(out1Mux.Out(), Bundle<N>(read));
-	out2Enable.Connect(out2Mux.Out(), Bundle<N>(read));
 }
 
 template<unsigned int N, unsigned int NReg>
@@ -60,6 +57,4 @@ inline void RegisterFile<N, NReg>::Update()
 	}
 	out1Mux.Update();
 	out2Mux.Update();
-	out1Enable.Update();
-	out2Enable.Update();
 }
