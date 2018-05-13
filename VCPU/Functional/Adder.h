@@ -39,7 +39,7 @@ public:
 private:
 	InverterN<N> bInv;
 	MuxBundle<N, 4> bInputMux;
-	FullAdder adders[N];
+	std::array<FullAdder, N> adders;
 	Bundle<N> sum;
 
 	OverflowDetector overflow;
