@@ -7,9 +7,9 @@ class InsRegister : public Register<32>
 public:
 	InsRegister();
 	const Bundle<6>& Opcode() { return opcode; }
-	const Bundle<5>& Rsaddr() { return rsaddr; }
-	const Bundle<5>& Rtaddr() { return rdaddr; }
-	const Bundle<5>& Rdaddr() { return rtaddr; }
+	const Bundle<5>& RsAddr() { return rsaddr; }
+	const Bundle<5>& RtAddr() { return rdaddr; }
+	const Bundle<5>& RdAddr() { return rtaddr; }
 	const Bundle<5>& Shamt() { return shamt; }
 	const Bundle<6>& Function() { return function; }
 	const Bundle<16>& Immediate() { return immediate; }
@@ -29,12 +29,12 @@ private:
 InsRegister::InsRegister()
 	: Register<32>()
 {
-	function = Out().Range() < 0, 6 > ();
-	shamt = Out().Range() < 6, 11 > ();
-	rtaddr = Out().Range() < 11, 16 > ();
-	rdaddr = Out().Range() < 16, 21 > ();
-	rsaddr = Out().Range() < 21, 26 > ();
-	opcode = Out().Range() < 26, 32 > ();
-	immediate = Out().Range() < 0, 16 > ();
-	address = Out().Range() < 0, 26 > ();
+	function = Out().Range<0, 6>();
+	shamt = Out().Range<6, 11>();
+	rtaddr = Out().Range<11, 16>();
+	rdaddr = Out().Range<16, 21>();
+	rsaddr = Out().Range<21, 26>();
+	opcode = Out().Range<26, 32>();
+	immediate = Out().Range<0, 16>();
+	address = Out().Range<0, 26>();
 }

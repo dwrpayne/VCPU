@@ -7,6 +7,8 @@
 #include "ALU.h"
 #include "MuxBundle.h"
 
+#include "InsRegister.h"
+
 class CPU : public Component
 {
 public:
@@ -15,6 +17,9 @@ public:
 
 	typedef Memory<32, 128> InsMemory;
 
+	void ConnectToLoader(Bundle<32>& addr, Bundle<32> ins);
+	void LoadInstruction();
+
 private:
 	MuxBundle<32, 2> pcInMux;
 	Register<32> pc;
@@ -22,9 +27,10 @@ private:
 	FullAdderN<32> pcJumpAdder;
 
 	InsMemory instructionMem;
-	Register<32> ir;
-	Register<32> mdr;
-	RegisterFile<32, 32> registers;
+	InsRegister ir;
+	RegisterFile<32, 32> regFile;
+
+	MuxBundle<32, 2> aluBInputMux;
 	ALU<32> alu;
 	Register<32> aluOut;
 };

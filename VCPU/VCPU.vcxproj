@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -122,7 +122,7 @@
   <ItemGroup>
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
-    <ClCompile Include="Functional\CPU.cpp" />
+    <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -134,6 +134,7 @@
     <ClCompile Include="Memory\DFlipFlop.cpp" />
     <ClCompile Include="Memory\JKFlipFlop.cpp" />
     <ClCompile Include="Memory\SRLatch.cpp" />
+    <ClCompile Include="Tests\TestCPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Control\Bundle.h" />
@@ -142,6 +143,7 @@
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\InsRegister.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\CPU.h" />
@@ -155,13 +157,13 @@
     <ClInclude Include="Gates\XorGate.h" />
     <ClInclude Include="Memory\Counter.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />
-    <ClInclude Include="Memory\InsRegister.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />
     <ClInclude Include="Memory\Memory.h" />
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />
     <ClInclude Include="Tests\MagicBundle.h" />
+    <ClInclude Include="Tests\TestCPU.h" />
     <ClInclude Include="Tests\TestHelpers.h" />
     <ClInclude Include="Tests\Tests.h" />
   </ItemGroup>
