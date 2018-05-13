@@ -705,8 +705,8 @@ bool TestRegisterFile(Verbosity verbosity)
 	RegisterFile<32, 8> test;
 	MagicBundle<3> addr1, addr2, addrw;
 	MagicBundle<32> data;
-	Wire write, read;
-	test.Connect(addr1, addr2, addrw, data, read, write);
+	Wire write;
+	test.Connect(addr1, addr2, addrw, data, write);
 
 	addr1.Write(4U);
 	addr2.Write(2U);
@@ -723,20 +723,17 @@ bool TestRegisterFile(Verbosity verbosity)
 
 	data.Write(987654321U);
 	write.Set(false);
-	read.Set(true);
 	test.Update();
 	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
 
 	addrw.Write(2U);
 	write.Set(true);
-	read.Set(false);
 	test.Update();
 	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
 	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
 
 	data.Write(-7281);
 	write.Set(false);
-	read.Set(true);
 	test.Update();
 	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
 	success &= TestState(i++, 987654321, test.Out2().Read(), verbosity);
@@ -747,7 +744,6 @@ bool TestRegisterFile(Verbosity verbosity)
 	write.Set(true);
 	test.Update();
 	write.Set(false);
-	read.Set(true);
 	addr2.Write(7U);
 	addr1.Write(4U);
 	test.Update();
