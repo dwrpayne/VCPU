@@ -83,7 +83,7 @@ private:
 	MultiGate<OrGate, N> ors;
 	MultiGate<XorGate, N> xors;
 	InverterN<N> invs;
-	MuxBundle<8, N> logicShiftMux;
+	MuxBundle<N, 8> logicShiftMux;
 	MuxBundle<N, 2> outMux;
 	NorGateN<N> zeroOut;
 };
