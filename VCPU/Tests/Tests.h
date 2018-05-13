@@ -484,6 +484,7 @@ bool TestCounter(Verbosity verbosity)
 
 	return success;
 }
+
 bool TestMultiplexer2(const Wire& a)
 {
 	Multiplexer<2> test;
@@ -702,13 +703,14 @@ bool TestRegisterFile(Verbosity verbosity)
 	bool success = true;
 
 	RegisterFile<32, 8> test;
-	MagicBundle<3> addr1, addr2;
+	MagicBundle<3> addr1, addr2, addrw;
 	MagicBundle<32> data;
 	Wire write, read;
-	test.Connect(addr1, addr2, data, read, write);
+	test.Connect(addr1, addr2, addrw, data, read, write);
 
 	addr1.Write(4U);
 	addr2.Write(2U);
+	addrw.Write(4U);
 	data.Write(123456U);
 	test.Update();
 	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
@@ -725,7 +727,7 @@ bool TestRegisterFile(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
 
-	addr1.Write(2U);
+	addrw.Write(2U);
 	write.Set(true);
 	read.Set(false);
 	test.Update();
@@ -733,24 +735,21 @@ bool TestRegisterFile(Verbosity verbosity)
 	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
 
 	data.Write(-7281);
-	addr2.Write(4U);
 	write.Set(false);
 	read.Set(true);
 	test.Update();
-	success &= TestState(i++, 987654321, test.Out1().Read(), verbosity);
-	success &= TestState(i++, 123456, test.Out2().Read(), verbosity);
+	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 987654321, test.Out2().Read(), verbosity);
 
 	test.Update();
 	test.Update();
-	addr1.Write(7U);
+	addrw.Write(7U);
 	write.Set(true);
 	test.Update();
 	write.Set(false);
 	read.Set(true);
 	addr2.Write(7U);
 	addr1.Write(4U);
-	write.Set(false);
-	read.Set(true);
 	test.Update();
 	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
 	success &= TestState(i++, -7281, test.Out2().Read(), verbosity);
