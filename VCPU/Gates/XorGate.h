@@ -32,7 +32,7 @@ public:
 	const Bundle<N>& Out() { return out; }
 
 private:
-	XorGate xors[N];
+	std::array<XorGate, N> xors;
 	Bundle<N> out;
 };
 

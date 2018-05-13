@@ -3,7 +3,7 @@
 #include <cmath>
 #include <map>
 #include "TestHelpers.h"
-#include "MagicRegister.h"
+#include "MagicBundle.h"
 #include "AndGate.h"
 #include "OrGate.h"
 #include "NandGate.h"
@@ -58,6 +58,33 @@ bool TestXorGate(const Wire& a, const Wire& b)
 	test.Connect(a, b);
 	test.Update();
 	return test.Out().On() == (a.On() ^ b.On());
+}
+
+bool TestAndGate3(const Wire& a, const Wire& b, const Wire& c)
+{
+	AndGateN<3> test;
+	test.Connect({ &a, &b, &c });
+	test.Update();
+	return test.Out().On() == (a.On() && b.On() && c.On());
+}
+
+bool TestXorGateN(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+	XorGateN<8> test;
+	MagicBundle<8> a_reg;
+	MagicBundle<8> b_reg;
+	test.Connect(a_reg.Out(), b_reg.Out());
+	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 11, 116 },{ 4, -121 } }))
+	{
+		a_reg.Write(a);
+		b_reg.Write(b);
+		test.Update();
+		success &= TestState(i++, a ^ b, test.Out().Read(), verbosity);
+	}
+
+	return success;
 }
 
 bool TestFullAdder(const Wire& a, const Wire& b, const Wire& c)
@@ -301,7 +328,7 @@ bool TestRegister(Verbosity verbosity)
 	int i = 0;
 
 	Register<8> reg;
-	MagicRegister<8> data;
+	MagicBundle<8> data;
 	Wire load(true);
 	reg.Connect(data.Out(), load);
 	data.Write(0);
@@ -334,8 +361,8 @@ bool TestAdder(Verbosity verbosity)
 	int i = 0;
 
 	Adder<8> adder;
-	MagicRegister<8> a_reg;
-	MagicRegister<8> b_reg;
+	MagicBundle<8> a_reg;
+	MagicBundle<8> b_reg;
 	Wire mode(false);
 	adder.Connect(a_reg.Out(), b_reg.Out(), mode);
 
@@ -384,10 +411,12 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestAndGate3, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, FAIL_ONLY);
+	RUN_TEST(TestXorGateN, FAIL_ONLY);
 	RUN_TEST(TestSRLatch, FAIL_ONLY);
 	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
