@@ -11,9 +11,12 @@ public:
 	virtual void Update() = 0;
 };
 
+constexpr unsigned int bits(unsigned int N)
+{
+	return N <= 2 ? 1 : 1 + bits(N / 2);
+}
 
-template <unsigned int N>
-extern constexpr int bits = 1 + bits<N / 2>;
-
-template<>
-extern constexpr int bits<2> = 1;
+constexpr unsigned int pow2(unsigned int exp)
+{
+	return exp == 0 ? 1 : 2 * pow2(exp - 1);
+}

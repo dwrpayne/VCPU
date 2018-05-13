@@ -35,9 +35,23 @@ public:
 			wires[i++] = wire;
 		}
 	}
+	
+	template <unsigned int M>
+	void Connect(int start, const Bundle<M>& wires)
+	{
+		for (int i = 0; i < M; i++)
+		{
+			Connect(start + i, wires[i]);
+		}
+	}
+
+	void Connect(int n, const Wire& wire)
+	{
+		wires[n] = &wire;
+	}
 
 	template <unsigned int start, unsigned int end>
-	const Bundle<end-start> Range() const 
+	const Bundle<end - start> Range() const
 	{
 		Bundle<end - start> out;
 		for (int i = start; i < end; i++)
@@ -45,11 +59,6 @@ public:
 			out.Connect(i - start, Get(i));
 		}
 		return out;
-	}
-
-	void Connect(int n, const Wire& wire)
-	{
-		wires[n] = &wire;
 	}
 
 	const Wire& Get(unsigned int n) const 
@@ -71,7 +80,6 @@ public:
 
 	const int width = N;
 
-#ifdef DEBUG
 	int Read() const
 	{
 		int n = 0;
@@ -83,7 +91,12 @@ public:
 		}
 		return (negative ? -1 : 1) * n - (int)negative;
 	}
-#endif
+
+	unsigned int UnsignedRead() const
+	{
+		int val = Read();
+		return val >= 0 ? val : pow2(width) + val;
+	}
 
 protected:
 	std::array<const Wire*, N> wires;

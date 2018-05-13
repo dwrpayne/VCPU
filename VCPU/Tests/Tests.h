@@ -19,6 +19,7 @@
 #include "FullAdder.h"
 #include "Adder.h"
 #include "Multiplexer.h"
+#include "Decoder.h"
 
 
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -406,6 +407,14 @@ bool TestMultiplexer8(const Wire& a, const Wire& b, const Wire& c)
 	return test.Out().On() != a.On();
 }
 
+bool TestDecoder4(const Wire& a, const Wire& b)
+{
+	Decoder<4> test;
+	test.Connect({ &a, &b });
+	test.Update();
+	return test.Out().UnsignedRead() == pow2(Bundle<2>({ &a, &b }).UnsignedRead());
+}
+
 bool RunAllTests()
 {
 	bool success = true;
@@ -428,5 +437,6 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
 	return success;
 }

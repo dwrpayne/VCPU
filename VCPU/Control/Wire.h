@@ -1,10 +1,6 @@
 #pragma once
 #include <iostream>
 
-#ifdef DEBUG
-#define CHOOSE_WIRE(b) (b ? WIRE_ON : WIRE_OFF)
-#endif
-
 class Wire
 {
 public:

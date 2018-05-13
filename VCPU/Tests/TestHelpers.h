@@ -11,6 +11,10 @@ enum Verbosity
 	VERBOSE
 };
 
+#ifdef DEBUG
+#define CHOOSE_WIRE(b) (b ? WIRE_ON : WIRE_OFF)
+#endif
+
 #define RUN_AUTO_TEST(runner, unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= runner(unit_test, v);
 #define RUN_TEST(unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= unit_test(v);
 
@@ -48,8 +52,8 @@ bool TestTwoWireComponent(bool(*test_func)(const Wire&, const Wire&), Verbosity 
 {
 	bool success = true;
 	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON);
 	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF);
+	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON);
 	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON);
 	return success;
 }
@@ -58,13 +62,24 @@ bool TestThreeWireComponent(bool(*test_func)(const Wire&, const Wire&, const Wir
 {
 	bool success = true;
 	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_ON);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_ON);
 	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_OFF);
-	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_ON);
+	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_OFF);
 	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON, WIRE_OFF);
+	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_OFF, WIRE_ON);
+	success &= Test(verbosity, test_func, WIRE_ON, WIRE_OFF, WIRE_ON);
+	success &= Test(verbosity, test_func, WIRE_OFF, WIRE_ON, WIRE_ON);
 	success &= Test(verbosity, test_func, WIRE_ON, WIRE_ON, WIRE_ON);
+	return success;
+}
+
+template <typename BundleType>
+bool TestBundleComponent(bool(*test_func)(const BundleType&), Verbosity verbosity)
+{
+	bool success = true;
+	for (int i = 0; i < pow2(N); i++)
+	{
+		success &= Test(verbosity, test_func, MagicBundle<N>(i));
+	}
 	return success;
 }
 

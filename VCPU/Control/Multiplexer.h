@@ -12,7 +12,7 @@ template <unsigned int N>
 class Multiplexer : public Component
 {
 public:
-	static const unsigned int BITS = bits<N>;
+	static const unsigned int BITS = bits(N);
 	void Connect(const Bundle<N>& in, const Bundle<BITS>& sel);
 	void Update();
 
