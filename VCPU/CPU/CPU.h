@@ -15,6 +15,8 @@ public:
 	void Connect();
 	void Update();
 
+	int cycles;
+
 	typedef Memory<32, 128> InsMemory;
 	typedef Memory<32, 1024> MainMemory; // Todo: cache levels
 	typedef RegisterFile<32, 32> RegFile;

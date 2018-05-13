@@ -11,7 +11,6 @@
 #include "NorGate.h"
 #include "XorGate.h"
 
-#ifdef DEBUG
 enum ALU_OPCODE : unsigned int
 {
 	A,
@@ -32,7 +31,6 @@ enum ALU_OPCODE : unsigned int
 	UNUSED2,
 	MAX
 };
-#endif
 
 /*******************************
       VALU opcode table

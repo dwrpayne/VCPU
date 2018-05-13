@@ -25,7 +25,7 @@
 #include "ALU.h"
 #include "RegisterFile.h"
 
-
+#ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
 {
 	AndGate test;
@@ -785,3 +785,4 @@ bool RunAllTests()
 	RUN_TEST(TestRegisterFile, FAIL_ONLY);
 	return success;
 }
+#endif

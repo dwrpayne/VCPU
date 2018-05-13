@@ -3,6 +3,7 @@
 
 void CPU::Connect()
 {
+	cycles = 0;
 	// Internal Bundles must be created first
 	Bundle<32> signExtImm(ir.Immediate()[15]);
 	signExtImm.Connect(0, ir.Immediate());
@@ -63,6 +64,7 @@ void CPU::Update()
 	mainMem.Update();
 	regFileWriteAddrMux.Update();
 	regWriteDataMux.Update();
+	cycles++;
 }
 
 void CPU::ConnectToLoader(Bundle<32>& addr, Bundle<32> ins)

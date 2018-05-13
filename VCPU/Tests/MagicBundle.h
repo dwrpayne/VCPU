@@ -11,8 +11,6 @@ Used for testing only since it's "magic" with respect to the VCPU.
 It can't be connected to input wires from the VCPU.
 ****************/
 
-#if DEBUG
-
 template <unsigned int N>
 class MagicBundle : public Bundle<N>
 {
@@ -70,4 +68,3 @@ private:
 	std::array<Wire, N> magicwires;
 	int value;
 };
-#endif

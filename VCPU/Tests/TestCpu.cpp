@@ -33,5 +33,7 @@ bool TestCPU()
 	while (true)
 	{
 		cpu.Update();
+		if (cpu.cycles % 500 == 0)
+			std::cout << cpu.cycles << std::endl;
 	}
 }
