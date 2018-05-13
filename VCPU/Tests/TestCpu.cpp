@@ -2,6 +2,10 @@
 #include "CPU/CPU.h"
 #include "MagicBundle.h"
 
+unsigned int GetInstruction(unsigned int opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt, unsigned int func)
+{
+	return (opcode << 26) + (rs << 21) + (rt << 16) + (rd << 11) + (shamt << 6) + func;
+}
 
 bool TestCPU()
 {
@@ -11,21 +15,18 @@ bool TestCPU()
 	MagicBundle<32> addr, ins;
 	cpu.ConnectToLoader(addr, ins);
 
+	ins.Write(GetInstruction(0, 0, 0, 0, 0, ALU_OPCODE::A_PLUS_ONE));
 	addr.Write(0);
-	ins.Write(1);
 	cpu.LoadInstruction();
+	ins.Write(GetInstruction(0, 0, 0, 1, 0, ALU_OPCODE::A));
 	addr.Write(4);
-	ins.Write(1);
 	cpu.LoadInstruction();
-	addr.Write(8);
-	ins.Write(1);
-	cpu.LoadInstruction();
-	addr.Write(12);
-	ins.Write(1);
-	cpu.LoadInstruction();
-	addr.Write(16);
-	ins.Write(1);
-	cpu.LoadInstruction();
+	for (int i = 0; i < 25; i++)
+	{
+		ins.Write(GetInstruction(0, i, i+1, i+2, 0, ALU_OPCODE::A_PLUS_B));
+		addr.Write(8 + 4*i);
+		cpu.LoadInstruction();
+	}
 
 	cpu.Connect();
 	
