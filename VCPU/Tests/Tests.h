@@ -64,12 +64,20 @@ bool TestXorGate(const Wire& a, const Wire& b)
 	return test.Out().On() == (a.On() ^ b.On());
 }
 
-bool TestAndGate3(const Wire& a, const Wire& b, const Wire& c)
+bool TestAndGate4(const Bundle<4>& b)
 {
-	AndGateN<3> test;
-	test.Connect({ &a, &b, &c });
+	AndGateN<4> test;
+	test.Connect(b);
 	test.Update();
-	return test.Out().On() == (a.On() && b.On() && c.On());
+	return test.Out().On() == (b[0].On() && b[1].On() && b[2].On() && b[3].On());
+}
+
+bool TestOrGate4(const Bundle<4>& b)
+{
+	OrGateN<4> test;
+	test.Connect(b);
+	test.Update();
+	return test.Out().On() == (b[0].On() || b[1].On() || b[2].On() || b[3].On());
 }
 
 bool TestXorGateN(Verbosity verbosity)
@@ -364,11 +372,11 @@ bool TestALU(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	ALU<8> ald;
+	ALU<8> alu;
 	MagicBundle<8> a_reg;
 	MagicBundle<8> b_reg;
 	MagicBundle<4> sel;
-	ald.Connect(a_reg, b_reg, sel);
+	alu.Connect(a_reg, b_reg, sel);
 
 	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 }, {15, 9}, { 11, 115 },{ 4, -121 } }))
 	{
@@ -380,69 +388,128 @@ bool TestALU(Verbosity verbosity)
 			std::cout << i << ". Testing " << a << ", " << b << std::endl;
 		}
 
-		sel.Write(0U);
-		ald.Update();
-		success &= TestState(i++, a, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A);
+		alu.Update();
+		success &= TestState(i++, a, alu.Out().Read(), verbosity);
 
-		sel.Write(1U);
-		ald.Update();
-		success &= TestState(i++, a + 1, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_PLUS_ONE);
+		alu.Update();
+		success &= TestState(i++, a + 1, alu.Out().Read(), verbosity);
 
-		sel.Write(2U);
-		ald.Update();
-		success &= TestState(i++, a + b, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_PLUS_B);
+		alu.Update();
+		success &= TestState(i++, a + b, alu.Out().Read(), verbosity);
 
-		sel.Write(3U);
-		ald.Update();
-		success &= TestState(i++, a + b + 1, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_PLUS_B_PLUS_ONE);
+		alu.Update();
+		success &= TestState(i++, a + b + 1, alu.Out().Read(), verbosity);
 
-		sel.Write(4U);
-		ald.Update();
-		success &= TestState(i++, a - b - 1, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_MINUS_B_MINUS_ONE);
+		alu.Update();
+		success &= TestState(i++, a - b - 1, alu.Out().Read(), verbosity);
 
-		sel.Write(5U);
-		ald.Update();
-		success &= TestState(i++, a - b, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_MINUS_B);
+		alu.Update();
+		success &= TestState(i++, a - b, alu.Out().Read(), verbosity);
 
-		sel.Write(6U);
-		ald.Update();
-		success &= TestState(i++, a - 1, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_MINUS_ONE);
+		alu.Update();
+		success &= TestState(i++, a - 1, alu.Out().Read(), verbosity);
 
-		sel.Write(7U);
-		ald.Update();
-		success &= TestState(i++, a, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_ALSO);
+		alu.Update();
+		success &= TestState(i++, a, alu.Out().Read(), verbosity);
 
-		sel.Write(8U);
-		ald.Update();
-		success &= TestState(i++, a & b, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_AND_B);
+		alu.Update();
+		success &= TestState(i++, a & b, alu.Out().Read(), verbosity);
 
-		sel.Write(9U);
-		ald.Update();
-		success &= TestState(i++, a | b, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_OR_B);
+		alu.Update();
+		success &= TestState(i++, a | b, alu.Out().Read(), verbosity);
 
-		sel.Write(10U);
-		ald.Update();
-		success &= TestState(i++, a ^ b, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::A_XOR_B);
+		alu.Update();
+		success &= TestState(i++, a ^ b, alu.Out().Read(), verbosity);
 
-		sel.Write(11U);
-		ald.Update();
-		success &= TestState(i++, ~a, ald.Out().Read(), verbosity);
+		sel.Write(ALU_OPCODE::NOT_A);
+		alu.Update();
+		success &= TestState(i++, ~a, alu.Out().Read(), verbosity);
 
 		if (a > 0)
 		{
-			sel.Write(12U);
-			ald.Update();
-			success &= TestState(i++, a >> 1, ald.Out().Read(), verbosity);
+			sel.Write(ALU_OPCODE::A_SHR);
+			alu.Update();
+			success &= TestState(i++, a >> 1, alu.Out().Read(), verbosity);
 
-			sel.Write(13U);
-			ald.Update();
-			success &= TestState(i++, a << 1, ald.Out().Read(), verbosity);
+			sel.Write(ALU_OPCODE::A_SHL);
+			alu.Update();
+			success &= TestState(i++, a << 1, alu.Out().Read(), verbosity);
 		}
 		else
 		{
 			i += 2;
 		}
 	}
+
+	// Test flags
+	a_reg.Write(125);
+	b_reg.Write(2);
+
+	sel.Write(ALU_OPCODE::A_PLUS_B);
+	alu.Update();
+	success &= TestState(i++, 127, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
+	success &= TestState(i++, false, alu.Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+
+	sel.Write(ALU_OPCODE::A_PLUS_B_PLUS_ONE);
+	alu.Update();
+	success &= TestState(i++, -128, alu.Out().Read(), verbosity);
+	success &= TestState(i++, true, alu.Overflow().On(), verbosity);
+	success &= TestState(i++, false, alu.Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+
+	a_reg.Write(-125);
+	b_reg.Write(3);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B);
+	alu.Update();
+	success &= TestState(i++, -128, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B_MINUS_ONE);
+	alu.Update();
+	success &= TestState(i++, 127, alu.Out().Read(), verbosity);
+	success &= TestState(i++, true, alu.Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+
+	a_reg.Write(3);
+	b_reg.Write(3);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B);
+	alu.Update();
+	success &= TestState(i++, 0, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Negative().On(), verbosity);
+	success &= TestState(i++, true, alu.Zero().On(), verbosity);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B_MINUS_ONE);
+	alu.Update();
+	success &= TestState(i++, -1, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
+	success &= TestState(i++, false, alu.Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+
 	return success;
 }
 
@@ -518,7 +585,8 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestAndGate3, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestAndGate4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestOrGate4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);

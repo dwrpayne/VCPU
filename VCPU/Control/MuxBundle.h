@@ -23,6 +23,9 @@ public:
 	const Bundle<N>& Out() { return out; }
 
 private:
+#ifdef DEBUG
+	std::array<Bundle<N>, Ninput> in_bundles;
+#endif
 	Multiplexer<Ninput> muxes[N];
 	Bundle<N> out;
 };
@@ -39,6 +42,9 @@ inline MuxBundle<N, Ninput>::MuxBundle()
 template <unsigned int N, unsigned int Ninput>
 inline void MuxBundle<N, Ninput>::Connect(const std::array<Bundle<N>, Ninput> in, const Bundle<BITS>& sel)
 {
+#ifdef DEBUG
+	in_bundles = in;
+#endif
 	for (int i = 0; i < N; i++)
 	{
 		Bundle<Ninput> muxin;

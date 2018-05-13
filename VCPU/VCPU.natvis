@@ -20,7 +20,7 @@
     <DisplayString>{{D={(int)invD.in->state}, E={(int)nandD.and.in2->state}, Q={(int)nandR.inv.out.state}}}</DisplayString>
   </Type>
   <Type Name="FullAdder">
-    <DisplayString>{{A={(int)andIn.in1->state}, B={(int)andIn.in2->state}, C={(int)andOut.in2->state}}}</DisplayString>
+    <DisplayString>{{A={(int)andIn.in1->state}, B={(int)andIn.in2->state}, Cin={(int)andOut.in2->state}, S={(int)xorOut.and.out.state}, Cout={(int)orGate.out.state}}}</DisplayString>
   </Type>
   <Type Name="Register&lt;8&gt;">
     <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits=
