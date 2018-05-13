@@ -39,9 +39,6 @@
     <ClCompile Include="Memory\JKFlipFlop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Memory\Register.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Memory\SRLatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,37 +48,13 @@
     <ClCompile Include="Gates\XorGate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Functional\ALU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Functional\FullAdder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Functional\Adder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\Multiplexer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Control\Component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Control\Wire.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\Bundle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\MagicBundle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\Decoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\MultiGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\MuxBundle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -153,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Control\MuxBundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\RegisterFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -22,6 +22,7 @@
 #include "MuxBundle.h"
 #include "Decoder.h"
 #include "ALU.h"
+#include "RegisterFile.h"
 
 
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -367,6 +368,72 @@ bool TestRegister(Verbosity verbosity)
 	return success;
 }
 
+bool TestMultiplexer2(const Wire& a)
+{
+	Multiplexer<2> test;
+	test.Connect({ &Wire::ON, &Wire::OFF }, a);
+	test.Update();
+	return test.Out().On() != a.On();	
+}
+
+bool TestMuxBundle(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	MuxBundle<32, 2> test;
+	Wire sel;
+	test.Connect({ MagicBundle<32>(12345), MagicBundle<32>(9876) }, sel);
+
+	test.Update();
+	success &= TestState(i++, 12345, test.Out().Read(), verbosity);
+
+	sel.Set(true);
+	test.Update();
+	success &= TestState(i++, 9876, test.Out().Read(), verbosity);
+	return success;
+}
+
+bool TestMultiplexer4(const Wire& a, const Wire& b)
+{
+	Multiplexer<4> test;
+	test.Connect({ &Wire::OFF, &Wire::ON, &Wire::ON, &Wire::OFF }, { &a, &b });
+	test.Update();
+	return test.Out().On() == (a.On() ^ b.On());
+}
+
+bool TestMultiplexer8(const Wire& a, const Wire& b, const Wire& c)
+{
+	Multiplexer<8> test;
+	test.Connect({ &Wire::ON, &Wire::OFF, &Wire::ON, &Wire::OFF, &Wire::ON, &Wire::OFF, &Wire::ON, &Wire::OFF }, { &a, &b, &c });
+	test.Update();
+	return test.Out().On() != a.On();
+}
+
+bool TestDecoder4(const Wire& a, const Wire& b)
+{
+	Decoder<4> test;
+	test.Connect({ &a, &b });
+	test.Update();
+	return test.Out().UnsignedRead() == pow2(Bundle<2>({ &a, &b }).UnsignedRead());
+}
+
+bool TestDecoder8(const Bundle<3>& in)
+{
+	Decoder<8> test;
+	test.Connect(in);
+	test.Update();
+	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
+}
+
+bool TestDecoder32(const Bundle<5>& in)
+{
+	Decoder<32> test;
+	test.Connect(in);
+	test.Update();
+	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
+}
+
 bool TestALU(Verbosity verbosity)
 {
 	bool success = true;
@@ -378,7 +445,7 @@ bool TestALU(Verbosity verbosity)
 	MagicBundle<4> sel;
 	alu.Connect(a_reg, b_reg, sel);
 
-	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 }, {15, 9}, { 11, 115 },{ 4, -121 } }))
+	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 } }))
 	{
 		a_reg.Write(a);
 		b_reg.Write(b);
@@ -513,70 +580,66 @@ bool TestALU(Verbosity verbosity)
 	return success;
 }
 
-bool TestMultiplexer2(const Wire& a)
-{
-	Multiplexer<2> test;
-	test.Connect({ &Wire::ON, &Wire::OFF }, a);
-	test.Update();
-	return test.Out().On() != a.On();	
-}
-
-bool TestMuxBundle(Verbosity verbosity)
+bool TestRegisterFile(Verbosity verbosity)
 {
 	int i = 0;
 	bool success = true;
 
-	MuxBundle<32, 2> test;
-	Wire sel;
-	test.Connect({ MagicBundle<32>(12345), MagicBundle<32>(9876) }, sel);
+	RegisterFile<32, 8> test;
+	MagicBundle<3> addr1, addr2;
+	MagicBundle<32> data;
+	Wire write, read;
+	test.Connect(addr1, addr2, data, read, write);
+
+	addr1.Write(4U);
+	addr2.Write(2U);
+	data.Write(123456U);
+	test.Update();
+	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
+
+	write.Set(true);
+	test.Update();
+	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
+
+	data.Write(987654321U);
+	write.Set(false);
+	read.Set(true);
+	test.Update();
+	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
+
+	addr1.Write(2U);
+	write.Set(true);
+	read.Set(false);
+	test.Update();
+	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
+
+	data.Write(-7281);
+	addr2.Write(4U);
+	write.Set(false);
+	read.Set(true);
+	test.Update();
+	success &= TestState(i++, 987654321, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 123456, test.Out2().Read(), verbosity);
 
 	test.Update();
-	success &= TestState(i++, 12345, test.Out().Read(), verbosity);
-
-	sel.Set(true);
 	test.Update();
-	success &= TestState(i++, 9876, test.Out().Read(), verbosity);
+	addr1.Write(7U);
+	write.Set(true);
+	test.Update();
+	write.Set(false);
+	read.Set(true);
+	addr2.Write(7U);
+	addr1.Write(4U);
+	write.Set(false);
+	read.Set(true);
+	test.Update();
+	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
+	success &= TestState(i++, -7281, test.Out2().Read(), verbosity);
+	
 	return success;
-}
-
-bool TestMultiplexer4(const Wire& a, const Wire& b)
-{
-	Multiplexer<4> test;
-	test.Connect({ &Wire::OFF, &Wire::ON, &Wire::ON, &Wire::OFF }, { &a, &b });
-	test.Update();
-	return test.Out().On() == (a.On() ^ b.On());
-}
-
-bool TestMultiplexer8(const Wire& a, const Wire& b, const Wire& c)
-{
-	Multiplexer<8> test;
-	test.Connect({ &Wire::ON, &Wire::OFF, &Wire::ON, &Wire::OFF, &Wire::ON, &Wire::OFF, &Wire::ON, &Wire::OFF }, { &a, &b, &c });
-	test.Update();
-	return test.Out().On() != a.On();
-}
-
-bool TestDecoder4(const Wire& a, const Wire& b)
-{
-	Decoder<4> test;
-	test.Connect({ &a, &b });
-	test.Update();
-	return test.Out().UnsignedRead() == pow2(Bundle<2>({ &a, &b }).UnsignedRead());
-}
-
-bool TestDecoder8(const Bundle<3>& in)
-{
-	Decoder<8> test;
-	test.Connect(in);
-	test.Update();
-	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
-}
-
-bool TestDecoder32(const Bundle<5>& in)
-{
-	Decoder<32> test;
-	test.Connect(in);
-	test.Update();
-	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
 }
 
 bool RunAllTests()
@@ -606,5 +669,6 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
 	RUN_TEST(TestALU, FAIL_ONLY);
+	RUN_TEST(TestRegisterFile, VERBOSE);
 	return success;
 }
