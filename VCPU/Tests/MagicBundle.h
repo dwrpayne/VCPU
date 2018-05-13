@@ -19,6 +19,11 @@ class MagicBundle : public Bundle<N>
 public:
 	MagicBundle() 
 	{
+		Init();
+	}
+
+	void Init()
+	{
 		for (int i = 0; i < N; i++)
 		{
 			wires[i] = &magicwires[i];
@@ -27,6 +32,13 @@ public:
 
 	explicit MagicBundle(int n)
 	{
+		Init();
+		Write(n);
+	}
+
+	explicit MagicBundle(unsigned int n)
+	{
+		Init();
 		Write(n);
 	}
 
@@ -44,6 +56,12 @@ public:
 			n /= 2;
 		}
 		magicwires[N-1].Set(negative);
+	}
+
+	void Write(unsigned int n)
+	{
+		int val = n < pow2(N) / 2 ? n : n - pow2(N);
+		Write(val);
 	}
 
 private:

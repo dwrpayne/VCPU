@@ -12,6 +12,8 @@ template <unsigned int N>
 class Bundle
 {
 public:
+	static const int WIDTH = N;
+
 	Bundle() {}
 	Bundle(std::initializer_list<const Wire*> list)
 	{
@@ -78,8 +80,6 @@ public:
 	}
 
 
-	const int width = N;
-
 	int Read() const
 	{
 		int n = 0;
@@ -95,10 +95,22 @@ public:
 	unsigned int UnsignedRead() const
 	{
 		int val = Read();
-		return val >= 0 ? val : pow2(width) + val;
+		return val >= 0 ? val : pow2(N) + val;
 	}
+
+	template <unsigned int N>
+	friend std::ostream& operator<<(std::ostream& os, const Bundle<N>& b);
 
 protected:
 	std::array<const Wire*, N> wires;
 };
 
+template<unsigned int N>
+std::ostream& operator<<(std::ostream& os, const Bundle<N>& b)
+{
+	for (auto w : b.wires)
+	{
+		os << w;
+	}
+	return os;
+}

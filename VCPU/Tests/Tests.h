@@ -415,6 +415,22 @@ bool TestDecoder4(const Wire& a, const Wire& b)
 	return test.Out().UnsignedRead() == pow2(Bundle<2>({ &a, &b }).UnsignedRead());
 }
 
+bool TestDecoder8(const Bundle<3>& in)
+{
+	Decoder<8> test;
+	test.Connect(in);
+	test.Update();
+	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
+}
+
+bool TestDecoder32(const Bundle<5>& in)
+{
+	Decoder<32> test;
+	test.Connect(in);
+	test.Update();
+	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
+}
+
 bool RunAllTests()
 {
 	bool success = true;
@@ -438,5 +454,7 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
 	return success;
 }
