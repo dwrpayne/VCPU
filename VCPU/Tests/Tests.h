@@ -175,16 +175,16 @@ bool TestSRLatch(Verbosity verbosity)
 
 bool TestJKFlipFlop(Verbosity verbosity)
 {
+	int i = 0;
+	bool success = true;
+
 	JKFlipFlop test;
-	test.Connect(Wire::OFF, Wire::ON);
-	test.Update();
-	test.Update();
+	test.Connect(Wire::OFF, Wire::OFF);
 	const Wire& q = test.Q();
 	const Wire& notq = test.NotQ();
 
-	bool success = true;
-
-	int i = 0;
+	test.Update();
+	test.Update();
 	success &= TestState(i++, q.On(), false, verbosity);
 	success &= TestState(i++, notq.On(), true, verbosity);
 
@@ -669,6 +669,6 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
 	RUN_TEST(TestALU, FAIL_ONLY);
-	RUN_TEST(TestRegisterFile, VERBOSE);
+	RUN_TEST(TestRegisterFile, FAIL_ONLY);
 	return success;
 }
