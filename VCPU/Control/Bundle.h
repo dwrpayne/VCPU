@@ -85,7 +85,7 @@ public:
 	}
 #endif
 
-private:
+protected:
 	std::array<const Wire*, N> wires;
 };
 

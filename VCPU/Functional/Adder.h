@@ -19,7 +19,7 @@ public:
 	const Wire& C() { return adders[N - 1].Cout(); }
 
 private:
-	XorGateN<N> xors;
+	XorGateW<N> xors;
 	FullAdder adders[N];
 	Bundle<N> sum;
 };

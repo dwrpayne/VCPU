@@ -40,10 +40,10 @@ public:
 		assert(n <= pow(2, N));
 		for (int i = 0; i < N - 1; i++)
 		{
-			wires[i].Set(negative ^ (bool)(n % 2));
+			magicwires[i].Set(negative ^ (bool)(n % 2));
 			n /= 2;
 		}
-		wires[N-1].Set(negative);
+		magicwires[N-1].Set(negative);
 	}
 
 private:

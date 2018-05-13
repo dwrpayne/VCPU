@@ -7,17 +7,13 @@
 #include "AndGate.h"
 #include "OrGate.h"
 
-template <unsigned int N>
-extern constexpr int bits = 1 + bits<N / 2>;
-
-template<>
-extern constexpr int bits<2> = 1;
 
 template <unsigned int N>
 class Multiplexer : public Component
 {
 public:
-	void Connect(const Bundle<N>& in, const Bundle<bits<N>>& sel);
+	static const unsigned int BITS = bits<N>;
+	void Connect(const Bundle<N>& in, const Bundle<BITS>& sel);
 	void Update();
 
 	const Wire& Out() { return muxOut.Out(); }
@@ -29,12 +25,12 @@ private:
 };
 
 template <unsigned int N>
-inline void Multiplexer<N>::Connect(const Bundle<N>& in, const Bundle<bits<N>>& sel)
+inline void Multiplexer<N>::Connect(const Bundle<N>& in, const Bundle<BITS>& sel)
 {
-	const Bundle<bits<N> - 1> local_sel = sel.Range<0, bits<N> - 1>();
+	const Bundle<BITS - 1> local_sel = sel.Range<0, BITS - 1>();
 	mux0.Connect(in.Range<0, N / 2>(), local_sel);
 	mux1.Connect(in.Range<N / 2, N>(), local_sel);
-	muxOut.Connect({ &mux0.Out(), &mux1.Out() }, sel.Get(bits<N> - 1));
+	muxOut.Connect({ &mux0.Out(), &mux1.Out() }, sel.Get(BITS - 1));
 }
 
 template <unsigned int N>

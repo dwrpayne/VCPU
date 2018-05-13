@@ -12,7 +12,7 @@ public:
 	{
 		for (int i = 0; i < N; ++i)
 		{
-			out.Connect(i, bits[i].Q());
+			out.Connect(i, BITS[i].Q());
 		}
 	}
 
@@ -21,7 +21,7 @@ public:
 	{
 		for (int i = 0; i < N; ++i)
 		{
-			bits[i].Connect(data[i], load);
+			BITS[i].Connect(data[i], load);
 		}
 	}
 
@@ -29,13 +29,13 @@ public:
 	{
 		for (int i = 0; i < N; ++i)
 		{
-			bits[i].Update();
+			BITS[i].Update();
 		}
 	}
 
 	const Bundle<N>& Out() { return out; }
 
 private:
-	DFlipFlop bits[N];
+	DFlipFlop BITS[N];
 	Bundle<N> out;
 };

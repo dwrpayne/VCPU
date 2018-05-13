@@ -122,6 +122,7 @@
   <ItemGroup>
     <ClCompile Include="Control\Bundle.cpp" />
     <ClCompile Include="Control\Component.cpp" />
+    <ClCompile Include="Control\Decoder.cpp" />
     <ClCompile Include="Control\Multiplexer.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="Functional\Adder.cpp" />
@@ -129,6 +130,7 @@
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
+    <ClCompile Include="Gates\MultiGate.cpp" />
     <ClCompile Include="Gates\NandGate.cpp" />
     <ClCompile Include="Gates\NorGate.cpp" />
     <ClCompile Include="Gates\OrGate.cpp" />
@@ -138,11 +140,12 @@
     <ClCompile Include="Memory\JKFlipFlop.cpp" />
     <ClCompile Include="Memory\Register.cpp" />
     <ClCompile Include="Memory\SRLatch.cpp" />
-    <ClCompile Include="Tests\MagicRegister.cpp" />
+    <ClCompile Include="Tests\MagicBundle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Component.h" />
+    <ClInclude Include="Control\Decoder.h" />
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="Functional\Adder.h" />
@@ -150,6 +153,7 @@
     <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Gates\AndGate.h" />
     <ClInclude Include="Gates\Inverter.h" />
+    <ClInclude Include="Gates\MultiGate.h" />
     <ClInclude Include="Gates\NandGate.h" />
     <ClInclude Include="Gates\NorGate.h" />
     <ClInclude Include="Gates\OrGate.h" />
@@ -158,7 +162,7 @@
     <ClInclude Include="Memory\JKFlipFlop.h" />
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\SRLatch.h" />
-    <ClInclude Include="Tests\MagicRegister.h" />
+    <ClInclude Include="Tests\MagicBundle.h" />
     <ClInclude Include="Tests\TestHelpers.h" />
     <ClInclude Include="Tests\Tests.h" />
   </ItemGroup>

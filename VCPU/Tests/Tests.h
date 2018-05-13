@@ -72,10 +72,10 @@ bool TestXorGateN(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
-	XorGateN<8> test;
+	XorGateW<8> test;
 	MagicBundle<8> a_reg;
 	MagicBundle<8> b_reg;
-	test.Connect(a_reg.Out(), b_reg.Out());
+	test.Connect(a_reg, b_reg);
 	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 11, 116 },{ 4, -121 } }))
 	{
 		a_reg.Write(a);
@@ -330,7 +330,7 @@ bool TestRegister(Verbosity verbosity)
 	Register<8> reg;
 	MagicBundle<8> data;
 	Wire load(true);
-	reg.Connect(data.Out(), load);
+	reg.Connect(data, load);
 	data.Write(0);
 	reg.Update();
 	int prevval = 0;
@@ -364,7 +364,7 @@ bool TestAdder(Verbosity verbosity)
 	MagicBundle<8> a_reg;
 	MagicBundle<8> b_reg;
 	Wire mode(false);
-	adder.Connect(a_reg.Out(), b_reg.Out(), mode);
+	adder.Connect(a_reg, b_reg, mode);
 
 	for (const auto& [a, b] : std::map<int,int>({ { -64, -64 },{ 0, 0 },{ 11, 116 },{ 4, -121 } }))
 	{

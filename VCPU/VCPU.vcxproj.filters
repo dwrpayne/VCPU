@@ -45,9 +45,6 @@
     <ClCompile Include="Memory\SRLatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\MagicRegister.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,6 +70,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Control\Bundle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\MagicBundle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\Decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Gates\MultiGate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -104,9 +110,6 @@
     <ClInclude Include="Memory\SRLatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\MagicRegister.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tests\TestHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -135,6 +138,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Control\Bundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MagicBundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\Decoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Gates\MultiGate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
