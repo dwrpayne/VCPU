@@ -10,7 +10,7 @@ void CPU::Connect()
 	// Dummy wires that aren't hooked up yet
 	const Wire& xxxpcSrc = Wire::OFF;
 	const Bundle<32> xxxregWriteData = aluOut.Out();
-	const Wire& xxxregWrite = Wire::OFF;
+	const Wire& xxxregWrite = ir.Function()[0];
 	const Wire& xxxaluBInputSel = Wire::OFF;
 	const Bundle<4> xxxaluOpcode = ir.Function().Range<0, 4>();
 

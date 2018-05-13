@@ -5,7 +5,9 @@
 
 bool TestCPU()
 {
-	CPU cpu;
+	CPU* pcpu = new CPU();
+	CPU& cpu = *pcpu;
+
 	MagicBundle<32> addr, ins;
 	cpu.ConnectToLoader(addr, ins);
 
