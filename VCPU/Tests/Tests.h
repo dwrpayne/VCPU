@@ -21,6 +21,7 @@
 #include "Multiplexer.h"
 #include "MuxBundle.h"
 #include "Decoder.h"
+#include "ALU.h"
 
 
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -358,16 +359,16 @@ bool TestRegister(Verbosity verbosity)
 	return success;
 }
 
-bool TestAdder(Verbosity verbosity)
+bool TestALU(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
 
-	Adder<8> adder;
+	ALU<8> ald;
 	MagicBundle<8> a_reg;
 	MagicBundle<8> b_reg;
-	MagicBundle<3> sel;
-	adder.Connect(a_reg, b_reg, sel);
+	MagicBundle<4> sel;
+	ald.Connect(a_reg, b_reg, sel);
 
 	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 }, {15, 9}, { 11, 115 },{ 4, -121 } }))
 	{
@@ -380,36 +381,67 @@ bool TestAdder(Verbosity verbosity)
 		}
 
 		sel.Write(0U);
-		adder.Update();
-		success &= TestState(i++, a, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a, ald.Out().Read(), verbosity);
 
 		sel.Write(1U);
-		adder.Update();
-		success &= TestState(i++, a + 1, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a + 1, ald.Out().Read(), verbosity);
 
 		sel.Write(2U);
-		adder.Update();
-		success &= TestState(i++, a + b, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a + b, ald.Out().Read(), verbosity);
 
 		sel.Write(3U);
-		adder.Update();
-		success &= TestState(i++, a + b + 1, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a + b + 1, ald.Out().Read(), verbosity);
 
 		sel.Write(4U);
-		adder.Update();
-		success &= TestState(i++, a - b - 1, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a - b - 1, ald.Out().Read(), verbosity);
 
 		sel.Write(5U);
-		adder.Update();
-		success &= TestState(i++, a - b, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a - b, ald.Out().Read(), verbosity);
 
 		sel.Write(6U);
-		adder.Update();
-		success &= TestState(i++, a - 1, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a - 1, ald.Out().Read(), verbosity);
 
 		sel.Write(7U);
-		adder.Update();
-		success &= TestState(i++, a, adder.S().Read(), verbosity);
+		ald.Update();
+		success &= TestState(i++, a, ald.Out().Read(), verbosity);
+
+		sel.Write(8U);
+		ald.Update();
+		success &= TestState(i++, a & b, ald.Out().Read(), verbosity);
+
+		sel.Write(9U);
+		ald.Update();
+		success &= TestState(i++, a | b, ald.Out().Read(), verbosity);
+
+		sel.Write(10U);
+		ald.Update();
+		success &= TestState(i++, a ^ b, ald.Out().Read(), verbosity);
+
+		sel.Write(11U);
+		ald.Update();
+		success &= TestState(i++, ~a, ald.Out().Read(), verbosity);
+
+		if (a > 0)
+		{
+			sel.Write(12U);
+			ald.Update();
+			success &= TestState(i++, a >> 1, ald.Out().Read(), verbosity);
+
+			sel.Write(13U);
+			ald.Update();
+			success &= TestState(i++, a << 1, ald.Out().Read(), verbosity);
+		}
+		else
+		{
+			i += 2;
+		}
 	}
 	return success;
 }
@@ -429,7 +461,7 @@ bool TestMuxBundle(Verbosity verbosity)
 
 	MuxBundle<32, 2> test;
 	Wire sel;
-	test.Connect({ MagicBundle<32>(12345), MagicBundle<32>(9876) }, { &sel });
+	test.Connect({ MagicBundle<32>(12345), MagicBundle<32>(9876) }, sel);
 
 	test.Update();
 	success &= TestState(i++, 12345, test.Out().Read(), verbosity);
@@ -498,7 +530,6 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
-	RUN_TEST(TestAdder, FAIL_ONLY);
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
@@ -506,5 +537,6 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
+	RUN_TEST(TestALU, FAIL_ONLY);
 	return success;
 }

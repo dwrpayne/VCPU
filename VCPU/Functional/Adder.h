@@ -31,8 +31,8 @@ public:
 	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<3>& sel);
 	void Update();
 
-	const Bundle<N>& S() { return sum; }
-	const Wire& C() { return adders[N - 1].Cout(); }
+	const Bundle<N>& Out() { return sum; }
+	const Wire& Cout() { return adders[N - 1].Cout(); }
 
 private:
 	InverterN<N> bInv;

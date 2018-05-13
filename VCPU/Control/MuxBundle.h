@@ -11,6 +11,13 @@ public:
 	static const unsigned int BITS = bits(N);
 	MuxBundle();
 	void Connect(const std::array<Bundle<WIDTH>, N> in, const Bundle<BITS>& sel);
+
+	template <typename = typename std::enable_if<BITS==1, const>::type>
+	void Connect(const std::array<Bundle<WIDTH>, N> in, const Wire& sel)
+	{
+		Connect(in, Bundle<BITS>(sel));
+	}
+
 	void Update();
 
 	const Bundle<WIDTH>& Out() { return out; }
