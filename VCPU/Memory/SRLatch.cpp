@@ -8,7 +8,7 @@ void SRLatch::Connect(const Wire& s, const Wire& r)
 
 void SRLatch::Update()
 {
-	norr.Update();
 	nors.Update();
 	norr.Update();
+	nors.Update();
 }
