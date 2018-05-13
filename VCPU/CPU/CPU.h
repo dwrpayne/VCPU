@@ -16,6 +16,8 @@ public:
 	void Update();
 
 	typedef Memory<32, 128> InsMemory;
+	typedef Memory<32, 1024> MainMemory; // Todo: cache levels
+	typedef RegisterFile<32, 32> RegFile;
 
 	void ConnectToLoader(Bundle<32>& addr, Bundle<32> ins);
 	void LoadInstruction();
@@ -28,9 +30,13 @@ private:
 
 	InsMemory instructionMem;
 	InsRegister ir;
-	RegisterFile<32, 32> regFile;
+	MuxBundle<RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
+	RegFile regFile;
 
 	MuxBundle<32, 2> aluBInputMux;
 	ALU<32> alu;
 	Register<32> aluOut;
+
+	MainMemory mainMem;
+	MuxBundle<32, 2> regWriteDataMux;
 };

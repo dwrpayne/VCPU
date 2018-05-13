@@ -9,10 +9,11 @@ void CPU::Connect()
 
 	// Dummy wires that aren't hooked up yet
 	const Wire& xxxpcSrc = Wire::OFF;
-	const Bundle<32> xxxregWriteData = aluOut.Out();
 	const Wire& xxxregWrite = ir.Function()[0];
+	const Wire& xxxregWriteSrc = Wire::OFF;
 	const Wire& xxxaluBInputSel = Wire::OFF;
-	const Bundle<4> xxxaluOpcode = ir.Function().Range<0, 4>();
+	const Wire& xxxregFileWriteAddrMuxSel = Wire::ON;
+	const Wire& xxxmainMemWrite = Wire::OFF;
 
 	// Program Counter
 	pc.Connect(pcInMux.Out(), Wire::ON);
@@ -35,12 +36,17 @@ void CPU::Connect()
 	ir.Connect(instructionMem.Out(), Wire::ON);
 
 	// Register File
-	regFile.Connect(ir.RsAddr(), ir.RtAddr(), ir.RdAddr(), xxxregWriteData, xxxregWrite);
+	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, xxxregFileWriteAddrMuxSel);
+	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, xxxregWriteSrc);
+	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), xxxregWrite);
 
 	// ALU
 	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, xxxaluBInputSel);
-	alu.Connect(regFile.Out1(), aluBInputMux.Out(), xxxaluOpcode);
+	alu.Connect(regFile.Out1(), aluBInputMux.Out(), signExtImm.Range<0, 4>());
 	aluOut.Connect(alu.Out(), Wire::ON);
+
+	// Main Memory
+	mainMem.Connect(aluOut.Out().Range<2, MainMemory::ADDR_BITS + 2>(), regFile.Out2(), xxxmainMemWrite);
 }
 
 void CPU::Update()
@@ -54,6 +60,8 @@ void CPU::Update()
 	aluBInputMux.Update();
 	alu.Update();
 	aluOut.Update();
+	mainMem.Update();
+	regWriteDataMux.Update();
 }
 
 void CPU::ConnectToLoader(Bundle<32>& addr, Bundle<32> ins)
