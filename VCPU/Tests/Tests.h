@@ -16,6 +16,7 @@
 #include "DFlipFlop.h"
 #include "Bundle.h"
 #include "Register.h"
+#include "Counter.h"
 #include "FullAdder.h"
 #include "Adder.h"
 #include "Multiplexer.h"
@@ -368,6 +369,20 @@ bool TestRegister(Verbosity verbosity)
 	return success;
 }
 
+bool TestCounter(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+	const int bits = 5;
+	Counter<bits> test;
+	for (unsigned int cycle = 0; cycle < 50; ++cycle)
+	{
+		test.Update();
+		success &= TestState(i++, cycle%pow2(bits), test.Out().UnsignedRead(), verbosity);
+	}
+
+	return success;
+}
 bool TestMultiplexer2(const Wire& a)
 {
 	Multiplexer<2> test;
@@ -660,6 +675,7 @@ bool RunAllTests()
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
+	RUN_TEST(TestCounter, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
