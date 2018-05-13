@@ -26,7 +26,7 @@ private:
 #ifdef DEBUG
 	std::array<Bundle<N>, Ninput> in_bundles;
 #endif
-	Multiplexer<Ninput> muxes[N];
+	std::array<Multiplexer<Ninput>, N> muxes;
 	Bundle<N> out;
 };
 
