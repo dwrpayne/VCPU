@@ -718,7 +718,7 @@ bool TestRegisterFile(Verbosity verbosity)
 
 	write.Set(true);
 	test.Update();
-	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
 	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
 
 	data.Write(987654321U);
@@ -729,8 +729,8 @@ bool TestRegisterFile(Verbosity verbosity)
 	addrw.Write(2U);
 	write.Set(true);
 	test.Update();
-	success &= TestState(i++, 0, test.Out1().Read(), verbosity);
-	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
+	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 987654321, test.Out2().Read(), verbosity);
 
 	data.Write(-7281);
 	write.Set(false);

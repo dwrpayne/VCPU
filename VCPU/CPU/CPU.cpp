@@ -9,7 +9,7 @@ void CPU::Connect()
 
 	// Dummy wires that aren't hooked up yet
 	const Wire& xxxpcSrc = Wire::OFF;
-	const Wire& xxxregWrite = ir.Function()[0];
+	const Wire& xxxregWrite = Wire::ON;
 	const Wire& xxxregWriteSrc = Wire::OFF;
 	const Wire& xxxaluBInputSel = Wire::OFF;
 	const Wire& xxxregFileWriteAddrMuxSel = Wire::ON;
@@ -25,14 +25,14 @@ void CPU::Connect()
 
 	// PC Jump address calculation
 	Bundle<32> addrOffset(Wire::OFF);
-	addrOffset.Connect(2, signExtImm.Range<0, 30>());
+	addrOffset.Connect(0, signExtImm);
 	pcJumpAdder.Connect(pcIncrementer.Out(), addrOffset, Wire::OFF);
 
 	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, xxxpcSrc);
 
 	// Instruction memory
 	// Drop the low 2 bits of the PC, grab the next chunk.
-	instructionMem.Connect(pc.Out().Range<2, InsMemory::ADDR_BITS+2>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
+	instructionMem.Connect(pc.Out().Range<0,InsMemory::ADDR_BITS>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
 	ir.Connect(instructionMem.Out(), Wire::ON);
 
 	// Register File
@@ -46,7 +46,7 @@ void CPU::Connect()
 	aluOut.Connect(alu.Out(), Wire::ON);
 
 	// Main Memory
-	mainMem.Connect(aluOut.Out().Range<2, MainMemory::ADDR_BITS + 2>(), regFile.Out2(), xxxmainMemWrite);
+	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), xxxmainMemWrite);
 }
 
 void CPU::Update()
@@ -61,12 +61,13 @@ void CPU::Update()
 	alu.Update();
 	aluOut.Update();
 	mainMem.Update();
+	regFileWriteAddrMux.Update();
 	regWriteDataMux.Update();
 }
 
 void CPU::ConnectToLoader(Bundle<32>& addr, Bundle<32> ins)
 {
-	instructionMem.Connect(addr.Range<2, InsMemory::ADDR_BITS + 2>(), ins, Wire::ON);
+	instructionMem.Connect(addr.Range<0, InsMemory::ADDR_BITS>(), ins, Wire::ON);
 }
 
 void CPU::LoadInstruction()

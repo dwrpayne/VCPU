@@ -7,12 +7,16 @@
 #include "MultiGate.h"
 #include "MuxBundle.h"
 
+// Memory is stored in words (32 bit registers)
+// But addressed by byte, so addresses take 2 bits more than the # of 32-bit registers
 
 template <unsigned int N, unsigned int NReg>
 class Memory : public Component
 {
 public:
-	static const unsigned int ADDR_BITS = bits(NReg);
+	static const unsigned int WORD_LEN = N / 8;
+	static const unsigned int BYTES = N * NReg * WORD_LEN;
+	static const unsigned int ADDR_BITS = bits(NReg) + bits(WORD_LEN);
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
 
@@ -31,7 +35,10 @@ private:
 template<unsigned int N, unsigned int NReg>
 inline void Memory<N, NReg>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write)
 {
-	addrDecoder.Connect(addr);
+	auto byteAddr = addr.Range<0, bits(WORD_LEN)>();
+	auto wordAddr = addr.Range<bits(WORD_LEN), ADDR_BITS>();
+
+	addrDecoder.Connect(wordAddr);
 	writeEnable.Connect(addrDecoder.Out(), Bundle<NReg>(write));
 
 	std::array<DataBundle, NReg> regOuts;
@@ -40,7 +47,7 @@ inline void Memory<N, NReg>::Connect(const AddrBundle & addr, const DataBundle &
 		registers[i].Connect(data, writeEnable.Out()[i]);
 		regOuts[i] = registers[i].Out();
 	}
-	outMux.Connect(regOuts, addr);
+	outMux.Connect(regOuts, wordAddr);
 }
 
 template<unsigned int N, unsigned int NReg>
