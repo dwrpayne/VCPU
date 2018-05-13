@@ -15,7 +15,7 @@ public:
 	const Bundle<N>& Out() { return out; }
 
 private:
-	DFlipFlop BITS[N];
+	std::array<DFlipFlop, N> bits;
 	Bundle<N> out;
 };
 
@@ -24,7 +24,7 @@ inline Register<N>::Register()
 {
 	for (int i = 0; i < N; ++i)
 	{
-		out.Connect(i, BITS[i].Q());
+		out.Connect(i, bits[i].Q());
 	}
 }
 
@@ -33,7 +33,7 @@ inline void Register<N>::Update()
 {
 	for (int i = 0; i < N; ++i)
 	{
-		BITS[i].Update();
+		bits[i].Update();
 	}
 }
 
@@ -42,6 +42,6 @@ inline void Register<N>::Connect(const Bundle<N>& data, const Wire & load)
 {
 	for (int i = 0; i < N; ++i)
 	{
-		BITS[i].Connect(data[i], load);
+		bits[i].Connect(data[i], load);
 	}
 }
