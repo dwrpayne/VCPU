@@ -14,3 +14,4 @@ void JKFlipFlop::Update()
 	andk.Update();
 	latch.Update();
 }
+

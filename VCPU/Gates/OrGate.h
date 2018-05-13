@@ -1,5 +1,5 @@
 #pragma once
-
+#include <array>
 #include "Wire.h"
 #include "Component.h"
 #include "Bundle.h"
