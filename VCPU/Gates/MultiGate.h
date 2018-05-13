@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Wire.h"
-#include "NandGate.h"
+#include "Bundle.h"
 #include "Component.h"
 
 template <typename Gate, unsigned int N>

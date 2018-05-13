@@ -20,6 +20,3 @@ private:
 	AndGate and;
 };
 
-#include "MultiGate.h"
-template <unsigned int N>
-using XorGateW = MultiGate<XorGate, N>;

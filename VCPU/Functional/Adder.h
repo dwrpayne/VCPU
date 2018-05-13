@@ -5,6 +5,8 @@
 #include "Bundle.h"
 #include "Inverter.h"
 #include "FullAdder.h"
+#include "MultiGate.h"
+#include "XorGate.h"
 
 
 template <unsigned int N>
@@ -19,7 +21,7 @@ public:
 	const Wire& C() { return adders[N - 1].Cout(); }
 
 private:
-	XorGateW<N> xors;
+	MultiGate<XorGate, N> xors;
 	FullAdder adders[N];
 	Bundle<N> sum;
 };

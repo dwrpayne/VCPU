@@ -34,10 +34,6 @@ private:
 	std::array<AndGate, N-1> ands;
 };
 
-
-//////////////////
-// AndGate N-way
-//////////////////
 template<unsigned int N>
 inline void AndGateN<N>::Connect(const Bundle<N>& wires)
 {

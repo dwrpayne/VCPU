@@ -8,6 +8,7 @@
 #include "OrGate.h"
 #include "NandGate.h"
 #include "NorGate.h"
+#include "MultiGate.h"
 #include "XorGate.h"
 #include "Inverter.h"
 #include "SRLatch.h"
@@ -72,7 +73,7 @@ bool TestXorGateN(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
-	XorGateW<8> test;
+	MultiGate<XorGate,8> test;
 	MagicBundle<8> a_reg;
 	MagicBundle<8> b_reg;
 	test.Connect(a_reg, b_reg);
