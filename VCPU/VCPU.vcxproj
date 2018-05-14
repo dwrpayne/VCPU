@@ -124,6 +124,7 @@
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
+    <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\InsRegister.h" />
+    <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\CPU.h" />
