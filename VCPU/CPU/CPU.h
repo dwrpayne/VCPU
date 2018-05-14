@@ -7,6 +7,7 @@
 #include "ALU.h"
 #include "MuxBundle.h"
 
+#include "OpcodeDecoder.h"
 #include "InsRegister.h"
 
 class CPU : public Component
@@ -29,6 +30,8 @@ private:
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
 	FullAdderN<32> pcJumpAdder;
+
+	OpcodeDecoder control;
 
 	InsMemory instructionMem;
 	InsRegister ir;

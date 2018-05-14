@@ -8,14 +8,6 @@ void CPU::Connect()
 	Bundle<32> signExtImm(ir.Immediate()[15]);
 	signExtImm.Connect(0, ir.Immediate());
 
-	// Dummy wires that aren't hooked up yet
-	const Wire& xxxpcSrc = Wire::OFF;
-	const Wire& xxxregWrite = Wire::ON;
-	const Wire& xxxregWriteSrc = Wire::OFF;
-	const Wire& xxxaluBInputSel = Wire::OFF;
-	const Wire& xxxregFileWriteAddrMuxSel = Wire::ON;
-	const Wire& xxxmainMemWrite = Wire::OFF;
-
 	// Program Counter
 	pc.Connect(pcInMux.Out(), Wire::ON);
 
@@ -29,25 +21,27 @@ void CPU::Connect()
 	addrOffset.Connect(0, signExtImm);
 	pcJumpAdder.Connect(pcIncrementer.Out(), addrOffset, Wire::OFF);
 
-	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, xxxpcSrc);
+	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, control.Branch());
 
 	// Instruction memory
 	// Drop the low 2 bits of the PC, grab the next chunk.
 	instructionMem.Connect(pc.Out().Range<0,InsMemory::ADDR_BITS>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
 	ir.Connect(instructionMem.Out(), Wire::ON);
+	
+	control.Connect(ir.Opcode());
 
 	// Register File
-	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, xxxregFileWriteAddrMuxSel);
-	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, xxxregWriteSrc);
-	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), xxxregWrite);
+	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, control.RegTorD());
+	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, control.MemToReg());
+	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), control.RegWrite());
 
 	// ALU
-	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, xxxaluBInputSel);
+	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, control.AluBSrc());
 	alu.Connect(regFile.Out1(), aluBInputMux.Out(), signExtImm.Range<0, 4>());
 	aluOut.Connect(alu.Out(), Wire::ON);
 
 	// Main Memory
-	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), xxxmainMemWrite);
+	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), control.MemWrite());
 }
 
 void CPU::Update()
@@ -57,6 +51,7 @@ void CPU::Update()
 	pcIncrementer.Update();
 	instructionMem.Update();
 	ir.Update();
+	control.Update();
 	regFile.Update();
 	aluBInputMux.Update();
 	alu.Update();
