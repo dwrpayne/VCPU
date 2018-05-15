@@ -71,7 +71,7 @@ void CPU::Connect()
 	regWriteDataMux.Connect({ bufMEMWB.aluOut.Out(), bufMEMWB.memOut.Out() }, bufMEMWB.OpcodeControl().LoadOp());
 }
 
-void CPU::Update()
+void CPU::Update1()
 {
 	// ******** STAGE 1 INSTRUCTION FETCH ************
 	pcInMux.Update();
@@ -79,12 +79,18 @@ void CPU::Update()
 	pcIncrementer.Update();
 	instructionMem.Update();
 	bufIFID.Update();
+}
 
+void CPU::Update2()
+{
 	// ******** STAGE 2 INSTRUCTION DECODE ************
 	opcodeControl.Update();
 	regFile.Update();
 	bufIDEX.Update();
+}
 
+void CPU::Update3()
+{
 	// ******** STAGE 3 EXECUTION ************
 	aluControl.Update();
 	regFileWriteAddrMux.Update();
@@ -92,14 +98,29 @@ void CPU::Update()
 	alu.Update();
 	pcJumpAdder.Update();
 	bufEXMEM.Update();
+}
 
+void CPU::Update4()
+{
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
-	mainMem.Update(); 
+	mainMem.Update();
 	bufMEMWB.Update();
+}
 
+void CPU::Update5()
+{
 	// ******** STAGE 5 BEGIN - WRITEBACK ************
 	regWriteDataMux.Update();
 	cycles++;
+}
+
+void CPU::Update()
+{
+	Update1();
+	Update2();
+	Update3();
+	Update4();
+	Update5();
 }
 
 void CPU::ConnectToLoader(Bundle<32>& addr, Bundle<32> ins)
