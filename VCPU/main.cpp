@@ -7,6 +7,6 @@ int main(int argc, char** argv)
 #ifdef DEBUG
 	success &= RunAllTests();
 #endif
-	TestCPU();
+	success &= RunCPUTests();
 	std::cout << (success ? "All tests passed!" : "Some tests failed!") << std::endl;
 }

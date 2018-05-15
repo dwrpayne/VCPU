@@ -6,6 +6,7 @@
 #include "OrGate.h"
 #include "Inverter.h"
 #include "MuxBundle.h"
+#include "NorGate.h"
 
 /*******************************
       Opcodes we care about
@@ -19,6 +20,8 @@
 	0	100111	1011	A NOR B
 
 	// Immediate instructions
+	00100x		0110	A + B
+	00101x		0101	A - B
 	001100		1000	A AND B
 	001101		1001	A OR B
 	001110		1010	A XOR B
@@ -47,17 +50,21 @@ public:
 	void Connect(const Wire& loadstore, const Wire& branch, const Wire& immediate, const Wire& rformat, const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	const Bundle<4>& AluControl() { return out; }
+	const Bundle<4>& AluControl() { return control.Out(); }
 
 private:
-	OrGate logicOp;
-	MuxBundle<2, 2> logicMux;
-	Inverter mathOp;
+	NorGateN<6> zeroOpcode;
+	MuxBundle<3, 2> funcOpMux;
 	Inverter func1Inv;
-	OrGate addOp;
-	OrGate subOp;
-	MuxBundle<2, 2> control;
-	Bundle<4> out;
+	Inverter func2Inv;
+	Inverter branchInv;
+	Inverter loadstoreInv;
+	OrGateN<3> mathOp;
+	OrGate addOr;
+	OrGate subOr;
+	AndGate addOp;
+	AndGate subOp;
+	MuxBundle<4, 2> control;
 };
 
 

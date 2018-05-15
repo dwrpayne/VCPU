@@ -11,7 +11,7 @@
 #include "NorGate.h"
 #include "XorGate.h"
 
-enum ALU_OPCODE : unsigned int
+enum ALU_OPCODE : uint8_t
 {
 	A,
 	A_PLUS_ONE,
@@ -24,7 +24,7 @@ enum ALU_OPCODE : unsigned int
 	A_AND_B,
 	A_OR_B,
 	A_XOR_B,
-	NOT_A,
+	A_NOR_B,
 	A_SHR,
 	A_SHL,
 	UNUSED,

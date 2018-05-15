@@ -2,18 +2,38 @@
 
 void ALUControl::Connect(const Wire & loadstore, const Wire & branch, const Wire& immediate, const Wire & rformat, const Bundle<6>& opcode, const Bundle<6>& func)
 {
-	func1Inv.Connect(func[1]);
-	logicOp.Connect(func[2], immediate);
-	logicMux.Connect({ func.Range<0,2>(), opcode.Range<0,2>() }, immediate);
+	zeroOpcode.Connect(opcode);
+	funcOpMux.Connect({ opcode.Range<0,3>(), func.Range<0,3>() }, zeroOpcode.Out());
 
-	addOp.Connect(loadstore, func1Inv.Out());
-	subOp.Connect(func[1], branch);
+	branchInv.Connect(branch);
+	loadstoreInv.Connect(loadstore);
+		
+	func1Inv.Connect(funcOpMux.Out()[1]);
+	func2Inv.Connect(funcOpMux.Out()[2]);
+	mathOp.Connect({ &func2Inv.Out(), &branch, &loadstore });
+	addOr.Connect(loadstore, func1Inv.Out());
+	subOr.Connect(funcOpMux.Out()[1], branch);
+	addOp.Connect(addOr.Out(), branchInv.Out());
+	subOp.Connect(subOr.Out(), loadstoreInv.Out());
+
+	Bundle<4> mathControl({ &subOp.Out(), &addOp.Out(), &Wire::ON, &Wire::OFF });
+	Bundle<4> logicControl({ &funcOpMux.Out()[0], &funcOpMux.Out()[1], &Wire::OFF, &Wire::ON});
 	
-	control.Connect({ Bundle<2>({ &subOp.Out(), &addOp.Out() }), logicMux.Out() }, logicOp.Out());
-
-	out = { &control.Out()[0], &control.Out()[1], &mathOp.Out(), &logicOp.Out() };
+	control.Connect({logicControl, mathControl}, mathOp.Out());
 }
 
 void ALUControl::Update()
 {
+	zeroOpcode.Update();
+	funcOpMux.Update();
+	branchInv.Update();
+	loadstoreInv.Update();
+	func1Inv.Update();
+	func2Inv.Update();
+	mathOp.Update();
+	addOr.Update();
+	subOr.Update();
+	addOp.Update();
+	subOp.Update();
+	control.Update();
 }

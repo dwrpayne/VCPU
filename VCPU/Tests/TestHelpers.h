@@ -11,16 +11,10 @@ enum Verbosity
 	VERBOSE
 };
 
-#ifdef DEBUG
-#define CHOOSE_WIRE(b) (b ? Wire::ON : Wire::OFF)
-#endif
-
 #define RUN_AUTO_TEST(runner, unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= runner(unit_test, v);
 #define RUN_TEST(unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= unit_test(v);
 
-void print() {
-	std::cout << std::endl;
-}
+void print();
 
 template<class T, class... Args>
 void print(T t1, Args... args) {
@@ -40,37 +34,9 @@ bool Test(Verbosity verbosity, FuncType && func, Args && ...args)
 	return pass;
 }
 
-bool TestOneWireComponent(bool(*test_func)(const Wire&), Verbosity verbosity)
-{
-	bool success = true;
-	success &= Test(verbosity, test_func, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::ON);
-	return success;
-}
-
-bool TestTwoWireComponent(bool(*test_func)(const Wire&, const Wire&), Verbosity verbosity)
-{
-	bool success = true;
-	success &= Test(verbosity, test_func, Wire::OFF, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::ON, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::OFF, Wire::ON);
-	success &= Test(verbosity, test_func, Wire::ON, Wire::ON);
-	return success;
-}
-
-bool TestThreeWireComponent(bool(*test_func)(const Wire&, const Wire&, const Wire&), Verbosity verbosity)
-{
-	bool success = true;
-	success &= Test(verbosity, test_func, Wire::OFF, Wire::OFF, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::ON, Wire::OFF, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::OFF, Wire::ON, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::ON, Wire::ON, Wire::OFF);
-	success &= Test(verbosity, test_func, Wire::OFF, Wire::OFF, Wire::ON);
-	success &= Test(verbosity, test_func, Wire::ON, Wire::OFF, Wire::ON);
-	success &= Test(verbosity, test_func, Wire::OFF, Wire::ON, Wire::ON);
-	success &= Test(verbosity, test_func, Wire::ON, Wire::ON, Wire::ON);
-	return success;
-}
+bool TestOneWireComponent(bool(*test_func)(const Wire&), Verbosity verbosity);
+bool TestTwoWireComponent(bool(*test_func)(const Wire&, const Wire&), Verbosity verbosity);
+bool TestThreeWireComponent(bool(*test_func)(const Wire&, const Wire&, const Wire&), Verbosity verbosity);
 
 template <typename BundleType>
 bool TestBundleComponent(bool(*test_func)(const BundleType&), Verbosity verbosity)

@@ -47,6 +47,7 @@ public:
 	const Wire& LoadOp() { return loadOp.Out(); }
 	const Wire& StoreOp() { return storeOp.Out(); }
 	const Wire& RFormat() { return rFormat.Out(); }
+	const Wire& IFormat() { return immOp.Out(); }
 	const Wire& AluBFromImm() { return aluBImm.Out(); }
 	const Wire& RegWrite() { return regWrite.Out(); }
 
@@ -59,7 +60,7 @@ private:
 	AndGateN<4> branchOp;
 	AndGateN<3> immOp;
 	OrGateN<3> aluBImm;
-	OrGate regWrite;
+	OrGateN<3> regWrite;
 };
 
 

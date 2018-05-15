@@ -616,9 +616,9 @@ bool TestALU(Verbosity verbosity)
 		alu.Update();
 		success &= TestState(i++, a ^ b, alu.Out().Read(), verbosity);
 
-		sel.Write(ALU_OPCODE::NOT_A);
+		sel.Write(ALU_OPCODE::A_NOR_B);
 		alu.Update();
-		success &= TestState(i++, ~a, alu.Out().Read(), verbosity);
+		success &= TestState(i++, (~a | b), alu.Out().Read(), verbosity);
 
 		if (a > 0)
 		{
