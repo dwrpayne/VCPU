@@ -50,7 +50,7 @@ enum ALU_OPCODE : unsigned int
 	   1  0  0  0	A AND B
 	   1  0  0  1	A OR B
 	   1  0  1  0	A XOR B
-	   1  0  1  1	NOT A
+	   1  0  1  1	A NOR B
 
 	   (C3==1, C2==1: shifts)
 	   1  1  0  0	SHR A
@@ -95,7 +95,7 @@ inline void ALU<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle
 	ands.Connect(a, b);
 	ors.Connect(a, b);
 	xors.Connect(a, b);
-	invs.Connect(a);
+	invs.Connect(ors.Out());
 
 	// Shift
 	Bundle<N> shiftL, shiftR;

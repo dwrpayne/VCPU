@@ -123,6 +123,7 @@
   <ItemGroup>
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
+    <ClCompile Include="CPU\ALUControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\ALUControl.h" />
     <ClInclude Include="CPU\InsRegister.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="Functional\Adder.h" />

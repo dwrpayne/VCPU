@@ -24,24 +24,24 @@ void CPU::Connect()
 	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, control.Branch());
 
 	// Instruction memory
-	// Drop the low 2 bits of the PC, grab the next chunk.
 	instructionMem.Connect(pc.Out().Range<0,InsMemory::ADDR_BITS>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
 	ir.Connect(instructionMem.Out(), Wire::ON);
 	
+	// Opcode Decoding
 	control.Connect(ir.Opcode());
 
 	// Register File
-	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, control.RegTorD());
-	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, control.MemToReg());
+	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, control.RFormat());
+	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, control.LoadOp());
 	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), control.RegWrite());
 
 	// ALU
-	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, control.AluBSrc());
+	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, control.AluBFromImm());
 	alu.Connect(regFile.Out1(), aluBInputMux.Out(), signExtImm.Range<0, 4>());
 	aluOut.Connect(alu.Out(), Wire::ON);
 
 	// Main Memory
-	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), control.MemWrite());
+	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), control.StoreOp());
 }
 
 void CPU::Update()

@@ -5,25 +5,111 @@
 #include "NandGate.h"
 #include "Bundle.h"
 
+
+/*******************************
+	VCPU implemented opcode table
+	DEC 543210	Func	mn		Name
+	-----------------
+	0	000000	100000	ADD		Add
+	0	000000	100010	SUB		Subtract
+	0	000000	100100	AND		And
+	0	000000	100101	OR		Or
+	0	000000	100110	XOR		Exclusive Or
+	0	000000	100111	NOR		Nor
+
+	2	000010			J		Jump
+	3	000011			JAL		Jump and Link
+	4	000100			BEQ		Branch on Equal
+	5	000101			BNE		Branch on Not Equal
+	6	000110			BLEZ	Branch on Less Than or Equal to Zero
+	7	000111			BGTZ	Branch on Greater Than Zero
+
+	8	001000			ADDI	Add Immediate
+
+	12	001100			ANDI	And Immediate
+	13	001101			ORI		Or Immediate
+	14	001110			XORI	Exclusive Or Immediate
+	15	001111			LUI		Load Upper Immediate
+
+	32-39  100xxx			LW		Load Word 
+	40-47	101xxx			SW		Store Word
+	
+*******************************/
+
 class OpcodeDecoder : public Component
 {
 public:
 	void Connect(const Bundle<6>& opcode);
 	void Update();
 
-	const Wire& Branch() { return beq.Out(); }
-	const Wire& MemToReg() { return lw.Out(); }
-	const Wire& RegTorD() { return rFormat.Out(); }
-	const Wire& MemWrite() { return sw.Out(); }
-	const Wire& AluBSrc() { return aluSrc.Out(); }
+	const Wire& Branch() { return branchOp.Out(); }
+	const Wire& LoadStore() { return loadstore.Out(); }
+	const Wire& LoadOp() { return loadOp.Out(); }
+	const Wire& StoreOp() { return storeOp.Out(); }
+	const Wire& RFormat() { return rFormat.Out(); }
+	const Wire& AluBFromImm() { return aluBImm.Out(); }
 	const Wire& RegWrite() { return regWrite.Out(); }
 
 private:
 	InverterN<6> inv;
 	AndGateN<6> rFormat;
-	AndGateN<6> lw;
-	AndGateN<6> sw;
-	AndGateN<6> beq;
-	OrGate aluSrc;
+	AndGate loadstore;
+	AndGate loadOp;
+	AndGate storeOp;
+	AndGateN<4> branchOp;
+	AndGateN<3> immOp;
+	OrGateN<3> aluBImm;
 	OrGate regWrite;
 };
+
+
+
+/*******************************
+		VCPU opcode table
+	DEC 543210	Func	mn		Name
+	-----------------
+	0	000000	001000	JR		Jump Register
+	0	000000	001001	JALR	Jump and Link Register
+
+	0	000000	100000	ADD		Add
+	0	000000	100001	ADDU	Add Unsigned
+	0	000000	100010	SUB		Subtract
+	0	000000	100011	SUBU	Subtract Unsigned
+	0	000000	100100	AND		And
+	0	000000	100101	OR		Or
+	0	000000	100110	XOR		Exclusive Or
+	0	000000	100111	NOR		Nor
+	0	000000	101010	SLT		Set on Less Than
+	0	000000	101011	SLTU	Set on Less Than Unsigned
+
+	2	000010			J		Jump
+	3	000011			JAL		Jump and Link
+	4	000100			BEQ		Branch on Equal
+	5	000101			BNE		Branch on Not Equal
+	6	000110			BLEZ	Branch on Less Than or Equal to Zero
+	7	000111			BGTZ	Branch on Greater Than Zero
+
+	8	001000			ADDI	Add Immediate
+	9	001001			ADDIU	Add Immediate Unsigned
+	10	001010			SLTI	Set on Less Than Immediate
+	11	001011			SLTIU	Set on Less Than Immediate Unsigned
+	12	001100			ANDI	And Immediate
+	13	001101			ORI		Or Immediate
+	14	001110			XORI	Exclusive Or Immediate
+	15	001111			LUI		Load Upper Immediate
+	32	100000			LB		Load Byte
+	33	100001			LH		Load Halfword
+	34  100010			LWL		Load Word Left
+	35  100011			LW		Load Word 
+	36  100100			LBU		Load Byte Unsigned
+	37  100101			LHU		Load Halfword Unsigned
+	38  100110			LWR		Load Word Right
+	40	101000			SB		Store Byte
+	41	101001			SH		Store Halfword
+	42	101010			SWL		Store Word Left
+	43	101011			SW		Store Word
+	46	101110			SWR		Store Word Right
+
+C[2:0] are passed through to the Adder as those are its opcodes
+
+*******************************/

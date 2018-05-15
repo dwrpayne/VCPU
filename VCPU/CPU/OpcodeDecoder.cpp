@@ -4,20 +4,23 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode)
 {
 	inv.Connect(opcode);
 	rFormat.Connect(inv.Out());
-	lw.Connect({ &opcode[0], &opcode[1], &inv.Out()[2], &inv.Out()[3], &inv.Out()[4], &opcode[5] });
-	sw.Connect({ &opcode[0], &opcode[1], &inv.Out()[2], &opcode[3], &inv.Out()[4], &opcode[5] });
-	beq.Connect({ &inv.Out()[0], &inv.Out()[1], &opcode[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
-	aluSrc.Connect(lw.Out(), sw.Out());
-	regWrite.Connect(rFormat.Out(), lw.Out());
+	loadstore.Connect(inv.Out()[4], opcode[5]);
+	loadOp.Connect(inv.Out()[3], loadstore.Out());
+	storeOp.Connect(opcode[3], loadstore.Out());
+	branchOp.Connect({ &opcode[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
+	immOp.Connect({ &opcode[3], &inv.Out()[4], &inv.Out()[5] });
+	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });
+	regWrite.Connect(rFormat.Out(), loadOp.Out());
 }
 
 void OpcodeDecoder::Update()
 {
 	inv.Update();
 	rFormat.Update();
-	lw.Update();
-	sw.Update();
-	beq.Update();
-	aluSrc.Update();
+	loadstore.Update();
+	loadOp.Update();
+	storeOp.Update();
+	branchOp.Update();
+	aluBImm.Update();
 	regWrite.Update();
 }
