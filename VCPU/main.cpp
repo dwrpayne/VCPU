@@ -4,14 +4,11 @@
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
 
-void RunCPU()
+void RunCPU(std::string filename)
 {
 	CPU* pcpu = new CPU();
-	CPU& cpu = *pcpu;
-
-	Assembler assembler("fib.vasm");
-	
-	Debugger debugger(cpu, assembler.GetProgram());
+	Assembler assembler(filename);
+	Debugger debugger(*pcpu, assembler.GetProgram());
 	debugger.Start();
 
 }
@@ -26,5 +23,5 @@ int main(int argc, char** argv)
 	success &= RunCPUTests();
 	std::cout << (success ? "All tests passed!" : "Some tests failed!") << std::endl;
 
-	RunCPU();
+	RunCPU("fib.vasm");
 }
