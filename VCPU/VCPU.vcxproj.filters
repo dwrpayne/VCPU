@@ -78,6 +78,9 @@
     <ClCompile Include="Tools\ProgramLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tools\Instruction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -170,9 +173,6 @@
     <ClInclude Include="CPU\ALUControl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CPU\Instructions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CPU\CPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -180,6 +180,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tools\ProgramLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Instruction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

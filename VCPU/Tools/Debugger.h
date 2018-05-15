@@ -12,6 +12,11 @@ public:
 	void Start();
 
 private:
+	void PrintInstruction();
+	
 	CPU& mCPU;
+	bool bPrintInstruction;
+
+
 };
 

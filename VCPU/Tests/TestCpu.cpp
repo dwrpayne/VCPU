@@ -179,24 +179,11 @@ bool TestALUControl(Verbosity verbosity)
 }
 
 
-
-bool TestCPU(Verbosity verbosity)
-{
-	CPU* pcpu = new CPU();
-	CPU& cpu = *pcpu;
-	Debugger debugger(cpu);
-	debugger.LoadProgram();
-	debugger.Start();
-	
-	return true;
-}
-
 bool RunCPUTests()
 {
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestALUControl, FAIL_ONLY);
-	RUN_TEST(TestCPU, VERBOSE);
 
 	return success;
 }

@@ -142,6 +142,7 @@
     <ClCompile Include="Tests\TestCPU.cpp" />
     <ClCompile Include="Tests\TestHelpers.cpp" />
     <ClCompile Include="Tools\Debugger.cpp" />
+    <ClCompile Include="Tools\Instruction.cpp" />
     <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -154,7 +155,6 @@
     <ClInclude Include="CPU\ALUControl.h" />
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\InsRegister.h" />
-    <ClInclude Include="CPU\Instructions.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
@@ -178,7 +178,9 @@
     <ClInclude Include="Tests\TestHelpers.h" />
     <ClInclude Include="Tests\Tests.h" />
     <ClInclude Include="Tools\Debugger.h" />
+    <ClInclude Include="Tools\Instruction.h" />
     <ClInclude Include="Tools\ProgramLoader.h" />
+    <ClInclude Include="Tools\Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
