@@ -7,7 +7,7 @@
 class ProgramLoader
 {
 public:
-	ProgramLoader(CPU& c);
+	ProgramLoader(CPU& cpu);
 
 	void LoadInstruction(Opcode opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt, Function func);
 	void LoadInstruction(Opcode opcode, unsigned int rs, unsigned int rt, unsigned short imm);
@@ -15,7 +15,7 @@ public:
 private:
 	void WriteInstruction(unsigned int val);
 
-	CPU & cpu;
+	CPU::InsMemory& insMemory;
 	MagicBundle<32> ins_bundle, addr_bundle;
 	unsigned int cur_addr;
 };

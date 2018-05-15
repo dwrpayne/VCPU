@@ -122,13 +122,3 @@ void CPU::Update()
 	Update4();
 	Update5();
 }
-
-void CPU::ConnectToLoader(Bundle<32>& addr, Bundle<32> ins)
-{
-	instructionMem.Connect(addr.Range<0, InsMemory::ADDR_BITS>(), ins, Wire::ON);
-}
-
-void CPU::LoadInstruction()
-{
-	instructionMem.Update();
-}

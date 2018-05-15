@@ -23,10 +23,7 @@ public:
 	typedef Memory<32, 128> InsMemory;
 	typedef Memory<32, 128> MainMemory; // Todo: cache levels
 	typedef RegisterFile<32, 32> RegFile;
-
-	void ConnectToLoader(Bundle<32>& addr, Bundle<32> ins);
-	void LoadInstruction();
-
+	
 private:
 	void Update1();
 	void Update2();
@@ -59,4 +56,6 @@ private:
 	BufferMEMWB bufMEMWB;
 
 	MuxBundle<32, 2> regWriteDataMux;
+
+	friend class ProgramLoader;
 };

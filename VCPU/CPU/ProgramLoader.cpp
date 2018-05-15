@@ -1,10 +1,10 @@
 #include "ProgramLoader.h"
 
-ProgramLoader::ProgramLoader(CPU & c)
-	: cpu(c)
+ProgramLoader::ProgramLoader(CPU & cpu)
+	: insMemory(cpu.instructionMem)
 	, cur_addr(0)
 {
-	cpu.ConnectToLoader(addr_bundle, ins_bundle);
+	insMemory.Connect(addr_bundle.Range<0, CPU::InsMemory::ADDR_BITS>(), ins_bundle, Wire::ON);
 }
 
 void ProgramLoader::LoadInstruction(Opcode opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt, Function func)
@@ -23,6 +23,6 @@ inline void ProgramLoader::WriteInstruction(unsigned int val)
 {
 	ins_bundle.Write(val);
 	addr_bundle.Write(cur_addr);
-	cpu.LoadInstruction();
+	insMemory.Update();
 	cur_addr += 4;
 }
