@@ -29,6 +29,8 @@ private:
 	std::array<Register<N>, NReg> registers; // Make space for R0
 
 	MuxBundle<N, NReg> out1Mux, out2Mux;
+
+	friend class Debugger;
 };
 
 template<unsigned int N, unsigned int NReg>

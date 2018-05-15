@@ -8,6 +8,7 @@ Instruction::Instruction(EOpcode opcode, unsigned int rs, unsigned int rt, unsig
 	, mShAmt(shamt)
 	, mImm(0)
 	, mAddr(0)
+	, mType(TYPE_R)
 {
 	auto [op, func, name] = opcodeInfo.find(opcode)->second;
 	mVal = (op << 26) + (rs << 21) + (rt << 16) + (rd << 11) + (shamt << 6) + func;
@@ -25,6 +26,7 @@ Instruction::Instruction(EOpcode opcode, unsigned int rs, unsigned int rt, unsig
 	, mFunc(0)
 	, mImm(imm)
 	, mAddr(0)
+	, mType(TYPE_I)
 {
 	auto[op, func, name] = opcodeInfo.find(opcode)->second;
 	mVal = (op << 26) + (rs << 21) + (rt << 16) + imm;
@@ -42,12 +44,30 @@ Instruction::Instruction(EOpcode opcode, unsigned int addr)
 	, mFunc(0)
 	, mImm(0)
 	, mAddr(addr)
+	, mType(TYPE_J)
 {
 	auto[op, func, name] = opcodeInfo.find(opcode)->second;
 	mVal = (op << 26) + addr;
 	mName = name;
 	mFunc = func;
 	mOp = op;
+}
+
+std::ostream& operator<<(std::ostream& os, const Instruction& i)
+{
+	if (i.mType == Instruction::TYPE_J)
+	{
+		os << i.mName << "\t" << i.mAddr;
+	}
+	else if (i.mType == Instruction::TYPE_I)
+	{
+		os << i.mName << "\tR" << (int)i.mRS << "\tR" << (int)i.mRT << "\t" << (int)i.mImm;
+	}
+	else if (i.mType == Instruction::TYPE_R)
+	{
+		os << i.mName << "\tR" << (int)i.mRS << "\tR" << (int)i.mRT << "\tR" << (int)i.mRD << "\t" << (int)i.mShAmt << "\t";
+	}
+	return os;
 }
 
 const std::map<EOpcode, std::tuple<unsigned char, unsigned char, const char*>> Instruction::opcodeInfo(

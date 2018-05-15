@@ -1,5 +1,5 @@
 #pragma once
-
+#include <vector>
 #include "Instruction.h"
 #include "CPU/MagicBundle.h"
 #include "CPU/CPU.h"
@@ -8,7 +8,7 @@ class ProgramLoader
 {
 public:
 	ProgramLoader(CPU& cpu);
-	void LoadInstruction(Instruction i);
+	void Load(const std::vector<Instruction>& instructions);
 
 private:
 

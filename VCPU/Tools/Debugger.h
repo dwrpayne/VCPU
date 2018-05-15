@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CPU/CPU.h"
+#include "Instruction.h"
 
 class Debugger
 {
@@ -13,10 +14,12 @@ public:
 
 private:
 	void PrintInstruction();
+
+	void PrintRegisters();
 	
 	CPU& mCPU;
 	bool bPrintInstruction;
 
-
+	std::vector<Instruction> program;
 };
 

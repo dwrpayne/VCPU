@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <string>
+#include <iostream>
 #include "CPU/Instructions.h"
 
 
@@ -70,15 +71,22 @@ enum EOpcode : unsigned char
 	SWR,
 };
 
-
 class Instruction
 {
 public:
+	enum Type
+	{
+		TYPE_R,
+		TYPE_I,
+		TYPE_J
+	};
+
 	Instruction(EOpcode opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt);
 	Instruction(EOpcode opcode, unsigned int rs, unsigned int rt, unsigned int imm);
 	Instruction(EOpcode opcode, unsigned int addr);
 
-	unsigned int GetValue() { return mVal; }
+	unsigned int GetValue() const { return mVal; }
+	friend std::ostream& operator<<(std::ostream& os, const Instruction& i);
 
 private:
 	unsigned int mVal;
@@ -89,6 +97,9 @@ private:
 	unsigned short mImm;
 	unsigned int mAddr;
 	const char* mName;
+	Type mType;
 
 	static const std::map < EOpcode, std::tuple<unsigned char, unsigned char, const char*>> opcodeInfo;
 };
+
+std::ostream& operator<<(std::ostream& os, const Instruction& i);
