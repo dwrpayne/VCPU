@@ -10,3 +10,7 @@ Debugger::Debugger()
 Debugger::~Debugger()
 {
 }
+
+void Debugger::LoadProgram()
+{
+}

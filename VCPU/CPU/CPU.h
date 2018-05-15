@@ -58,4 +58,5 @@ private:
 	MuxBundle<32, 2> regWriteDataMux;
 
 	friend class ProgramLoader;
+	friend class Debugger;
 };

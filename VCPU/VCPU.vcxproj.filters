@@ -72,10 +72,10 @@
     <ClCompile Include="Tests\TestHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CPU\ProgramLoader.cpp">
+    <ClCompile Include="Tools\Debugger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Debugger.cpp">
+    <ClCompile Include="Tools\ProgramLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -170,16 +170,16 @@
     <ClInclude Include="CPU\ALUControl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CPU\ProgramLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CPU\Instructions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPU\CPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Debugger.h">
+    <ClInclude Include="Tools\Debugger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\ProgramLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

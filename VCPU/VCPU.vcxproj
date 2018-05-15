@@ -128,8 +128,6 @@
     <ClCompile Include="CPU\ALUControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
-    <ClCompile Include="CPU\ProgramLoader.cpp" />
-    <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -143,6 +141,8 @@
     <ClCompile Include="Memory\SRLatch.cpp" />
     <ClCompile Include="Tests\TestCPU.cpp" />
     <ClCompile Include="Tests\TestHelpers.cpp" />
+    <ClCompile Include="Tools\Debugger.cpp" />
+    <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Control\Bundle.h" />
@@ -156,8 +156,6 @@
     <ClInclude Include="CPU\InsRegister.h" />
     <ClInclude Include="CPU\Instructions.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
-    <ClInclude Include="CPU\ProgramLoader.h" />
-    <ClInclude Include="Debugger.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\FullAdder.h" />
@@ -179,6 +177,8 @@
     <ClInclude Include="Tests\TestCPU.h" />
     <ClInclude Include="Tests\TestHelpers.h" />
     <ClInclude Include="Tests\Tests.h" />
+    <ClInclude Include="Tools\Debugger.h" />
+    <ClInclude Include="Tools\ProgramLoader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
