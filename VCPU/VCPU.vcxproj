@@ -141,6 +141,7 @@
     <ClCompile Include="Memory\SRLatch.cpp" />
     <ClCompile Include="Tests\TestCPU.cpp" />
     <ClCompile Include="Tests\TestHelpers.cpp" />
+    <ClCompile Include="Tools\Assembler.cpp" />
     <ClCompile Include="Tools\Debugger.cpp" />
     <ClCompile Include="Tools\Instruction.cpp" />
     <ClCompile Include="Tools\ProgramLoader.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="Tests\TestCPU.h" />
     <ClInclude Include="Tests\TestHelpers.h" />
     <ClInclude Include="Tests\Tests.h" />
+    <ClInclude Include="Tools\Assembler.h" />
     <ClInclude Include="Tools\Debugger.h" />
     <ClInclude Include="Tools\Instruction.h" />
     <ClInclude Include="Tools\ProgramLoader.h" />

@@ -5,31 +5,15 @@
 #include "CPU/Instructions.h"
 
 
-Debugger::Debugger(CPU& cpu)
+Debugger::Debugger(CPU& cpu, std::vector<Instruction>& program)
 	: mCPU(cpu)
+	, mProgram(program)
 {
 	bPrintInstruction = true;
 	bStep = false;
-}
-
-
-Debugger::~Debugger()
-{
-}
-
-void Debugger::LoadProgram()
-{
-	program.push_back({ ADDI, 0, 1, 1 });
-	program.push_back({ ADDI, 0, 2, 1 });
-	for (int i = 0; i < 5; i++)
-	{
-		program.push_back({ ADD, i + 1, i + 2, i + 3, 0 });
-		program.push_back({ SW, 0, i + 3, i * 4 });
-	}
-	program.push_back({ BEQ, 0, 0, -10 });
 
 	ProgramLoader loader(mCPU);
-	loader.Load(program);
+	loader.Load(mProgram);
 }
 
 void Debugger::Start()
@@ -60,9 +44,9 @@ void Debugger::Start()
 void Debugger::PrintInstruction()
 {
 	unsigned int addr = mCPU.pc.Out().UnsignedRead() / 4;
-	if (addr < program.size())
+	if (addr < mProgram.size())
 	{
-		std::cout << mCPU.cycles << "\t" << program[mCPU.pc.Out().UnsignedRead() / 4] << std::endl;
+		std::cout << mCPU.cycles << "\t" << mProgram[mCPU.pc.Out().UnsignedRead() / 4] << std::endl;
 	}
 }
 

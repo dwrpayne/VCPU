@@ -81,6 +81,9 @@
     <ClCompile Include="Tools\Instruction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tools\Assembler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tools\Instruction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Assembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

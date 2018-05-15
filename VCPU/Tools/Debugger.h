@@ -6,21 +6,18 @@
 class Debugger
 {
 public:
-	Debugger(CPU& cpu);
-	~Debugger();
+	Debugger(CPU& cpu, std::vector<Instruction>& program);
 
-	void LoadProgram();
 	void Start();
 
 private:
 	void PrintInstruction();
-
 	void PrintRegisters();
 	
 	CPU& mCPU;
 	bool bPrintInstruction;
 	bool bStep;
 
-	std::vector<Instruction> program;
+	std::vector<Instruction> mProgram;
 };
 

@@ -11,7 +11,6 @@ public:
 	void Load(const std::vector<Instruction>& instructions);
 
 private:
-
 	CPU::InsMemory& insMemory;
 	MagicBundle<32> ins_bundle, addr_bundle;
 	unsigned int cur_addr;

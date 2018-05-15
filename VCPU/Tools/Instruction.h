@@ -4,73 +4,6 @@
 #include <iostream>
 #include "CPU/Instructions.h"
 
-
-enum EOpcode : unsigned char
-{
-	SLL,
-	SRL,
-	SRA,
-	SLLV,
-	SRLV,
-	SRAV,
-
-	JR,
-	JALR,
-
-	MFHI,
-	MTHI,
-	MFLO,
-	MTLO,
-	MULT,
-	MULTU,
-	DIV,
-	DIVU,
-
-	ADD,
-	ADDU,
-	SUB,
-	SUBU,
-	AND,
-	OR,
-	XOR,
-	NOR,
-	SLT,
-	SLTU,
-
-	BLTZ,
-	BGEZ,
-	BLTZAL,
-	BGEZAL,
-	J,
-	JAL,
-	BEQ,
-	BNE,
-	BLEZ,
-	BGTZ,
-
-	ADDI,
-	ADDIU,
-	SLTI,
-	SLTIU,
-	ANDI,
-	ORI,
-	XORI,
-	LUI,
-
-	LB,
-	LH,
-	LWL,
-	LW,
-	LBU,
-	LHU,
-	LWR,
-	SB,
-	SH,
-	SWL,
-	SW,
-	SWR,
-};
-
 class Instruction
 {
 public:
@@ -81,25 +14,24 @@ public:
 		TYPE_J
 	};
 
-	Instruction(EOpcode opcode, int rs, int rt, int rd, int shamt);
-	Instruction(EOpcode opcode, int rs, int rt, int imm);
-	Instruction(EOpcode opcode, int addr);
+	Instruction(const std::string& name, int rs, int rt, int rd, int shamt);
+	Instruction(const std::string& name, int rs, int rt, int imm);
+	Instruction(const std::string& name, int addr);
 
 	unsigned int GetValue() const { return mVal; }
 	friend std::ostream& operator<<(std::ostream& os, const Instruction& i);
 
 private:
 	unsigned int mVal;
-	EOpcode mOpcode;
 	unsigned char mOp;
 	unsigned char mRS, mRT, mRD;
 	unsigned char mShAmt, mFunc;
 	int mImm;
 	int mAddr;
-	const char* mName;
+	const std::string mName;
 	Type mType;
 
-	static const std::map < EOpcode, std::tuple<unsigned char, unsigned char, const char*>> opcodeInfo;
+	static const std::map <std::string, std::tuple<unsigned char, unsigned char>> opcodeInfo;
 };
 
 std::ostream& operator<<(std::ostream& os, const Instruction& i);
