@@ -191,6 +191,7 @@ bool TestCPU(Verbosity verbosity)
 	for (unsigned int i = 0; i < 25; i++)
 	{
 		loader.LoadInstruction(OP_ADD, i + 1, i + 2, i + 3, 0, F_ADD);
+		loader.LoadInstruction(OP_SW, 0, i+3, i*4);
 	}
 
 	cpu.Connect();

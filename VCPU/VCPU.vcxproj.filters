@@ -152,9 +152,6 @@
     <ClInclude Include="Memory\Counter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Functional\CPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Memory\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -174,6 +171,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPU\Instructions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\CPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

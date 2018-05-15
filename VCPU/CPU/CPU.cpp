@@ -5,10 +5,13 @@ void CPU::Connect()
 {
 	cycles = 0;
 	// Internal Bundles must be created first
-	Bundle<32> signExtImm(ir.Immediate()[15]);
-	signExtImm.Connect(0, ir.Immediate());
+	Bundle<32> signExtImm(bufIFID.IR.Immediate()[15]);
+	signExtImm.Connect(0, bufIFID.IR.Immediate());
+
+	// ******** STAGE 1 BEGIN - INSTRUCTION FETCH ************
 
 	// Program Counter
+	pcInMux.Connect({ pcIncrementer.Out(), bufEXMEM.pcJumpAddr.Out() }, bufEXMEM.OpcodeControl().Branch());
 	pc.Connect(pcInMux.Out(), Wire::ON);
 
 	// PC Increment. Instruction width is 4, hardwired.
@@ -16,50 +19,85 @@ void CPU::Connect()
 	insWidth.Connect(2, Wire::ON);
 	pcIncrementer.Connect(pc.Out(), insWidth, Wire::OFF);
 
-	// PC Jump address calculation
-	Bundle<32> addrOffset(Wire::OFF);
-	addrOffset.Connect(0, signExtImm);
-	pcJumpAdder.Connect(pcIncrementer.Out(), addrOffset, Wire::OFF);
-
-	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, opcodeControl.Branch());
-
 	// Instruction memory
 	instructionMem.Connect(pc.Out().Range<0,InsMemory::ADDR_BITS>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
-	ir.Connect(instructionMem.Out(), Wire::ON);
-	
+
+	// ******** STAGE 1 END - INSTRUCTION FETCH ************
+
+	bufIFID.Connect(instructionMem.Out(), pcIncrementer.Out());
+
+	// ******** STAGE 2 BEGIN - INSTRUCTION DECODE ************
+		
 	// Opcode Decoding
-	opcodeControl.Connect(ir.Opcode());
-	aluControl.Connect(opcodeControl.LoadStore(), opcodeControl.Branch(), opcodeControl.IFormat(), opcodeControl.RFormat(), ir.Opcode(), ir.Function());
-	
+	opcodeControl.Connect(bufIFID.IR.Opcode());
+
 	// Register File
-	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, opcodeControl.RFormat());
-	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, opcodeControl.LoadOp());
-	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), opcodeControl.RegWrite());
+	regFile.Connect(bufIFID.IR.RsAddr(), bufIFID.IR.RtAddr(), bufMEMWB.Rwrite.Out(), regWriteDataMux.Out(), bufMEMWB.OpcodeControl().RegWrite());
+	
+	// ******** STAGE 2 END - INSTRUCTION DECODE ************
+
+	bufIDEX.Connect(bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.AsBundle());
+
+	// ******** STAGE 3 BEGIN - EXECUTION ************
+
+	// ALU control. Get the opcode decoding from the previous stage. Note the Function bits are in the low 6 of "signext" now.
+	aluControl.Connect(bufIDEX.OpcodeControl().LoadStore(), bufIDEX.OpcodeControl().Branch(), bufIDEX.OpcodeControl().IFormat(), 
+						bufIDEX.OpcodeControl().RFormat(), bufIDEX.opcode.Out(), bufIDEX.signExt.Out().Range<0,6>());
+	
+	regFileWriteAddrMux.Connect({ bufIDEX.RT.Out(), bufIDEX.RD.Out() }, bufIDEX.OpcodeControl().RFormat());
 
 	// ALU
-	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, opcodeControl.AluBFromImm());
-	alu.Connect(regFile.Out1(), aluBInputMux.Out(), aluControl.AluControl());
-	aluOut.Connect(alu.Out(), Wire::ON);
+	aluBInputMux.Connect({ bufIDEX.reg2.Out(), bufIDEX.signExt.Out() }, bufIDEX.OpcodeControl().AluBFromImm());
+	alu.Connect(bufIDEX.reg1.Out(), aluBInputMux.Out(), aluControl.AluControl());
+	
+	// PC Jump address calculation
+	pcJumpAdder.Connect(bufIDEX.PCinc.Out(), bufIDEX.signExt.Out(), Wire::OFF);
+	
+	// ******** STAGE 3 END - EXECUTION ************
 
+	bufEXMEM.Connect(regFileWriteAddrMux.Out(), bufIDEX.reg2.Out(), alu.Out(), pcJumpAdder.Out(), bufIDEX.OpcodeControl());
+
+	// ******** STAGE 4 BEGIN - MEMORY STORE ************
+	
 	// Main Memory
-	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), opcodeControl.StoreOp());
+	mainMem.Connect(bufEXMEM.aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp());
+
+	// ******** STAGE 4 END - MEMORY STORE ************
+
+	bufMEMWB.Connect(bufEXMEM.Rwrite.Out(), bufEXMEM.aluOut.Out(), mainMem.Out(), bufEXMEM.OpcodeControl());
+
+	// ******** STAGE 5 BEGIN - WRITEBACK ************
+	
+	regWriteDataMux.Connect({ bufMEMWB.aluOut.Out(), bufMEMWB.memOut.Out() }, bufMEMWB.OpcodeControl().LoadOp());
 }
 
 void CPU::Update()
 {
+	// ******** STAGE 1 INSTRUCTION FETCH ************
 	pcInMux.Update();
 	pc.Update();
 	pcIncrementer.Update();
 	instructionMem.Update();
-	ir.Update();
+	bufIFID.Update();
+
+	// ******** STAGE 2 INSTRUCTION DECODE ************
 	opcodeControl.Update();
-	aluControl.Update();
 	regFile.Update();
+	bufIDEX.Update();
+
+	// ******** STAGE 3 EXECUTION ************
+	aluControl.Update();
+	regFileWriteAddrMux.Update();
 	aluBInputMux.Update();
 	alu.Update();
-	aluOut.Update();
-	mainMem.Update();
-	regFileWriteAddrMux.Update();
+	pcJumpAdder.Update();
+	bufEXMEM.Update();
+
+	// ******** STAGE 4 BEGIN - MEMORY STORE ************
+	mainMem.Update(); 
+	bufMEMWB.Update();
+
+	// ******** STAGE 5 BEGIN - WRITEBACK ************
 	regWriteDataMux.Update();
 	cycles++;
 }

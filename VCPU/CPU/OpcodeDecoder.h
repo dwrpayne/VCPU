@@ -42,6 +42,25 @@ public:
 	void Connect(const Bundle<6>& opcode);
 	void Update();
 
+	class OpcodeDecoderBundle : public Bundle<8>
+	{
+	public:
+		OpcodeDecoderBundle(std::initializer_list<const Wire*> list)
+			: Bundle<8>(list)
+		{}
+		OpcodeDecoderBundle(const Bundle<8>& other)
+			: Bundle<8>(other)
+		{}
+		const Wire& Branch() { return Get(0); }
+		const Wire& LoadStore() { return Get(1); }
+		const Wire& LoadOp() { return Get(2); }
+		const Wire& StoreOp() { return Get(3); }
+		const Wire& RFormat() { return Get(4); }
+		const Wire& IFormat() { return Get(5); }
+		const Wire& AluBFromImm() { return Get(6); }
+		const Wire& RegWrite() { return Get(7); }
+	};
+
 	const Wire& Branch() { return branchOp.Out(); }
 	const Wire& LoadStore() { return loadstore.Out(); }
 	const Wire& LoadOp() { return loadOp.Out(); }
@@ -50,6 +69,8 @@ public:
 	const Wire& IFormat() { return immOp.Out(); }
 	const Wire& AluBFromImm() { return aluBImm.Out(); }
 	const Wire& RegWrite() { return regWrite.Out(); }
+	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadStore(), &LoadOp(), &StoreOp(), &RFormat(), &IFormat(), &AluBFromImm(), &RegWrite() }; }
+
 
 private:
 	InverterN<6> inv;

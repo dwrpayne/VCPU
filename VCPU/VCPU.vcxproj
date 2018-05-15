@@ -150,13 +150,13 @@
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\ALUControl.h" />
+    <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\InsRegister.h" />
     <ClInclude Include="CPU\Instructions.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\ProgramLoader.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
-    <ClInclude Include="Functional\CPU.h" />
     <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Gates\AndGate.h" />
     <ClInclude Include="Gates\Inverter.h" />
