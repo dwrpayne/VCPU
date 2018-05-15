@@ -9,6 +9,7 @@
 
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"
+#include "ALUControl.h"
 
 class CPU : public Component
 {
@@ -19,7 +20,7 @@ public:
 	int cycles;
 
 	typedef Memory<32, 128> InsMemory;
-	typedef Memory<32, 1024> MainMemory; // Todo: cache levels
+	typedef Memory<32, 128> MainMemory; // Todo: cache levels
 	typedef RegisterFile<32, 32> RegFile;
 
 	void ConnectToLoader(Bundle<32>& addr, Bundle<32> ins);
@@ -31,7 +32,8 @@ private:
 	FullAdderN<32> pcIncrementer;
 	FullAdderN<32> pcJumpAdder;
 
-	OpcodeDecoder control;
+	OpcodeDecoder opcodeControl;
+	ALUControl aluControl;
 
 	InsMemory instructionMem;
 	InsRegister ir;

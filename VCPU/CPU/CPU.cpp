@@ -21,27 +21,28 @@ void CPU::Connect()
 	addrOffset.Connect(0, signExtImm);
 	pcJumpAdder.Connect(pcIncrementer.Out(), addrOffset, Wire::OFF);
 
-	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, control.Branch());
+	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAdder.Out() }, opcodeControl.Branch());
 
 	// Instruction memory
 	instructionMem.Connect(pc.Out().Range<0,InsMemory::ADDR_BITS>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
 	ir.Connect(instructionMem.Out(), Wire::ON);
 	
 	// Opcode Decoding
-	control.Connect(ir.Opcode());
-
+	opcodeControl.Connect(ir.Opcode());
+	aluControl.Connect(opcodeControl.LoadStore(), opcodeControl.Branch(), opcodeControl.IFormat(), opcodeControl.RFormat(), ir.Opcode(), ir.Function());
+	
 	// Register File
-	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, control.RFormat());
-	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, control.LoadOp());
-	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), control.RegWrite());
+	regFileWriteAddrMux.Connect({ ir.RtAddr(), ir.RdAddr() }, opcodeControl.RFormat());
+	regWriteDataMux.Connect({ aluOut.Out(), mainMem.Out() }, opcodeControl.LoadOp());
+	regFile.Connect(ir.RsAddr(), ir.RtAddr(), regFileWriteAddrMux.Out(), regWriteDataMux.Out(), opcodeControl.RegWrite());
 
 	// ALU
-	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, control.AluBFromImm());
-	alu.Connect(regFile.Out1(), aluBInputMux.Out(), signExtImm.Range<0, 4>());
+	aluBInputMux.Connect({ regFile.Out2(), signExtImm }, opcodeControl.AluBFromImm());
+	alu.Connect(regFile.Out1(), aluBInputMux.Out(), aluControl.AluControl());
 	aluOut.Connect(alu.Out(), Wire::ON);
 
 	// Main Memory
-	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), control.StoreOp());
+	mainMem.Connect(aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), regFile.Out2(), opcodeControl.StoreOp());
 }
 
 void CPU::Update()
@@ -51,7 +52,8 @@ void CPU::Update()
 	pcIncrementer.Update();
 	instructionMem.Update();
 	ir.Update();
-	control.Update();
+	opcodeControl.Update();
+	aluControl.Update();
 	regFile.Update();
 	aluBInputMux.Update();
 	alu.Update();

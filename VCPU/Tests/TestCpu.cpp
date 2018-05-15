@@ -104,43 +104,7 @@ enum Function : uint8_t
 	F_NOR = 39,
 	F_SLT = 42,
 	F_SLTU = 43,
-
-	F_BLTZ = 0,
-	F_BGEZ = 0,
-	F_BLTZAL = 0,
-	F_BGEZAL = 0,
-	F_J = 0,
-	F_JAL = 0,
-	F_BEQ = 0,
-	F_BNE = 0,
-	F_BLEZ = 0,
-	F_BGTZ = 0,
-	F_ADDI = 0,
-	F_ADDIU = 0,
-	F_SLTI = 0,
-	F_SLTIU = 0,
-	F_ANDI = 0,
-	F_ORI = 0,
-	F_XORI = 0,
-	F_LUI = 0,
-	F_LB = 0,
-	F_LH = 0,
-	F_LWL = 0,
-	F_LW = 0,
-	F_LBU = 0,
-	F_LHU = 0,
-	F_LWR = 0,
-	F_SB = 0,
-	F_SH = 0,
-	F_SWL = 0,
-	F_SW = 0,
-	F_SWR = 0,
 };
-
-unsigned int GetInstruction(Opcode opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt, Function func)
-{
-	return (opcode << 26) + (rs << 21) + (rt << 16) + (rd << 11) + (shamt << 6) + func;
-}
 
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
@@ -258,15 +222,15 @@ bool TestALUControl(Verbosity verbosity)
 	}
 
 	std::cout << "Testing I-ALU Ops" << std::endl;
-	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, Function>>({
-		{ A_PLUS_B, OP_ADDI, F_ADDI },
-		{ A_PLUS_B, OP_ADDIU, F_ADDIU },
-		//{ A_MINUS_B, OP_SLTI, F_SUB },
-		//{ A_MINUS_B, OP_SLTIU, F_SUBU },
-		{ A_AND_B, OP_ANDI, F_ANDI },
-		{ A_OR_B, OP_ORI, F_ORI },
-		{ A_XOR_B, OP_XORI, F_XORI },
-		/*{ A_NOR_B, OP_LUI, F_NOR }*/ }))
+	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, unsigned int>>({
+		{ A_PLUS_B, OP_ADDI, 45 },
+		{ A_PLUS_B, OP_ADDIU, 45 },
+		//{ A_MINUS_B, OP_SLTI, 45 },
+		//{ A_MINUS_B, OP_SLTIU, 45 },
+		{ A_AND_B, OP_ANDI, 45 },
+		{ A_OR_B, OP_ORI, 45 },
+		{ A_XOR_B, OP_XORI, 45 },
+		/*{ A_NOR_B, OP_LUI, 45 }*/ }))
 	{
 		opcode.Write(op);
 		func.Write(f);
@@ -276,11 +240,11 @@ bool TestALUControl(Verbosity verbosity)
 	}
 
 	std::cout << "Testing Branch Ops" << std::endl;
-	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, Function>>({
-		{ A_MINUS_B, OP_BEQ, F_BEQ },
-		{ A_MINUS_B, OP_BNE, F_BNE },
-		{ A_MINUS_B, OP_BLEZ, F_BLEZ },
-		{ A_MINUS_B, OP_BGTZ, F_BGTZ } }))
+	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, unsigned int>>({
+		{ A_MINUS_B, OP_BEQ, 45 },
+		{ A_MINUS_B, OP_BNE, 45 },
+		{ A_MINUS_B, OP_BLEZ, 45 },
+		{ A_MINUS_B, OP_BGTZ, 45 } }))
 	{
 		opcode.Write(op);
 		func.Write(f);
@@ -290,19 +254,19 @@ bool TestALUControl(Verbosity verbosity)
 	}
 
 	std::cout << "Testing Load/Store Ops" << std::endl;
-	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, Function>>({
-		{ A_PLUS_B, OP_LB, F_LB },
-		{ A_PLUS_B, OP_LH, F_LH },
-		{ A_PLUS_B, OP_LWL, F_LWL },
-		{ A_PLUS_B, OP_LW, F_LW },
-		{ A_PLUS_B, OP_LBU, F_LBU },
-		{ A_PLUS_B, OP_LHU, F_LHU },
-		{ A_PLUS_B, OP_LWR, F_LWR },
-		{ A_PLUS_B, OP_SB, F_SB },
-		{ A_PLUS_B, OP_SH, F_SH },
-		{ A_PLUS_B, OP_SWL, F_SWL },
-		{ A_PLUS_B, OP_SW, F_SW },
-		{ A_PLUS_B, OP_SWR, F_SWR } }))
+	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, unsigned int>>({
+		{ A_PLUS_B, OP_LB, 45 },
+		{ A_PLUS_B, OP_LH, 45 },
+		{ A_PLUS_B, OP_LWL, 45 },
+		{ A_PLUS_B, OP_LW, 45 },
+		{ A_PLUS_B, OP_LBU, 45 },
+		{ A_PLUS_B, OP_LHU, 45 },
+		{ A_PLUS_B, OP_LWR, 45 },
+		{ A_PLUS_B, OP_SB, 45 },
+		{ A_PLUS_B, OP_SH, 45 },
+		{ A_PLUS_B, OP_SWL, 45 },
+		{ A_PLUS_B, OP_SW, 45 },
+		{ A_PLUS_B, OP_SWR, 45 } }))
 	{
 		opcode.Write(op);
 		func.Write(f);
@@ -313,7 +277,31 @@ bool TestALUControl(Verbosity verbosity)
 	return success;
 }
 
-bool TestCPU()
+
+struct Instruction
+{
+	Instruction(Opcode opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt, Function func)
+	{
+		val = (opcode << 26) + (rs << 21) + (rt << 16) + (rd << 11) + (shamt << 6) + func;
+	}
+	Instruction(Opcode opcode, unsigned int rs, unsigned int rt, unsigned short imm)
+	{
+		val = (opcode << 26) + (rs << 21) + (rt << 16) + imm;
+	}
+
+	unsigned int val;
+};
+
+void WriteInstruction(CPU& cpu, MagicBundle<32>& addr_bundle, MagicBundle<32>& bundle, Instruction ins)
+{
+	static unsigned int addr = 0;
+	bundle.Write(ins.val);
+	addr_bundle.Write(addr);
+	cpu.LoadInstruction();
+	addr += 4;
+}
+
+bool TestCPU(Verbosity verbosity)
 {
 	CPU* pcpu = new CPU();
 	CPU& cpu = *pcpu;
@@ -321,27 +309,22 @@ bool TestCPU()
 	MagicBundle<32> addr, ins;
 	cpu.ConnectToLoader(addr, ins);
 
-	//ins.Write(GetInstruction(0, 0, 0, 0, 0, ALU_OPCODE::A_PLUS_ONE));
-	//addr.Write(0);
-	//cpu.LoadInstruction();
-	//ins.Write(GetInstruction(0, 0, 0, 1, 0, ALU_OPCODE::A));
-	//addr.Write(4);
-	//cpu.LoadInstruction();
-	//for (int i = 0; i < 25; i++)
-	//{
-	//	ins.Write(GetInstruction(0, i, i+1, i+2, 0, ALU_OPCODE::A_PLUS_B));
-	//	addr.Write(8 + 4*i);
-	//	cpu.LoadInstruction();
-	//}
+	WriteInstruction(cpu, addr, ins, { OP_ADDI, 0, 1, 1 });
+	WriteInstruction(cpu, addr, ins, { OP_ADDI, 0, 2, 1 });
 
-	//cpu.Connect();
-	//
-	//while (true)
-	//{
-	//	cpu.Update();
-	//	if (cpu.cycles % 500 == 0)
-	//		std::cout << cpu.cycles << std::endl;
-	//}
+	for (unsigned int i = 0; i < 25; i++)
+	{
+		WriteInstruction(cpu, addr, ins, { OP_ADD, i + 1, i + 2, i + 3, 0, F_ADD });
+	}
+
+	cpu.Connect();
+	
+	while (true)
+	{
+		cpu.Update();
+		if (cpu.cycles % 500 == 0)
+			std::cout << cpu.cycles << std::endl;
+	}
 	return true;
 }
 
@@ -350,6 +333,7 @@ bool RunCPUTests()
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestALUControl, FAIL_ONLY);
+	RUN_TEST(TestCPU, VERBOSE);
 
 	return success;
 }
