@@ -129,6 +129,7 @@
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="CPU\ProgramLoader.cpp" />
+    <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="CPU\Instructions.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\ProgramLoader.h" />
+    <ClInclude Include="Debugger.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\FullAdder.h" />

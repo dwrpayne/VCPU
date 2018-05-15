@@ -5,7 +5,7 @@
 #include "CPU/MagicBundle.h"
 #include "CPU/ALUControl.h"
 #include "CPU/Instructions.h"
-#include "CPU/ProgramLoader.h"
+#include "Tools/ProgramLoader.h"
 
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
