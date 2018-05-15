@@ -3,7 +3,7 @@
 #include <cmath>
 #include <map>
 #include "TestHelpers.h"
-#include "MagicBundle.h"
+#include "CPU/MagicBundle.h"
 #include "AndGate.h"
 #include "OrGate.h"
 #include "NandGate.h"

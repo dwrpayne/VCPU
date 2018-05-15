@@ -127,6 +127,7 @@
     <ClCompile Include="CPU\ALUControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
+    <ClCompile Include="CPU\ProgramLoader.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -150,7 +151,9 @@
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\ALUControl.h" />
     <ClInclude Include="CPU\InsRegister.h" />
+    <ClInclude Include="CPU\Instructions.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
+    <ClInclude Include="CPU\ProgramLoader.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\CPU.h" />
