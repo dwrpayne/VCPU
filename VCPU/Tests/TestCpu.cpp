@@ -259,14 +259,14 @@ bool TestALUControl(Verbosity verbosity)
 
 	std::cout << "Testing I-ALU Ops" << std::endl;
 	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, Function>>({
-		{ A_PLUS_B, OP_ADD, F_ADD },
-		{ A_PLUS_B, OP_ADDU, F_ADDU },
-		{ A_MINUS_B, OP_SUB, F_SUB },
-		{ A_MINUS_B, OP_SUBU, F_SUBU },
-		{ A_AND_B, OP_AND, F_AND },
-		{ A_OR_B, OP_OR, F_OR },
-		{ A_XOR_B, OP_XOR, F_XOR },
-		{ A_NOR_B, OP_NOR, F_NOR } }))
+		{ A_PLUS_B, OP_ADDI, F_ADDI },
+		{ A_PLUS_B, OP_ADDIU, F_ADDIU },
+		//{ A_MINUS_B, OP_SLTI, F_SUB },
+		//{ A_MINUS_B, OP_SLTIU, F_SUBU },
+		{ A_AND_B, OP_ANDI, F_ANDI },
+		{ A_OR_B, OP_ORI, F_ORI },
+		{ A_XOR_B, OP_XORI, F_XORI },
+		/*{ A_NOR_B, OP_LUI, F_NOR }*/ }))
 	{
 		opcode.Write(op);
 		func.Write(f);
