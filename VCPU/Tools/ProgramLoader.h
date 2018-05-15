@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Instructions.h"
-#include "MagicBundle.h"
-#include "CPU.h"
+#include "CPU/Instructions.h"
+#include "CPU/MagicBundle.h"
+#include "CPU/CPU.h"
 
 class ProgramLoader
 {

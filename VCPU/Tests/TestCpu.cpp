@@ -5,7 +5,7 @@
 #include "CPU/MagicBundle.h"
 #include "CPU/ALUControl.h"
 #include "CPU/Instructions.h"
-#include "Tools/ProgramLoader.h"
+#include "Tools/Debugger.h"
 
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
@@ -184,24 +184,10 @@ bool TestCPU(Verbosity verbosity)
 {
 	CPU* pcpu = new CPU();
 	CPU& cpu = *pcpu;
-
-	ProgramLoader loader(cpu);
-	loader.LoadInstruction(OP_ADDI, 0, 1, 1);
-	loader.LoadInstruction(OP_ADDI, 0, 2, 1);
-	for (unsigned int i = 0; i < 25; i++)
-	{
-		loader.LoadInstruction(OP_ADD, i + 1, i + 2, i + 3, 0, F_ADD);
-		loader.LoadInstruction(OP_SW, 0, i+3, i*4);
-	}
-
-	cpu.Connect();
+	Debugger debugger(cpu);
+	debugger.LoadProgram();
+	debugger.Start();
 	
-	while (true)
-	{
-		cpu.Update();
-		if (cpu.cycles % 500 == 0)
-			std::cout << cpu.cycles << std::endl;
-	}
 	return true;
 }
 

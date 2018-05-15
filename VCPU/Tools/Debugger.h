@@ -9,6 +9,7 @@ public:
 	~Debugger();
 
 	void LoadProgram();
+	void Start();
 
 private:
 	CPU& mCPU;
