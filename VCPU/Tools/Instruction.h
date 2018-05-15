@@ -81,9 +81,9 @@ public:
 		TYPE_J
 	};
 
-	Instruction(EOpcode opcode, unsigned int rs, unsigned int rt, unsigned int rd, unsigned int shamt);
-	Instruction(EOpcode opcode, unsigned int rs, unsigned int rt, unsigned int imm);
-	Instruction(EOpcode opcode, unsigned int addr);
+	Instruction(EOpcode opcode, int rs, int rt, int rd, int shamt);
+	Instruction(EOpcode opcode, int rs, int rt, int imm);
+	Instruction(EOpcode opcode, int addr);
 
 	unsigned int GetValue() const { return mVal; }
 	friend std::ostream& operator<<(std::ostream& os, const Instruction& i);
@@ -94,8 +94,8 @@ private:
 	unsigned char mOp;
 	unsigned char mRS, mRT, mRD;
 	unsigned char mShAmt, mFunc;
-	unsigned short mImm;
-	unsigned int mAddr;
+	int mImm;
+	int mAddr;
 	const char* mName;
 	Type mType;
 

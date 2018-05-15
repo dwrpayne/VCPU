@@ -19,6 +19,7 @@ private:
 	
 	CPU& mCPU;
 	bool bPrintInstruction;
+	bool bStep;
 
 	std::vector<Instruction> program;
 };

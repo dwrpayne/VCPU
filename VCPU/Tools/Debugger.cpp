@@ -9,6 +9,7 @@ Debugger::Debugger(CPU& cpu)
 	: mCPU(cpu)
 {
 	bPrintInstruction = true;
+	bStep = false;
 }
 
 
@@ -20,11 +21,12 @@ void Debugger::LoadProgram()
 {
 	program.push_back({ ADDI, 0, 1, 1 });
 	program.push_back({ ADDI, 0, 2, 1 });
-	for (unsigned int i = 0; i < 25; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		program.push_back({ ADD, i + 1, i + 2, i + 3, 0 });
 		program.push_back({ SW, 0, i + 3, i * 4 });
 	}
+	program.push_back({ BEQ, 0, 0, -10 });
 
 	ProgramLoader loader(mCPU);
 	loader.Load(program);
@@ -36,7 +38,12 @@ void Debugger::Start()
 
 	while (true)
 	{
+		if (bStep)
+		{
+			__debugbreak();
+		}
 		mCPU.Update();
+		
 
 		if (mCPU.cycles % 10 == 0)
 		{
@@ -66,7 +73,7 @@ void Debugger::PrintRegisters()
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			std::cout << "R" << i + 8*j << " " << mCPU.regFile.registers[i + 8*j].Out().Read() << "\t\t";
+			std::cout << "$" << i + 8*j << " " << mCPU.regFile.registers[i + 8*j].Out().Read() << "\t\t";
 		}
 		std::cout << std::endl;
 	}
