@@ -18,6 +18,3 @@ What does class Component have?
 	* static int id?
 	
 A "Bundle" is a way to collect some wires and hand them to another component. It doesn't really exist and can't be modified. If you reconnect its wires, you have to reconnect the components that are using it.
-
-// CPU notes
-Memory class should handle word vs byte addressing.

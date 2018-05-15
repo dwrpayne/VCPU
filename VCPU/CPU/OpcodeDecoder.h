@@ -25,6 +25,7 @@
 	7	000111			BGTZ	Branch on Greater Than Zero
 
 	8	001000			ADDI	Add Immediate
+	9	001001			ADDUI	Add Immediate
 
 	12	001100			ANDI	And Immediate
 	13	001101			ORI		Or Immediate

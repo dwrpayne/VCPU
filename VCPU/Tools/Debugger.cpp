@@ -26,8 +26,7 @@ void Debugger::Start()
 		{
 			__debugbreak();
 		}
-		mCPU.Update();
-		
+		mCPU.Update();		
 
 		if (mCPU.cycles % 10 == 0)
 		{

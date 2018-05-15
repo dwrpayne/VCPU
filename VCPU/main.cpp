@@ -23,5 +23,5 @@ int main(int argc, char** argv)
 	success &= RunCPUTests();
 	std::cout << (success ? "All tests passed!" : "Some tests failed!") << std::endl;
 
-	RunCPU("fib.vasm");
+	RunCPU("testops.vasm");
 }
