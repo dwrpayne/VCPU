@@ -143,9 +143,6 @@
     <ClInclude Include="Control\Bundle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\MagicBundle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Control\Decoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -192,6 +189,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tools\Assembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\PipelineBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\MagicBundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\Instructions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

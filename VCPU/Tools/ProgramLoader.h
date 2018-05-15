@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Instruction.h"
-#include "CPU/MagicBundle.h"
+#include "Tools/MagicBundle.h"
 #include "CPU/CPU.h"
 
 class ProgramLoader

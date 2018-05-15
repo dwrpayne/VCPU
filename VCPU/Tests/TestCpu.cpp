@@ -2,9 +2,9 @@
 #include "TestCPU.h"
 #include "TestHelpers.h"
 #include "CPU/CPU.h"
-#include "CPU/MagicBundle.h"
+#include "Tools/MagicBundle.h"
 #include "CPU/ALUControl.h"
-#include "CPU/Instructions.h"
+#include "Instructions.h"
 #include "Tools/Debugger.h"
 
 bool TestOpcodeDecoder(Verbosity verbosity)

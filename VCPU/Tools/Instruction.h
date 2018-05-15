@@ -2,7 +2,6 @@
 #include <map>
 #include <string>
 #include <iostream>
-#include "CPU/Instructions.h"
 
 class Instruction
 {
