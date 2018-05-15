@@ -14,7 +14,7 @@ void DFlipFlop::Update()
 	invD.Update();
 	nandD.Update();
 	nandDinv.Update();
-	nandR.Update();
 	nandS.Update();
 	nandR.Update();
+	nandS.Update();
 }
