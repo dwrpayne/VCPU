@@ -3,7 +3,6 @@
 
 bool TestOpcodeDecoder(Verbosity verbosity);
 bool TestALUControl(Verbosity verbosity);
-
-bool TestCPU();
+bool TestCPU(Verbosity verbosity);
 
 bool RunCPUTests();

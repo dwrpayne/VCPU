@@ -11,6 +11,7 @@ public:
 	void Start();
 	void Step();
 	int GetRegisterVal(int reg);
+	int GetMemoryVal(int addr);
 	int GetNextPCAddr();
 
 private:

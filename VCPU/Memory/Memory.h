@@ -30,6 +30,8 @@ private:
 	MultiGate<AndGate, NReg> writeEnable;
 	std::array<Register<N>, NReg> registers;
 	MuxBundle<N, NReg> outMux;
+
+	friend class Debugger;
 };
 
 template<unsigned int N, unsigned int NReg>

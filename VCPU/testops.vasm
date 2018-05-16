@@ -6,15 +6,17 @@ and 1 2 5 0
 or 1 2 6 0
 xor 1 2 7 0
 nor 1 2 8 0
+slt 1 2 9
+slt 3 2 9
 addi 3 13 1234
 andi 5 15 1234
 ori 6 16 1234
 xori 7 17 1234
+slti 6 19 4064
+slti 6 19 4063
 ori 0 22 4325
+sw 15 1 14
+lw 5 11 -246
 beq 3 22 4
 and 0 0 0 0
 bne 3 22 -38
-and 0 0 0 0
-and 0 0 0 0
-and 0 0 0 0
-beq 3 22 -80

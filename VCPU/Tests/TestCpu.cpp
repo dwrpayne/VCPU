@@ -131,6 +131,7 @@ bool TestALUControl(Verbosity verbosity)
 		//{ A_MINUS_B, OP_SLTIU, 45 },
 		{ A_AND_B, OP_ANDI, 45 },
 		{ A_OR_B, OP_ORI, 45 },
+
 		{ A_XOR_B, OP_XORI, 45 },
 		/*{ A_NOR_B, OP_LUI, 45 }*/ }))
 	{
@@ -190,50 +191,90 @@ bool TestCPU(Verbosity verbosity)
 
 	success &= TestState(i++, 0, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(0), verbosity);
+
 	debugger.Step();																// addi 0 1 1887
 	success &= TestState(i++, 4, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(1), verbosity);
+
 	debugger.Step();																// addi 0 2 2438
 	success &= TestState(i++, 8, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 2438, debugger.GetRegisterVal(2), verbosity);
-	debugger.Step();		 														// add 1 2 3 0
+
+	debugger.Step();		 														// add 1 2 3 0 
 	success &= TestState(i++, 12, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(3), verbosity);
-	debugger.Step();																// sub 1 2 4 0
+
+	debugger.Step();																// sub 1 2 4 0 
 	success &= TestState(i++, 16, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, -551, debugger.GetRegisterVal(4), verbosity);
-	debugger.Step();															// and 1 2 5 0
+
+	debugger.Step();																// and 1 2 5 0
 	success &= TestState(i++, 20, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 262, debugger.GetRegisterVal(5), verbosity);
-	debugger.Step();															// or 1 2 6 0
+
+	debugger.Step();																// or 1 2 6 0
 	success &= TestState(i++, 24, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 4063, debugger.GetRegisterVal(6), verbosity);
+
 	debugger.Step();																// xor 1 2 7 0
 	success &= TestState(i++, 28, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 3801, debugger.GetRegisterVal(7), verbosity);
+
 	debugger.Step();																// nor 1 2 8 0
 	success &= TestState(i++, 32, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, -4064, debugger.GetRegisterVal(8), verbosity);
-	debugger.Step();																// addi 3 13 1234
+
+	debugger.Step();																// slt 1 2 9 0
 	success &= TestState(i++, 36, debugger.GetNextPCAddr(), verbosity);
-	success &= TestState(i++, 5559, debugger.GetRegisterVal(13), verbosity);
-	debugger.Step();		 														// andi 5 15 1234
+	success &= TestState(i++, 1, debugger.GetRegisterVal(9), verbosity);
+
+	debugger.Step();																// slt 3 2 9 0
 	success &= TestState(i++, 40, debugger.GetNextPCAddr(), verbosity);
-	success &= TestState(i++, 2, debugger.GetRegisterVal(15), verbosity);
-	debugger.Step();																// ori 6 16 1234
+	success &= TestState(i++, 0, debugger.GetRegisterVal(9), verbosity);
+
+	debugger.Step();																// addi 3 13 1234
 	success &= TestState(i++, 44, debugger.GetNextPCAddr(), verbosity);
-	success &= TestState(i++, 4063, debugger.GetRegisterVal(16), verbosity);
-	debugger.Step();																// xori 7 17 1234
+	success &= TestState(i++, 5559, debugger.GetRegisterVal(13), verbosity);
+
+	debugger.Step();		 														// andi 5 15 1234
 	success &= TestState(i++, 48, debugger.GetNextPCAddr(), verbosity);
-	success &= TestState(i++, 2571, debugger.GetRegisterVal(17), verbosity);
-	debugger.Step();																// ori 0 22 4325
+	success &= TestState(i++, 2, debugger.GetRegisterVal(15), verbosity);
+
+	debugger.Step();																// ori 6 16 1234
 	success &= TestState(i++, 52, debugger.GetNextPCAddr(), verbosity);
-	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
-	debugger.Step();																// beq 3 22 4
+	success &= TestState(i++, 4063, debugger.GetRegisterVal(16), verbosity);
+
+	debugger.Step();																// xori 7 17 1234
+	success &= TestState(i++, 56, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 2571, debugger.GetRegisterVal(17), verbosity);
+
+	debugger.Step();																// slti 6 19 4064
 	success &= TestState(i++, 60, debugger.GetNextPCAddr(), verbosity);
-	debugger.Step();																// bne 3 22 -38
+	success &= TestState(i++, 1, debugger.GetRegisterVal(19), verbosity);
+
+	debugger.Step();																// slti 6 19 4063
 	success &= TestState(i++, 64, debugger.GetNextPCAddr(), verbosity);
-	debugger.Step();																// and 0 0 0 0
+	success &= TestState(i++, 0, debugger.GetRegisterVal(19), verbosity);
+
+	debugger.Step();																// ori 0 22 4325
+	success &= TestState(i++, 68, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
+
+	debugger.Step();																// sw 15 1 14  (store R1 into R15(14). R15 is 2 so mem 16
+	success &= TestState(i++, 72, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 1887, debugger.GetMemoryVal(16), verbosity);
+
+	debugger.Step();																// sw 15 1 14  (store R1 into R15(14). R15 is 2 so mem 16
+	success &= TestState(i++, 76, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 1887, debugger.GetMemoryVal(16), verbosity);
+
+	debugger.Step();																// beq 3 22 4
+	success &= TestState(i++, 84, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// bne 3 22 -38
+	success &= TestState(i++, 88, debugger.GetNextPCAddr(), verbosity);
+	
+
 
 	return success;
 }
