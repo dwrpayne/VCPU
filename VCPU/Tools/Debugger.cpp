@@ -4,20 +4,21 @@
 #include "ProgramLoader.h"
 
 
-Debugger::Debugger(CPU& cpu, std::vector<Instruction>& program)
-	: mCPU(cpu)
-	, mProgram(program)
+Debugger::Debugger(std::vector<Instruction>& program)
+	: mProgram(program)
+	, pCPU(new CPU())
 {
+	pCPU = new CPU();
 	bPrintInstruction = true;
 	bStep = false;
 
-	ProgramLoader loader(mCPU);
+	ProgramLoader loader(*pCPU);
 	loader.Load(mProgram);
 }
 
 void Debugger::Start()
 {
-	mCPU.Connect();
+	pCPU->Connect();
 
 	while (true)
 	{
@@ -25,9 +26,9 @@ void Debugger::Start()
 		{
 			__debugbreak();
 		}
-		mCPU.Update();		
+		pCPU->Update();
 
-		if (mCPU.cycles % 10 == 0)
+		if (pCPU->cycles % 10 == 0)
 		{
 			PrintRegisters();
 		}
@@ -41,12 +42,14 @@ void Debugger::Start()
 
 void Debugger::PrintInstruction()
 {
-	unsigned int addr = mCPU.pc.Out().UnsignedRead() / 4;
+	unsigned int addr = pCPU->pc.Out().UnsignedRead() / 4;
 	if (addr < mProgram.size())
 	{
-		std::cout << mCPU.cycles << "\t" << mProgram[mCPU.pc.Out().UnsignedRead() / 4] << std::endl;
+		std::cout << pCPU->cycles << "\t" << mProgram[pCPU->pc.Out().UnsignedRead() / 4] << std::endl;
 	}
 }
+
+
 
 void Debugger::PrintRegisters()
 {
@@ -55,7 +58,7 @@ void Debugger::PrintRegisters()
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			std::cout << "$" << i + 8*j << " " << mCPU.regFile.registers[i + 8*j].Out().Read() << "\t\t";
+			std::cout << "$" << i + 8*j << " " << pCPU->regFile.registers[i + 8*j].Out().Read() << "\t\t";
 		}
 		std::cout << std::endl;
 	}

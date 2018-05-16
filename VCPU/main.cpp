@@ -6,11 +6,9 @@
 
 void RunCPU(std::string filename)
 {
-	CPU* pcpu = new CPU();
 	Assembler assembler(filename);
-	Debugger debugger(*pcpu, assembler.GetProgram());
+	Debugger debugger(assembler.GetProgram());
 	debugger.Start();
-
 }
 
 
