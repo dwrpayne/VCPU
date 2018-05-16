@@ -3,7 +3,7 @@
 #include <cmath>
 #include <map>
 #include "TestHelpers.h"
-#include "CPU/MagicBundle.h"
+#include "Tools/MagicBundle.h"
 #include "AndGate.h"
 #include "OrGate.h"
 #include "NandGate.h"
@@ -258,91 +258,6 @@ bool TestJKFlipFlop(Verbosity verbosity)
 
 	return success;
 }
-//
-//bool TestJKFlipFlopPreset(Verbosity verbosity)
-//{
-//	int i = 0;
-//	bool success = true;
-//
-//	JKFlipFlopPreset test;
-//	test.Connect(Wire::OFF, Wire::OFF, Wire::OFF, Wire::OFF);
-//	const Wire& q = test.Q();
-//	const Wire& notq = test.NotQ();
-//
-//	test.Update();
-//	test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	test.Connect(Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::ON, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	test.Connect(Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//	test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::ON, Wire::ON, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::OFF, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	test.Connect(Wire::ON, Wire::ON, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::OFF, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::ON, Wire::ON, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::ON, Wire::ON, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), true, verbosity);
-//	success &= TestState(i++, notq.On(), false, verbosity);
-//
-//	test.Connect(Wire::ON, Wire::OFF, Wire::OFF, Wire::ON); test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::OFF, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	test.Connect(Wire::OFF, Wire::OFF, Wire::OFF, Wire::OFF); test.Update();
-//	success &= TestState(i++, q.On(), false, verbosity);
-//	success &= TestState(i++, notq.On(), true, verbosity);
-//
-//	return success;
-//}
 
 bool TestDFlipFlop(Verbosity verbosity)
 {
@@ -469,18 +384,6 @@ bool TestCounter(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, cycle%pow2(bits), test.Out().UnsignedRead(), verbosity);
 	}
-
-	//unsigned int start = 12U;
-	//data.Write(start);
-	//load.Set(true);
-	//test.Update();
-	//load.Set(false);
-	//success &= TestState(i++, start, test.Out().UnsignedRead(), verbosity);
-	//for (unsigned int cycle = 0; cycle < 50; ++cycle)
-	//{
-	//	test.Update();
-	//	success &= TestState(i++, (start + cycle)%pow2(bits), test.Out().UnsignedRead(), verbosity);
-	//}
 
 	return success;
 }
@@ -618,7 +521,7 @@ bool TestALU(Verbosity verbosity)
 
 		sel.Write(ALU_OPCODE::A_NOR_B);
 		alu.Update();
-		success &= TestState(i++, (~a | b), alu.Out().Read(), verbosity);
+		success &= TestState(i++, (~(a | b)), alu.Out().Read(), verbosity);
 
 		if (a > 0)
 		{

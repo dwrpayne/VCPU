@@ -1,4 +1,4 @@
-addi 0 1 71
+addi 0 1 1887
 addi 0 2 2438
 add 1 2 3 0
 sub 1 2 4 0
@@ -10,7 +10,7 @@ addi 3 13 1234
 andi 5 15 1234
 ori 6 16 1234
 xori 7 17 1234
-ori 0 22 2509
+ori 0 22 4325
 beq 3 22 4
 and 0 0 0 0
 bne 3 22 -38

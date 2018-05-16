@@ -58,11 +58,11 @@ std::ostream& operator<<(std::ostream& os, const Instruction& i)
 	}
 	else if (i.mType == Instruction::TYPE_I)
 	{
-		os << i.mName << "\t$" << (int)i.mRS << "\t$" << (int)i.mRT << "\t" << i.mImm;
+		os << i.mName << "\t$" << (int)i.mRS << " $" << (int)i.mRT << " " << i.mImm;
 	}
 	else if (i.mType == Instruction::TYPE_R)
 	{
-		os << i.mName << "\t$" << (int)i.mRS << "\t$" << (int)i.mRT << "\t$" << (int)i.mRD << "\t" << (int)i.mShAmt << "\t";
+		os << i.mName << "\t$" << (int)i.mRS << " $" << (int)i.mRT << " $" << (int)i.mRD << " " << (int)i.mShAmt << " ";
 	}
 	return os;
 }

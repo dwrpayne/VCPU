@@ -9,6 +9,9 @@ public:
 	Debugger(std::vector<Instruction>& program);
 
 	void Start();
+	void Step();
+	int GetRegisterVal(int reg);
+	int GetNextPCAddr();
 
 private:
 	void PrintInstruction();
@@ -16,7 +19,6 @@ private:
 	
 	CPU* pCPU;
 	bool bPrintInstruction;
-	bool bStep;
 
 	std::vector<Instruction> mProgram;
 };
