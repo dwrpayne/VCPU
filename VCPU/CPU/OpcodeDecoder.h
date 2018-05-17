@@ -3,7 +3,9 @@
 #include "Component.h"
 #include "OrGate.h"
 #include "NandGate.h"
+#include "NorGate.h"
 #include "Bundle.h"
+#include "MuxBundle.h"
 
 
 /*******************************
@@ -17,6 +19,8 @@
 	0	000000	100110	XOR		Exclusive Or
 	0	000000	100111	NOR		Nor
 
+	0	000000	10101x	SLT		Set on Less Than
+
 	2	000010			J		Jump
 	3	000011			JAL		Jump and Link
 	4	000100			BEQ		Branch on Equal
@@ -26,7 +30,8 @@
 
 	8	001000			ADDI	Add Immediate
 	9	001001			ADDUI	Add Immediate
-
+	10	001010			SLTI	Set on Less Than Immediate
+	11	001011			SLTUI	Set on Less ThanImmediate
 	12	001100			ANDI	And Immediate
 	13	001101			ORI		Or Immediate
 	14	001110			XORI	Exclusive Or Immediate
@@ -40,7 +45,7 @@
 class OpcodeDecoder : public Component
 {
 public:
-	void Connect(const Bundle<6>& opcode);
+	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
 	class OpcodeDecoderBundle : public Bundle<8>
@@ -72,6 +77,8 @@ public:
 	const Wire& RegWrite() { return regWrite.Out(); }
 	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadStore(), &LoadOp(), &StoreOp(), &RFormat(), &IFormat(), &AluBFromImm(), &RegWrite() }; }
 
+	const Bundle<4>& AluControl() { return control.Out(); }
+
 
 private:
 	InverterN<6> inv;
@@ -83,6 +90,19 @@ private:
 	AndGateN<3> immOp;
 	OrGateN<3> aluBImm;
 	OrGateN<3> regWrite;
+
+	NorGateN<6> zeroOpcode;
+	MuxBundle<3, 2> funcOpMux;
+	Inverter func1Inv;
+	Inverter func2Inv;
+	Inverter branchInv;
+	Inverter loadstoreInv;
+	OrGateN<3> mathOp;
+	OrGate addOr;
+	OrGate subOr;
+	AndGate addOp;
+	AndGate subOp;
+	MuxBundle<4, 2> control;
 };
 
 

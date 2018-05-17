@@ -29,26 +29,22 @@ void CPU::Connect()
 	// ******** STAGE 2 BEGIN - INSTRUCTION DECODE ************
 		
 	// Opcode Decoding
-	opcodeControl.Connect(bufIFID.IR.Opcode());
+	opcodeControl.Connect(bufIFID.IR.Opcode(), bufIFID.IR.Function());
 
 	// Register File
 	regFile.Connect(bufIFID.IR.RsAddr(), bufIFID.IR.RtAddr(), bufMEMWB.Rwrite.Out(), regWriteDataMux.Out(), bufMEMWB.OpcodeControl().RegWrite());
 	
 	// ******** STAGE 2 END - INSTRUCTION DECODE ************
 
-	bufIDEX.Connect(bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.AsBundle());
+	bufIDEX.Connect(bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.AsBundle(), opcodeControl.AluControl());
 
 	// ******** STAGE 3 BEGIN - EXECUTION ************
-
-	// ALU control. Get the opcode decoding from the previous stage. Note the Function bits are in the low 6 of "signext" now.
-	aluControl.Connect(bufIDEX.OpcodeControl().LoadStore(), bufIDEX.OpcodeControl().Branch(), bufIDEX.OpcodeControl().IFormat(), 
-						bufIDEX.OpcodeControl().RFormat(), bufIDEX.opcode.Out(), bufIDEX.signExt.Out().Range<0,6>());
 	
 	regFileWriteAddrMux.Connect({ bufIDEX.RT.Out(), bufIDEX.RD.Out() }, bufIDEX.OpcodeControl().RFormat());
 
 	// ALU
 	aluBInputMux.Connect({ bufIDEX.reg2.Out(), bufIDEX.signExt.Out() }, bufIDEX.OpcodeControl().AluBFromImm());
-	alu.Connect(bufIDEX.reg1.Out(), aluBInputMux.Out(), aluControl.AluControl());
+	alu.Connect(bufIDEX.reg1.Out(), aluBInputMux.Out(), bufIDEX.aluControl.Out());
 	
 	// PC Jump address calculation
 	pcJumpAdder.Connect(bufIDEX.PCinc.Out(), bufIDEX.signExt.Out(), Wire::OFF);
@@ -92,7 +88,6 @@ void CPU::Update2()
 void CPU::Update3()
 {
 	// ******** STAGE 3 EXECUTION ************
-	aluControl.Update();
 	regFileWriteAddrMux.Update();
 	aluBInputMux.Update();
 	alu.Update();

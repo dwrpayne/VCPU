@@ -43,7 +43,6 @@ private:
 
 	BufferIDEX bufIDEX;
 
-	ALUControl aluControl;
 	FullAdderN<32> pcJumpAdder;
 	MuxBundle<32, 2> aluBInputMux;
 	ALU<32> alu;
