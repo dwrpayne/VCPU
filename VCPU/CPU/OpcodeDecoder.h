@@ -48,14 +48,16 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	class OpcodeDecoderBundle : public Bundle<8>
+	static const int OUT_WIDTH = 9;
+	
+	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
 	public:
 		OpcodeDecoderBundle(std::initializer_list<const Wire*> list)
-			: Bundle<8>(list)
+			: Bundle<OUT_WIDTH>(list)
 		{}
-		OpcodeDecoderBundle(const Bundle<8>& other)
-			: Bundle<8>(other)
+		OpcodeDecoderBundle(const Bundle<9>& other)
+			: Bundle<OUT_WIDTH>(other)
 		{}
 		const Wire& Branch() { return Get(0); }
 		const Wire& LoadStore() { return Get(1); }
@@ -65,6 +67,7 @@ public:
 		const Wire& IFormat() { return Get(5); }
 		const Wire& AluBFromImm() { return Get(6); }
 		const Wire& RegWrite() { return Get(7); }
+		const Wire& SltInst() { return Get(8); }
 	};
 
 	const Wire& Branch() { return branchOp.Out(); }
@@ -75,7 +78,8 @@ public:
 	const Wire& IFormat() { return immOp.Out(); }
 	const Wire& AluBFromImm() { return aluBImm.Out(); }
 	const Wire& RegWrite() { return regWrite.Out(); }
-	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadStore(), &LoadOp(), &StoreOp(), &RFormat(), &IFormat(), &AluBFromImm(), &RegWrite() }; }
+	const Wire& SltInst() { return sltInst.Out(); }
+	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadStore(), &LoadOp(), &StoreOp(), &RFormat(), &IFormat(), &AluBFromImm(), &RegWrite(), &SltInst() }; }
 
 	const Bundle<4>& AluControl() { return control.Out(); }
 
@@ -92,11 +96,13 @@ private:
 	OrGateN<3> regWrite;
 
 	NorGateN<6> zeroOpcode;
-	MuxBundle<3, 2> funcOpMux;
+	MuxBundle<6, 2> funcOpMux;
 	Inverter func1Inv;
 	Inverter func2Inv;
+	Inverter func4Inv;
 	Inverter branchInv;
 	Inverter loadstoreInv;
+	AndGateN<5> sltInst;
 	OrGateN<3> mathOp;
 	OrGate addOr;
 	OrGate subOr;

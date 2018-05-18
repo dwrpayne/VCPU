@@ -6,7 +6,6 @@
 
 Debugger::Debugger(std::vector<Instruction>& program)
 	: mProgram(program)
-	, pCPU(new CPU())
 {
 	pCPU = new CPU();
 	bPrintInstruction = true;

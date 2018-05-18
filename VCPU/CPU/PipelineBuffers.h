@@ -61,7 +61,7 @@ public:
 	Register<32> reg2;
 	Register<32> PCinc;
 	Register<6> opcode;
-	Register<8> opcodeControl;
+	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 	Register<4> aluControl;
 
 };
@@ -91,7 +91,7 @@ public:
 	Register<32> reg2;
 	Register<32> aluOut;
 	Register<32> pcJumpAddr;
-	Register<8> opcodeControl;
+	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 };
 
 class BufferMEMWB : public Component
@@ -116,5 +116,5 @@ public:
 	Register<5> Rwrite;
 	Register<32> aluOut;
 	Register<32> memOut;
-	Register<8> opcodeControl;
+	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 };

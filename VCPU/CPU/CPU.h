@@ -9,7 +9,6 @@
 
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"
-#include "ALUControl.h"
 #include "PipelineBuffers.h"
 
 class CPU : public Component
@@ -54,7 +53,7 @@ private:
 
 	BufferMEMWB bufMEMWB;
 
-	MuxBundle<32, 2> regWriteDataMux;
+	MuxBundle<32, 4> regWriteDataMux;
 
 	friend class ProgramLoader;
 	friend class Debugger;

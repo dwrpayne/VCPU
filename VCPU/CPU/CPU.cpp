@@ -63,8 +63,10 @@ void CPU::Connect()
 	bufMEMWB.Connect(bufEXMEM.Rwrite.Out(), bufEXMEM.aluOut.Out(), mainMem.Out(), bufEXMEM.OpcodeControl());
 
 	// ******** STAGE 5 BEGIN - WRITEBACK ************
-	
-	regWriteDataMux.Connect({ bufMEMWB.aluOut.Out(), bufMEMWB.memOut.Out() }, bufMEMWB.OpcodeControl().LoadOp());
+	Bundle<32> sltExtended(Wire::OFF);
+	sltExtended.Connect(0, alu.Negative());
+	regWriteDataMux.Connect({ bufMEMWB.aluOut.Out(), bufMEMWB.memOut.Out(), sltExtended, sltExtended }, 
+		{ &bufMEMWB.OpcodeControl().LoadOp(), &bufMEMWB.OpcodeControl().SltInst() });
 }
 
 void CPU::Update1()

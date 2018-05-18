@@ -6,8 +6,9 @@ and 1 2 5 0
 or 1 2 6 0
 xor 1 2 7 0
 nor 1 2 8 0
-slt 1 2 9
-slt 3 2 9
+slt 1 2 9 0
+ori 0 10 11111
+slt 3 2 10 0
 addi 3 13 1234
 andi 5 15 1234
 ori 6 16 1234
