@@ -14,9 +14,7 @@ public:
 	void Update();
 
 	const Bundle<N>& Out() { return data.Out(); }
-	const Bundle<NTag>& Tag() { return tag.Out(); }
 	const Wire& CacheHit() { return cacheHit.Out(); }
-	const Wire& Status() { return status.Q(); }
 
 	virtual int Cost() const
 	{

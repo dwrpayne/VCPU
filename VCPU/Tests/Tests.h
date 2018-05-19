@@ -712,34 +712,28 @@ bool TestCacheLine(Verbosity verbosity)
 	test.Connect(tag, data, load);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, false, test.Status().On(), verbosity);
 
 	data.Write(1234);
 	tag.Write(987);
 	load.Set(true);
 	test.Update();
 	success &= TestState(i++, 1234, test.Out().Read(), verbosity);
-	success &= TestState(i++, 987, test.Tag().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, true, test.Status().On(), verbosity);
 
 	data.Write(9764);
 	tag.Write(123);
 	load.Set(false);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, true, test.Status().On(), verbosity);
 
 	tag.Write(988);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, true, test.Status().On(), verbosity);
 
 	tag.Write(987);
 	test.Update();
 	success &= TestState(i++, 1234, test.Out().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, true, test.Status().On(), verbosity);
 
 	return success;
 }
