@@ -13,11 +13,6 @@ public:
 
 	const Wire& Out() { return orGate.Out(); }
 
-	virtual int Cost() const
-	{
-		return and.Cost() + aInv.Cost() + bInv.Cost() + invAnd.Cost() + orGate.Cost();
-	}
-
 private:
 	AndGate and;
 	Inverter aInv, bInv;

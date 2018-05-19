@@ -23,12 +23,6 @@ public:
 	typedef Memory<32, 128> MainMemory; // Todo: cache levels
 	typedef RegisterFile<32, 32> RegFile;
 
-	virtual int Cost() const
-	{
-		return pcInMux.Cost() + pc.Cost() + pcIncrementer.Cost() + instructionMem.Cost() + bufIFID.Cost() +
-			opcodeControl.Cost() + regFile.Cost() + bufIDEX.Cost() + pcJumpAdder.Cost() + aluBInputMux.Cost() +
-			alu.Cost() + regFileWriteAddrMux.Cost() + bufEXMEM.Cost() + mainMem.Cost() + bufMEMWB.Cost() + regWriteDataMux.Cost();
-	}
 	
 private:
 	void Update1();

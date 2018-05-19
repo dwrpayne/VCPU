@@ -13,11 +13,6 @@ public:
 	const Wire& Q() { return norr.Out(); }
 	const Wire& NotQ() { return nors.Out(); }
 
-	virtual int Cost() const
-	{
-		return norr.Cost() + nors.Cost();
-	}
-
 private:
 	NorGate norr;
 	NorGate nors;

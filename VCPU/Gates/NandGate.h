@@ -13,11 +13,6 @@ public:
 
 	const Wire& Out() { return inv.Out(); }
 
-	virtual int Cost() const
-	{
-		return and.Cost() + inv.Cost();
-	}
-
 private:
 	AndGate and;
 	Inverter inv;
@@ -31,11 +26,6 @@ public:
 	void Update();
 
 	const Wire& Out() { return inv.Out(); }
-
-	virtual int Cost() const
-	{
-		return ands.Cost() + inv.Cost();
-	}
 
 private:
 	AndGateN<N> ands;

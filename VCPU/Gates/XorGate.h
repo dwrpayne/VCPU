@@ -14,11 +14,6 @@ public:
 
 	const Wire& Out() { return and.Out(); }
 
-	virtual int Cost() const
-	{
-		return nand.Cost() + or.Cost() + and.Cost();
-	}
-
 private:
 	NandGate nand;
 	OrGate or;

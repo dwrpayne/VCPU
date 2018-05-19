@@ -8,7 +8,7 @@
 #include "MultiGate.h"
 #include "MuxBundle.h"
 
-template <unsigned int N, unsigned int NReg>
+template <unsigned int N, unsigned int NCacheSize, unsigned int NReg>
 class Cache : public Component
 {
 public:
@@ -25,10 +25,6 @@ public:
 	const DataBundle& Out() { return outMux.Out(); }
 	const Wire& CacheHit() 
 
-	virtual int Cost() const
-	{
-		return 0;
-	}
 
 private:
 	Decoder<NReg> addrDecoder;

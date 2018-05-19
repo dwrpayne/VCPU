@@ -14,11 +14,6 @@ public:
 	const Wire& Q() { return latch.Q(); }
 	const Wire& NotQ() { return latch.NotQ(); }
 
-	virtual int Cost() const
-	{
-		return andj.Cost() + andk.Cost() + latch.Cost();
-	}
-
 private:
 	AndGate andj;
 	AndGate andk;

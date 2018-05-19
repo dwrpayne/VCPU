@@ -14,11 +14,6 @@ public:
 
 	const Bundle<N>& Out() { return out; }
 
-	virtual int Cost() const
-	{
-		return ArrayCost(bits);
-	}
-
 private:
 	std::array<DFlipFlop, N> bits;
 	Bundle<N> out;

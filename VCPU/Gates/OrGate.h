@@ -12,11 +12,6 @@ public:
 
 	const Wire& Out() { return out; }
 
-	virtual int Cost() const
-	{
-		return 1;
-	}
-
 private:
 	const Wire* in1;
 	const Wire* in2;
@@ -31,11 +26,6 @@ public:
 	void Update();
 
 	const Wire& Out() { return ors[N - 2].Out(); }
-
-	virtual int Cost() const
-	{
-		return ArrayCost(ors);
-	}
 
 private:
 	std::array<OrGate, N - 1> ors;

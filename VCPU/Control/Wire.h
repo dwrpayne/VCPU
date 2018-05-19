@@ -14,6 +14,7 @@ public:
 
 	static const Wire OFF;
 	static const Wire ON;
+	static int WireCount() { return id_counter; }
 
 private:
 	static int id_counter;

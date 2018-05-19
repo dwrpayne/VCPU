@@ -16,11 +16,6 @@ public:
 	const Bundle<N>& Out() { return data.Out(); }
 	const Wire& CacheHit() { return cacheHit.Out(); }
 
-	virtual int Cost() const
-	{
-		return data.Cost() + tag.Cost() + tagAnd.Cost() + tagMatch.Cost() + status.Cost() + cacheHit.Cost();
-	}
-
 private:
 	Register<N> data;
 	Register<NTag> tag;

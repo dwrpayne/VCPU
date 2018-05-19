@@ -16,10 +16,6 @@ public:
 	const Wire& S() { return xorOut.Out(); }
 	const Wire& Cout() { return orGate.Out(); }
 
-	virtual int Cost() const
-	{
-		return xorIn.Cost() + andIn.Cost() + xorOut.Cost() + andOut.Cost() + orGate.Cost();
-	} 
 
 private:
 	XorGate xorIn;
@@ -39,11 +35,6 @@ public:
 
 	const Bundle<N>& Out() { return sum; }
 	const Wire& Cout() { return adders[N - 1].Cout(); }
-
-	virtual int Cost() const
-	{
-		return ArrayCost(adders);
-	}
 
 private:
 	std::array<FullAdder, N> adders;

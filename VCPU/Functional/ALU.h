@@ -92,11 +92,6 @@ public:
 	};
 	const ALUFlags& Flags() { return flags; }
 
-	virtual int Cost() const
-	{
-		return adder.Cost() + ands.Cost() + ors.Cost() + xors.Cost() +
-			invs.Cost() + logicShiftMux.Cost() + outMux.Cost() + zeroOut.Cost();
-	}
 
 private:
 	Adder<N> adder;

@@ -1,8 +1,8 @@
 #include "CPU/CPU.h"
 
-#define _PRINT_COST(obj) std::cout << obj.Cost() << "\t" << typeid(obj).name() << std::endl;
-#define PRINT_COST(type) {type t; _PRINT_COST(t);}
-#define PRINT_COST_NEW(type) {type* t = new type(); _PRINT_COST((*t)); delete t;}
+#define _PRINT_COST(obj) std::cout << Wire::WireCount() - cnt << "\t" << typeid(obj).name() << std::endl;
+#define PRINT_COST(type) {int cnt = Wire::WireCount(); type t; _PRINT_COST(t);}
+#define PRINT_COST_NEW(type) {int cnt = Wire::WireCount(); type* t = new type(); _PRINT_COST((*t)); delete t;}
 
 void PrintComponentCosts()
 {

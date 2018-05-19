@@ -15,12 +15,6 @@ public:
 
 	const Wire& Out() { return overflow.Out(); }
 
-	virtual int Cost() const
-	{
-		return invA.Cost() + invB.Cost() + invSum.Cost() + overflowPos.Cost() +
-			overflowNeg.Cost() + overflow.Cost();
-	}
-	
 private:
 	Inverter invA;
 	Inverter invB;

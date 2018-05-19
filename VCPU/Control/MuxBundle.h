@@ -22,11 +22,6 @@ public:
 
 	const Bundle<N>& Out() { return out; }
 
-	virtual int Cost() const
-	{
-		return ArrayCost(muxes);
-	}
-
 private:
 #ifdef DEBUG
 	std::array<Bundle<N>, Ninput> in_bundles;

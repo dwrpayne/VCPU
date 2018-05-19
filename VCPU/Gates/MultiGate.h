@@ -13,11 +13,6 @@ public:
 
 	const Bundle<N>& Out() { return out; }
 
-	virtual int Cost() const
-	{
-		return ArrayCost(gates);
-	}
-
 private:
 	std::array<Gate, N> gates;
 	Bundle<N> out;

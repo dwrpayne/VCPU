@@ -21,10 +21,6 @@ public:
 
 	const Bundle<N>& Out() { return ands.Out(); }
 
-	virtual int Cost() const
-	{
-		return dec1.Cost() + dec2.Cost() + ands.Cost();
-	}
 
 private:
 	Decoder<N1> dec1;
@@ -71,10 +67,6 @@ public:
 
 	const Bundle<2>& Out() { return out; }
 
-	virtual int Cost() const
-	{
-		return inv.Cost() + buffer.Cost();
-	}
 
 private:
 	Inverter inv;
