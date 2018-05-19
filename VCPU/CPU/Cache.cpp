@@ -11,9 +11,12 @@
 
 void Cache::Connect(const AddrBundle & addr, const CacheLineDataBundle & data, const Wire& write)
 {
-	CacheOffsetBundle offset = addr.Range<CACHE_OFFSET_BITS>(0);
-	CacheIndexBundle index = addr.Range<CACHE_INDEX_BITS>(CACHE_OFFSET_BITS);
-	TagBundle tag = addr.Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);
+	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
+	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));
+
+	CacheOffsetBundle offset = wordAddr.Range<CACHE_OFFSET_BITS>(0);
+	CacheIndexBundle index = wordAddr.Range<CACHE_INDEX_BITS>(CACHE_OFFSET_BITS);
+	TagBundle tag = wordAddr.Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);
 
 	addrDecoder.Connect(index);
 	writeEnable.Connect(addrDecoder.Out(), Bundle<NUM_CACHE_LINES>(cacheMiss.Out()));

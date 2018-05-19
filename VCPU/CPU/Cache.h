@@ -15,6 +15,7 @@ public:
 	static const int MAIN_MEMORY_BYTES = 8192;
 	static const int CACHE_SIZE_BYTES = 512;
 	static const int WORD_SIZE = 32;
+	static const int WORD_BYTES = WORD_SIZE / 8;
 	static const int CACHE_LINE_BITS = 256;
 	static const int ADDR_BITS = bits(MAIN_MEMORY_BYTES);
 	static const int MAIN_MEMORY_LINES = MAIN_MEMORY_BYTES * 8 / CACHE_LINE_BITS;
@@ -22,7 +23,7 @@ public:
 	static const int CACHE_INDEX_BITS = bits(NUM_CACHE_LINES);
 	static const int CACHE_WORDS = CACHE_LINE_BITS / WORD_SIZE;
 	static const int CACHE_OFFSET_BITS = bits(CACHE_WORDS);
-	static const int TAG_BITS = ADDR_BITS - CACHE_INDEX_BITS - CACHE_OFFSET_BITS;
+	static const int TAG_BITS = ADDR_BITS - CACHE_INDEX_BITS - CACHE_OFFSET_BITS - bits(WORD_BYTES);
 
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<WORD_SIZE> DataBundle;

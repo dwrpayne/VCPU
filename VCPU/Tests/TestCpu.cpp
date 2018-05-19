@@ -165,12 +165,13 @@ bool TestCache(Verbosity verbosity)
 	}
 	addr.Write(68);
 	pMainMem->Update();
+	load.Set(false);
 	
 	Cache* pCache = new Cache();
 	Cache& test = *pCache;
 	test.Connect(addr, pMainMem->Out(), Wire::OFF);
 	
-	addr.Write(8);
+	addr.Write(0);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
@@ -182,7 +183,15 @@ bool TestCache(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(20);
+	addr.Write(8);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	addr.Write(10);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	addr.Write(12);
 	test.Update();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
