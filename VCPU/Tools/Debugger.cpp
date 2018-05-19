@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <string>
 #include "Debugger.h"
 #include "ProgramLoader.h" 
 #include "Assembler.h"
