@@ -80,11 +80,12 @@ public:
 class BufferEXMEM : public Component
 {
 public:
-	void Connect(const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const Bundle<32>& pcjumpAdd, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+	void Connect(const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, const Bundle<32>& pcjumpAdd, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
 		Rwrite.Connect(rwrite, Wire::ON);
 		reg2.Connect(regR2, Wire::ON);
 		aluOut.Connect(aluout, Wire::ON);
+		aluFlags.Connect(flags, Wire::ON);
 		pcJumpAddr.Connect(pcjumpAdd, Wire::ON);
 		opcodeControl.Connect(opcodeDec, Wire::ON);
 	}
@@ -93,6 +94,7 @@ public:
 		Rwrite.Update();
 		reg2.Update();
 		aluOut.Update();
+		aluFlags.Update();
 		pcJumpAddr.Update();
 		opcodeControl.Update();
 	}
@@ -102,11 +104,14 @@ public:
 		return Rwrite.Cost() + reg2.Cost() + aluOut.Cost() + pcJumpAddr.Cost() + opcodeControl.Cost();
 	}
 
+	ALU<32>::ALUFlags Flags() { return ALU<32>::ALUFlags(aluFlags.Out()); }
+
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> Rwrite;
 	Register<32> reg2;
 	Register<32> aluOut;
+	Register<4> aluFlags;
 	Register<32> pcJumpAddr;
 	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 };

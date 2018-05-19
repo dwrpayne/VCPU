@@ -66,15 +66,31 @@ template <unsigned int N>
 class ALU : public Component
 {
 public:
+	ALU();
 	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<4>& control);
 	void Update();
 
 	const Bundle<N>& Out() { return outMux.Out(); }
-	const Wire& Zero() { return zeroOut.Out(); }
-	const Wire& Carry() { return adder.Cout(); } // TODO: When subtracting, seems to return true when a >= b? Weird..
-	const Wire& Overflow() { return adder.Overflow(); }
-	const Wire& Negative() { return Out()[N - 1]; }
 
+	class ALUFlags : public Bundle<4>
+	{
+	public:
+		ALUFlags()
+			: Bundle<4>()
+		{}
+		ALUFlags(std::initializer_list<const Wire*> list)
+			: Bundle<4>(list)
+		{}
+		ALUFlags(const Bundle<4>& other)
+			: Bundle<4>(other)
+		{}
+		const Wire& Zero() const { return Get(0); }
+		const Wire& Carry() const { return Get(1); }  // TODO: When subtracting, seems to return true when a >= b? Weird..
+		const Wire& Overflow() const { return Get(2); }
+		const Wire& Negative() const { return Get(3); }
+
+	};
+	const ALUFlags& Flags() { return flags; }
 
 	virtual int Cost() const
 	{
@@ -91,7 +107,14 @@ private:
 	MuxBundle<N, 8> logicShiftMux;
 	MuxBundle<N, 2> outMux;
 	NorGateN<N> zeroOut;
+	ALUFlags flags;
 };
+
+template<unsigned int N>
+inline ALU<N>::ALU()
+{
+	flags.Connect({ &zeroOut.Out(), &adder.Cout(), &adder.Overflow(), &Out()[N - 1] });
+}
 
 template<unsigned int N>
 inline void ALU<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<4>& control)

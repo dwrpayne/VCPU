@@ -546,18 +546,18 @@ bool TestALU(Verbosity verbosity)
 	sel.Write(ALU_OPCODE::A_PLUS_B);
 	alu.Update();
 	success &= TestState(i++, 127, alu.Out().Read(), verbosity);
-	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
-	success &= TestState(i++, false, alu.Carry().On(), verbosity);
-	success &= TestState(i++, false, alu.Negative().On(), verbosity);
-	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
 
 	sel.Write(ALU_OPCODE::A_PLUS_B_PLUS_ONE);
 	alu.Update();
 	success &= TestState(i++, -128, alu.Out().Read(), verbosity);
-	success &= TestState(i++, true, alu.Overflow().On(), verbosity);
-	success &= TestState(i++, false, alu.Carry().On(), verbosity);
-	success &= TestState(i++, true, alu.Negative().On(), verbosity);
-	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
 
 	a_reg.Write(-125);
 	b_reg.Write(3);
@@ -565,18 +565,18 @@ bool TestALU(Verbosity verbosity)
 	sel.Write(ALU_OPCODE::A_MINUS_B);
 	alu.Update();
 	success &= TestState(i++, -128, alu.Out().Read(), verbosity);
-	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
-	success &= TestState(i++, true, alu.Carry().On(), verbosity);
-	success &= TestState(i++, true, alu.Negative().On(), verbosity);
-	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
 
 	sel.Write(ALU_OPCODE::A_MINUS_B_MINUS_ONE);
 	alu.Update();
 	success &= TestState(i++, 127, alu.Out().Read(), verbosity);
-	success &= TestState(i++, true, alu.Overflow().On(), verbosity);
-	success &= TestState(i++, true, alu.Carry().On(), verbosity);
-	success &= TestState(i++, false, alu.Negative().On(), verbosity);
-	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
 
 	a_reg.Write(3);
 	b_reg.Write(3);
@@ -584,18 +584,51 @@ bool TestALU(Verbosity verbosity)
 	sel.Write(ALU_OPCODE::A_MINUS_B);
 	alu.Update();
 	success &= TestState(i++, 0, alu.Out().Read(), verbosity);
-	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
-	success &= TestState(i++, true, alu.Carry().On(), verbosity);
-	success &= TestState(i++, false, alu.Negative().On(), verbosity);
-	success &= TestState(i++, true, alu.Zero().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Zero().On(), verbosity);
 
 	sel.Write(ALU_OPCODE::A_MINUS_B_MINUS_ONE);
 	alu.Update();
 	success &= TestState(i++, -1, alu.Out().Read(), verbosity);
-	success &= TestState(i++, false, alu.Overflow().On(), verbosity);
-	success &= TestState(i++, false, alu.Carry().On(), verbosity);
-	success &= TestState(i++, true, alu.Negative().On(), verbosity);
-	success &= TestState(i++, false, alu.Zero().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
+
+	a_reg.Write(11);
+	b_reg.Write(10);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B);
+	alu.Update();
+	success &= TestState(i++, 1, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
+
+	a_reg.Write(10);
+	b_reg.Write(10);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B);
+	alu.Update();
+	success &= TestState(i++, 0, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Zero().On(), verbosity);
+
+	a_reg.Write(9);
+	b_reg.Write(10);
+
+	sel.Write(ALU_OPCODE::A_MINUS_B);
+	alu.Update();
+	success &= TestState(i++, -1, alu.Out().Read(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, true, alu.Flags().Negative().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
 
 	return success;
 }
