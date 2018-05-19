@@ -141,6 +141,7 @@ bool TestCPU(Verbosity verbosity)
 	CPU* pcpu = new CPU();
 	Assembler assembler("testops.vasm");
 	Debugger debugger(assembler.GetProgram());
+	debugger.SetInstructionPrint(true);
 
 	success &= TestState(i++, 0, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(0), verbosity);
@@ -225,12 +226,51 @@ bool TestCPU(Verbosity verbosity)
 	success &= TestState(i++, 80, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
 
-	debugger.Step();																// beq 3 22 4
-	success &= TestState(i++, 88, debugger.GetNextPCAddr(), verbosity);
-
-	debugger.Step();																// bne 3 22 -38
+	debugger.Step();																// beq 3 22 8 (should take)
 	success &= TestState(i++, 92, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// beq 3 20 4 (should not take)
+	success &= TestState(i++, 96, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// and 0 0 0
+	success &= TestState(i++, 100, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// bne 3 22 -38 (should not take)
+	success &= TestState(i++, 104, debugger.GetNextPCAddr(), verbosity);
 	
+	debugger.Step();																// and 0 0 0
+	success &= TestState(i++, 108, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// bne 3 20 12 (should take)
+	success &= TestState(i++, 124, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// blez 8 0 8 (should take)
+	success &= TestState(i++, 136, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// blez 19 0 4 (should take)
+	success &= TestState(i++, 144, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// blez 16 0 4 (should not take)
+	success &= TestState(i++, 148, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// and 0 0 0
+	success &= TestState(i++, 152, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// bgtz 8 0 4 (should not take)
+	success &= TestState(i++, 156, debugger.GetNextPCAddr(), verbosity);
+	debugger.Step();																// and 0 0 0
+	success &= TestState(i++, 160, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// bgtz 19 0 4 (should not take)
+	success &= TestState(i++, 164, debugger.GetNextPCAddr(), verbosity);
+	debugger.Step();																// and 0 0 0
+	success &= TestState(i++, 168, debugger.GetNextPCAddr(), verbosity);
+
+	debugger.Step();																// bgtz 16 0 20 (should take)
+	success &= TestState(i++, 192, debugger.GetNextPCAddr(), verbosity);
+	
+	debugger.Step();																// beq 1 11 -196 (should take back to start
+	success &= TestState(i++, 0, debugger.GetNextPCAddr(), verbosity);
 
 
 	return success;

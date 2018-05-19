@@ -26,6 +26,6 @@ void RunCPU(std::string filename)
 
 int main(int argc, char** argv)
 {
-	//Test();
-	RunCPU("testops.vasm");
+	Test();
+	//RunCPU("testops.vasm");
 }

@@ -55,18 +55,17 @@ void CPU::Connect()
 
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
 	
-	// Handles 4 branch instructions
+	// TODO: This is hacky, extract to component.  Handles 4 branch instructions  
 	//	000100	beq rs rt	 rs - rt		alu.zero()
 	//	000101	bneq rs rt	 rs - rt		NOT alu.zero()
 	//	000110	blez rs 0	 rs - 0			alu.negative or alu.zero()
 	//	000111	bgtz rs 0	 rs - 0			not (alu.negative or alu.zero())
-
-	// TODO: This is hacky, extract to component.
 	aluZeroInv.Connect(bufEXMEM.Flags().Zero());
 	aluNegOrZero.Connect(bufEXMEM.Flags().Negative(), bufEXMEM.Flags().Zero());
 	aluPos.Connect(aluNegOrZero.Out());
 	branchTakenMux.Connect({ &bufEXMEM.Flags().Zero(), &aluZeroInv.Out(), &aluNegOrZero.Out(), &aluPos.Out() }, bufEXMEM.OpcodeControl().BranchSel());
 	branchTakenAnd.Connect(branchTakenMux.Out(), bufEXMEM.OpcodeControl().Branch());
+
 	// Main Memory
 	mainMem.Connect(bufEXMEM.aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp());
 

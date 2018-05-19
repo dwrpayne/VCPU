@@ -14,6 +14,8 @@ public:
 	int GetMemoryVal(int addr);
 	int GetNextPCAddr();
 
+	void SetInstructionPrint(bool state) { bPrintInstruction = state; }
+
 private:
 	void PrintInstruction();
 	void PrintRegisters();
