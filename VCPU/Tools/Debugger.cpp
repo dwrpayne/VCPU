@@ -8,8 +8,8 @@ Debugger::Debugger(std::vector<Instruction>& program)
 	: mProgram(program)
 {
 	pCPU = new CPU();
-	bPrintInstruction = true;
-	bPrintRegisters = true;
+	bPrintInstruction = false;
+	bPrintRegisters = false;
 
 	ProgramLoader loader(*pCPU);
 	loader.Load(mProgram);
@@ -21,24 +21,33 @@ void Debugger::Start()
 {
 	while (true)
 	{
-		pCPU->Update();
+		Step();
 
-		if (pCPU->cycles % 100 == 0)
+		if (pCPU->cycles % 1000 == 0)
 		{
-			PrintRegisters();
-		}
-
-		if (bPrintInstruction)
-		{
-			PrintInstruction();
+			long long ms = mCpuElapsedTime.count() / 1000;
+			std::cout << pCPU->cycles << " cycles in " << ms << "ms. Average clock freq of " << (1000.0 * pCPU->cycles) / mCpuElapsedTime.count() << "kHz" << std::endl;
 		}
 	}
 }
 
 void Debugger::Step()
 {
-	PrintInstruction();
+	if (bPrintInstruction)
+	{
+		PrintInstruction();
+	}
+
+	auto t1 = std::chrono::high_resolution_clock::now();
 	pCPU->Update();
+	auto t2 = std::chrono::high_resolution_clock::now();
+
+	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+
+	if (bPrintRegisters)
+	{
+		PrintRegisters();
+	}
 }
 
 int Debugger::GetRegisterVal(int reg)

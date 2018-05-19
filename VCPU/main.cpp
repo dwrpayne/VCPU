@@ -5,15 +5,8 @@
 #include "Tools/Assembler.h"
 #include "Tests/ComponentCost.h"
 
-void RunCPU(std::string filename)
-{
-	Assembler assembler(filename);
-	Debugger debugger(assembler.GetProgram());
-	debugger.Start();
-}
 
-
-int main(int argc, char** argv)
+void Test()
 {
 	bool success = true;
 	PrintComponentCosts();
@@ -22,6 +15,17 @@ int main(int argc, char** argv)
 #endif
 	success &= RunCPUTests();
 	std::cout << (success ? "All tests passed!" : "Some tests failed!") << std::endl;
+}
 
-	//RunCPU("testops.vasm");
+void RunCPU(std::string filename)
+{
+	Assembler assembler(filename);
+	Debugger debugger(assembler.GetProgram());
+	debugger.Start();
+}
+
+int main(int argc, char** argv)
+{
+	//Test();
+	RunCPU("testops.vasm");
 }

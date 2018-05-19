@@ -1,5 +1,5 @@
 #pragma once
-
+#include <chrono>
 #include "CPU/CPU.h"
 #include "Instruction.h"
 
@@ -21,6 +21,8 @@ private:
 	CPU* pCPU;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
+
+	std::chrono::microseconds mCpuElapsedTime;
 
 	std::vector<Instruction> mProgram;
 };
