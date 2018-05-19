@@ -159,6 +159,7 @@
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\FullAdder.h" />
+    <ClInclude Include="Functional\OverflowDetector.h" />
     <ClInclude Include="Gates\AndGate.h" />
     <ClInclude Include="Gates\Inverter.h" />
     <ClInclude Include="Gates\MultiGate.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />
+    <ClInclude Include="Tests\ComponentCost.h" />
     <ClInclude Include="Tests\Instructions.h" />
     <ClInclude Include="Tests\TestCPU.h" />
     <ClInclude Include="Tests\TestHelpers.h" />

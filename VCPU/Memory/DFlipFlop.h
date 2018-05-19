@@ -11,7 +11,12 @@ public:
 
 	const Wire& Q() { return nandR.Out(); }
 	const Wire& NotQ() { return nandS.Out(); }
-	
+
+	virtual int Cost() const
+	{
+		return invD.Cost() + nandD.Cost() + nandDinv.Cost() + nandR.Cost() + nandS.Cost();
+	}
+
 private:
 	Inverter invD;
 	NandGate nandD;

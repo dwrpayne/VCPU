@@ -14,6 +14,11 @@ public:
 
 	const Wire& Out() { return inv.Out(); }
 
+	virtual int Cost() const
+	{
+		return or.Cost() + inv.Cost();
+	}
+
 private:
 	OrGate or;
 	Inverter inv;
@@ -27,6 +32,11 @@ public:
 	void Update();
 
 	const Wire& Out() { return inv.Out(); }
+
+	virtual int Cost() const
+	{
+		return ors.Cost() + inv.Cost();
+	}
 
 private:
 	OrGateN<N> ors;

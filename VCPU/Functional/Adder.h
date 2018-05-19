@@ -35,6 +35,11 @@ public:
 	const Wire& Cout() { return adders.Cout(); }
 	const Wire& Overflow() { return overflow.Out(); }
 
+	virtual int Cost() const
+	{
+		return bInv.Cost() + bInputMux.Cost() + adders.Cost() + overflow.Cost();
+	}
+
 private:
 	InverterN<N> bInv;
 	MuxBundle<N, 4> bInputMux;

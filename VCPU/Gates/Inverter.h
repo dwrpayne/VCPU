@@ -11,6 +11,11 @@ public:
 	void Update();
 
 	const Wire& Out() { return out; }
+	
+	virtual int Cost() const
+	{
+		return 1;
+	}
 
 private:
 	const Wire* in;
@@ -28,8 +33,13 @@ public:
 
 	const Bundle<N>& Out() { return out; }
 
+	virtual int Cost() const
+	{
+		return ArrayCost(invs);
+	}
+
 private:
-	Inverter invs[N];
+	std::array<Inverter, N> invs;
 	Bundle<N> out;
 };
 

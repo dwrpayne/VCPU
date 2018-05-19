@@ -25,6 +25,11 @@ public:
 
 	const DataBundle& Out() { return outMux.Out(); }
 
+	virtual int Cost() const
+	{
+		return addrDecoder.Cost() + writeEnable.Cost() + ArrayCost(registers) + outMux.Cost();
+	}
+
 private:
 	Decoder<NReg> addrDecoder;
 	MultiGate<AndGate, NReg> writeEnable;

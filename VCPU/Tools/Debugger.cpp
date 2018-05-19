@@ -9,6 +9,7 @@ Debugger::Debugger(std::vector<Instruction>& program)
 {
 	pCPU = new CPU();
 	bPrintInstruction = true;
+	bPrintRegisters = true;
 
 	ProgramLoader loader(*pCPU);
 	loader.Load(mProgram);
@@ -22,7 +23,7 @@ void Debugger::Start()
 	{
 		pCPU->Update();
 
-		if (pCPU->cycles % 10 == 0)
+		if (pCPU->cycles % 100 == 0)
 		{
 			PrintRegisters();
 		}

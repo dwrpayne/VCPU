@@ -79,6 +79,13 @@ public:
 
 	const Bundle<4>& AluControl() { return control.Out(); }
 
+	virtual int Cost() const
+	{
+		return inv.Cost() + rFormat.Cost() + loadstore.Cost() + loadOp.Cost() + storeOp.Cost() + branchOp.Cost() +
+			immOp.Cost() + aluBImm.Cost() + regWrite.Cost() + zeroOpcode.Cost() + funcOpMux.Cost() + func1Inv.Cost() +
+			func2Inv.Cost() + func4Inv.Cost() + branchInv.Cost() + loadstoreInv.Cost() + sltop.Cost() + mathOp.Cost() +
+			addOr.Cost() + subOr.Cost() + addOp.Cost() + subOp.Cost() + control.Cost();
+	}
 
 private:
 	InverterN<6> inv;

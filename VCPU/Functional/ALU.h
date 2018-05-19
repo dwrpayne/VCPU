@@ -75,6 +75,13 @@ public:
 	const Wire& Overflow() { return adder.Overflow(); }
 	const Wire& Negative() { return Out()[N - 1]; }
 
+
+	virtual int Cost() const
+	{
+		return adder.Cost() + ands.Cost() + ors.Cost() + xors.Cost() +
+			invs.Cost() + logicShiftMux.Cost() + outMux.Cost() + zeroOut.Cost();
+	}
+
 private:
 	Adder<N> adder;
 	MultiGate<AndGate, N> ands;

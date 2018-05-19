@@ -17,6 +17,11 @@ public:
 
 	const Bundle<N>& Out() { return out; }
 
+	virtual int Cost() const
+	{
+		return ArrayCost(bits) + ArrayCost(ands) + loadMux.Cost() + invData.Cost();
+	}
+
 private:
 	std::array<JKFlipFlop, N> bits;
 	std::array<AndGate, N - 2> ands;

@@ -20,6 +20,7 @@ private:
 	
 	CPU* pCPU;
 	bool bPrintInstruction;
+	bool bPrintRegisters;
 
 	std::vector<Instruction> mProgram;
 };

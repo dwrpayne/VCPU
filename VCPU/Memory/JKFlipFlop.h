@@ -14,25 +14,14 @@ public:
 	const Wire& Q() { return latch.Q(); }
 	const Wire& NotQ() { return latch.NotQ(); }
 
+	virtual int Cost() const
+	{
+		return andj.Cost() + andk.Cost() + latch.Cost();
+	}
+
 private:
 	AndGate andj;
 	AndGate andk;
 	SRLatch latch;
-};
-
-
-class JKFlipFlopPreset : public Component
-{
-public:
-	void Connect(const Wire& j, const Wire& k, const Wire& preset, const Wire& clear);
-	void Update();
-
-	const Wire& Q() { return latch.Q(); }
-	const Wire& NotQ() { return latch.NotQ(); }
-
-private:
-	AndGate andj;
-	AndGate andk;
-	SRLatchPreset latch;
 };
 

@@ -194,5 +194,11 @@
     <ClInclude Include="Tests\Instructions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Functional\OverflowDetector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\ComponentCost.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

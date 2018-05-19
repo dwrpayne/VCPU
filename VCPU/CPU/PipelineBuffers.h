@@ -20,6 +20,11 @@ public:
 		PCinc.Update();
 	}
 
+	virtual int Cost() const
+	{
+		return IR.Cost() + PCinc.Cost();
+	}
+
 	InsRegister IR;
 	Register<32> PCinc;
 };
@@ -50,6 +55,12 @@ public:
 		opcode.Update();
 		opcodeControl.Update();
 		aluControl.Update();
+	}
+
+	virtual int Cost() const
+	{
+		return RT.Cost() + RD.Cost() + signExt.Cost() + reg1.Cost() + reg2.Cost() +
+			PCinc.Cost() + opcode.Cost() + opcodeControl.Cost() + aluControl.Cost();
 	}
 
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
@@ -85,6 +96,12 @@ public:
 		pcJumpAddr.Update();
 		opcodeControl.Update();
 	}
+
+	virtual int Cost() const
+	{
+		return Rwrite.Cost() + reg2.Cost() + aluOut.Cost() + pcJumpAddr.Cost() + opcodeControl.Cost();
+	}
+
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> Rwrite;
@@ -111,6 +128,12 @@ public:
 		memOut.Update();
 		opcodeControl.Update();
 	}
+
+	virtual int Cost() const
+	{
+		return Rwrite.Cost() + aluOut.Cost() + memOut.Cost() + opcodeControl.Cost();
+	}
+
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> Rwrite;

@@ -18,6 +18,11 @@ public:
 
 	const Wire& Out() { return muxOut.Out(); }
 
+	virtual int Cost() const
+	{
+		return mux0.Cost() + mux1.Cost() + muxOut.Cost();
+	}
+
 private:
 	Multiplexer<N / 2> mux0;
 	Multiplexer<N / 2> mux1;
@@ -50,6 +55,11 @@ public:
 	void Update();
 	
 	const Wire& Out() { return orOut.Out(); }
+
+	virtual int Cost() const
+	{
+		return inv.Cost() + and0.Cost() + and1.Cost() + orOut.Cost();
+	}
 
 private:
 	Inverter inv;

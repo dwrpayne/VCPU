@@ -14,6 +14,11 @@ public:
 
 	const Wire& Out() { return out; }
 
+	virtual int Cost() const
+	{
+		return 1;
+	}
+
 private:
 	const Wire* in1;
 	const Wire* in2;
@@ -29,6 +34,11 @@ public:
 	void Update();
 
 	const Wire& Out() { return ands[N-2].Out(); }
+	
+	virtual int Cost() const
+	{
+		return ArrayCost(ands);
+	}
 
 private:
 	std::array<AndGate, N-1> ands;
