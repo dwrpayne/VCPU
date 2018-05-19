@@ -1,18 +1,21 @@
 #include <iostream>
 
 #include "Debugger.h"
-#include "ProgramLoader.h"
+#include "ProgramLoader.h" 
+#include "Assembler.h"
 
 
-Debugger::Debugger(std::vector<Instruction>& program)
-	: mProgram(program)
+Debugger::Debugger(const std::string& source_filename)
 {
 	pCPU = new CPU();
 	bPrintInstruction = false;
 	bPrintRegisters = false;
 
+	pAssembler = new Assembler(source_filename);
+
+
 	ProgramLoader loader(*pCPU);
-	loader.Load(mProgram);
+	loader.Load(pAssembler->GetBinary());
 	pCPU->Connect();
 	pCPU->Update();
 }
@@ -68,12 +71,9 @@ int Debugger::GetNextPCAddr()
 void Debugger::PrintInstruction()
 {
 	unsigned int addr = pCPU->pc.Out().UnsignedRead() / 4;
-	if (addr < mProgram.size())
-	{
-		std::cout << pCPU->cycles << "\t0x" << std::hex << GetNextPCAddr() << std::dec << "\t" << mProgram[pCPU->pc.Out().UnsignedRead() / 4] << std::endl;
-	}
+	auto line = pAssembler->GetSourceLine(addr);
+	std::cout << pCPU->cycles << "\t0x" << std::hex << GetNextPCAddr() << std::dec << "\t" << line << std::endl;
 }
-
 
 void Debugger::PrintRegisters()
 {

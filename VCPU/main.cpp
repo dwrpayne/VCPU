@@ -19,8 +19,7 @@ void Test()
 
 void RunCPU(std::string filename)
 {
-	Assembler assembler(filename);
-	Debugger debugger(assembler.GetProgram());
+	Debugger debugger(filename);
 	debugger.Start();
 }
 

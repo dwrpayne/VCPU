@@ -7,11 +7,11 @@ ProgramLoader::ProgramLoader(CPU & cpu)
 	insMemory.Connect(addr_bundle.Range<0, CPU::InsMemory::ADDR_BITS>(), ins_bundle, Wire::ON);
 }
 
-void ProgramLoader::Load(const std::vector<Instruction>& instructions)
+void ProgramLoader::Load(const std::vector<unsigned int>& instructions)
 {
 	for (const auto& i : instructions)
 	{
-		ins_bundle.Write(i.GetValue());
+		ins_bundle.Write(i);
 		addr_bundle.Write(cur_addr);
 		insMemory.Update();
 		cur_addr += 4;

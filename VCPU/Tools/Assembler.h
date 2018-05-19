@@ -1,16 +1,31 @@
 #pragma once
 #include <vector>
-#include "Instruction.h"
+#include <map>
+
+enum InstType
+{
+	R_TYPE,
+	I_TYPE,
+	J_TYPE
+};
 
 class Assembler
 {
 public:
 	Assembler(const std::string& filename);
-	bool ParseLine(const std::string& line);
+	void ParseSource();
 
-	std::vector<Instruction>& GetProgram() { return program; }
+	const std::string GetSourceLine(unsigned int line) const;
+	std::vector<unsigned int>& GetBinary() { return mBinary; }
 		
 private:
-	std::vector<Instruction> program;
+	unsigned int ParseLine(const std::string line);
+
+	std::string mSourceFilename;
+
+	std::vector<std::string> mSource;
+	std::vector<unsigned int> mBinary;
+
+	static const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> opcodeInfo;
 };
 

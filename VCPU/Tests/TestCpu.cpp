@@ -139,8 +139,7 @@ bool TestCPU(Verbosity verbosity)
 	bool success = true;
 
 	CPU* pcpu = new CPU();
-	Assembler assembler("testops.vasm");
-	Debugger debugger(assembler.GetProgram());
+	Debugger debugger("testops.vasm");
 	debugger.SetInstructionPrint(true);
 
 	success &= TestState(i++, 0, debugger.GetNextPCAddr(), verbosity);

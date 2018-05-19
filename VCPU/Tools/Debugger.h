@@ -1,12 +1,11 @@
 #pragma once
 #include <chrono>
 #include "CPU/CPU.h"
-#include "Instruction.h"
 
 class Debugger
 {
 public:
-	Debugger(std::vector<Instruction>& program);
+	Debugger(const std::string& source_filename);
 
 	void Start();
 	void Step();
@@ -26,6 +25,6 @@ private:
 
 	std::chrono::microseconds mCpuElapsedTime;
 
-	std::vector<Instruction> mProgram;
+	class Assembler* pAssembler;
 };
 

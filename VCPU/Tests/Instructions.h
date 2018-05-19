@@ -32,10 +32,6 @@ enum Opcode : unsigned char
 	OP_SLT = 0,
 	OP_SLTU = 0,
 
-	OP_BLTZ = 1,
-	OP_BGEZ = 1,
-	OP_BLTZAL = 1,
-	OP_BGEZAL = 1,
 	OP_J = 2,
 	OP_JAL = 3,
 	OP_BEQ = 4,
