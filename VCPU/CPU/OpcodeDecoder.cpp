@@ -2,8 +2,8 @@
 
 OpcodeDecoder::OpcodeDecoder()
 {
-	out.Connect({ &Branch(), &LoadOp(), &StoreOp(), &RFormat(),
-		&AluBFromImm(), &RegWrite(), &SltOp(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
+	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &rFormat.Out(),
+		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
 }
 
 void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
