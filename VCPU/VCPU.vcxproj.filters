@@ -197,6 +197,9 @@
     <ClInclude Include="Tests\ComponentCost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Memory\CacheLine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Gates\XNorGate.h">
       <Filter>Header Files</Filter>
     </ClInclude>

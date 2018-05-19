@@ -168,6 +168,7 @@
     <ClInclude Include="Gates\OrGate.h" />
     <ClInclude Include="Gates\XNorGate.h" />
     <ClInclude Include="Gates\XorGate.h" />
+    <ClInclude Include="Memory\CacheLine.h" />
     <ClInclude Include="Memory\Counter.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />

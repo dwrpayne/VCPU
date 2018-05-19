@@ -25,6 +25,7 @@
 #include "Decoder.h"
 #include "ALU.h"
 #include "RegisterFile.h"
+#include "CacheLine.h"
 
 #ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -635,7 +636,7 @@ bool TestALU(Verbosity verbosity)
 	alu.Update();
 	success &= TestState(i++, -1, alu.Out().Read(), verbosity);
 	success &= TestState(i++, false, alu.Flags().Overflow().On(), verbosity);
-	success &= TestState(i++, true, alu.Flags().Carry().On(), verbosity);
+	success &= TestState(i++, false, alu.Flags().Carry().On(), verbosity);
 	success &= TestState(i++, true, alu.Flags().Negative().On(), verbosity);
 	success &= TestState(i++, false, alu.Flags().Zero().On(), verbosity);
 
@@ -698,6 +699,51 @@ bool TestRegisterFile(Verbosity verbosity)
 	return success;
 }
 
+
+bool TestCacheLine(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	CacheLine<32, 20> test;
+	MagicBundle<32> data;
+	MagicBundle<20> tag;
+	Wire load(false);
+	test.Connect(tag, data, load);
+	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, false, test.Status().On(), verbosity);
+
+	data.Write(1234);
+	tag.Write(987);
+	load.Set(true);
+	test.Update();
+	success &= TestState(i++, 1234, test.Out().Read(), verbosity);
+	success &= TestState(i++, 987, test.Tag().Read(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Status().On(), verbosity);
+
+	data.Write(9764);
+	tag.Write(123);
+	load.Set(false);
+	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Status().On(), verbosity);
+
+	tag.Write(988);
+	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Status().On(), verbosity);
+
+	tag.Write(987);
+	test.Update();
+	success &= TestState(i++, 1234, test.Out().Read(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Status().On(), verbosity);
+
+	return success;
+}
+
 bool RunAllTests()
 {
 	bool success = true;
@@ -728,6 +774,7 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
 	RUN_TEST(TestALU, FAIL_ONLY);
 	RUN_TEST(TestRegisterFile, FAIL_ONLY);
+	RUN_TEST(TestCacheLine, FAIL_ONLY);
 	return success;
 }
 #endif
