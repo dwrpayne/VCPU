@@ -56,6 +56,12 @@ private:
 
 	BufferEXMEM bufEXMEM;
 
+	// TODO: Extract these gates into a Component
+	Inverter aluZeroInv;
+	OrGate aluNegOrZero;
+	Inverter aluPos;
+	Multiplexer<4> branchTakenMux;
+	AndGate branchTakenAnd;
 	MainMemory mainMem;
 
 	BufferMEMWB bufMEMWB;

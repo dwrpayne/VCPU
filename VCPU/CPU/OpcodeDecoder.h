@@ -10,72 +10,79 @@
 
 /*******************************
 	VCPU implemented opcode table
-	DEC 543210	Func	mn		Name
-	-----------------
-	0	000000	100000	ADD		Add
-	0	000000	100010	SUB		Subtract
-	0	000000	100100	AND		And
-	0	000000	100101	OR		Or
-	0	000000	100110	XOR		Exclusive Or
-	0	000000	100111	NOR		Nor
+	DEC 543210	Func	ALU		mn		Name
+	--------------------------
+	0	000000	100000	0110	ADD		Add
+	0	000000	100010	0101	SUB		Subtract
+	0	000000	100100	1000	AND		And
+	0	000000	100101	1001	OR		Or
+	0	000000	100110	1010	XOR		Exclusive Or
+	0	000000	100111	1011	NOR		Nor
 
-	0	000000	10101x	SLT		Set on Less Than
+	0	000000	10101x			SLT		Set on Less Than
 
-	2	000010			J		Jump
-	3	000011			JAL		Jump and Link
-	4	000100			BEQ		Branch on Equal
-	5	000101			BNE		Branch on Not Equal
-	6	000110			BLEZ	Branch on Less Than or Equal to Zero
-	7	000111			BGTZ	Branch on Greater Than Zero
+	2	000010					J		Jump
+	3	000011					JAL		Jump and Link
+	4	000100			0101	BEQ		Branch on Equal
+	5	000101			0101	BNE		Branch on Not Equal
+	6	000110			0101	BLEZ	Branch on Less Than or Equal to Zero
+	7	000111			0101	BGTZ	Branch on Greater Than Zero
 
-	8	001000			ADDI	Add Immediate
-	9	001001			ADDUI	Add Immediate
-	10	001010			SLTI	Set on Less Than Immediate
-	11	001011			SLTUI	Set on Less ThanImmediate
-	12	001100			ANDI	And Immediate
-	13	001101			ORI		Or Immediate
-	14	001110			XORI	Exclusive Or Immediate
-	15	001111			LUI		Load Upper Immediate
+	8	001000			0110	ADDI	Add Immediate
+	9	001001			0110	ADDUI	Add Immediate
+	10	001010			0101	SLTI	Set on Less Than Immediate
+	11	001011			0101	SLTUI	Set on Less ThanImmediate
+	12	001100			1000	ANDI	And Immediate
+	13	001101			1001	ORI		Or Immediate
+	14	001110			1010	XORI	Exclusive Or Immediate
+	15	001111			????	LUI		Load Upper Immediate
 
-	32-39  100xxx			LW		Load Word 
-	40-47	101xxx			SW		Store Word
+	32-39  100xxx		0110	LW		Load Word 
+	40-47	101xxx		0110	SW		Store Word
 	
 *******************************/
 
 class OpcodeDecoder : public Component
 {
 public:
+	OpcodeDecoder();
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 7;
+	static const int OUT_WIDTH = 9;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
 	public:
+		OpcodeDecoderBundle() 
+			: Bundle<OUT_WIDTH>()
+		{}
 		OpcodeDecoderBundle(std::initializer_list<const Wire*> list)
 			: Bundle<OUT_WIDTH>(list)
 		{}
 		OpcodeDecoderBundle(const Bundle<OUT_WIDTH>& other)
 			: Bundle<OUT_WIDTH>(other)
 		{}
-		const Wire& Branch() { return Get(0); }
-		const Wire& LoadOp() { return Get(1); }
-		const Wire& StoreOp() { return Get(2); }
-		const Wire& RFormat() { return Get(3); }
-		const Wire& AluBFromImm() { return Get(4); }
-		const Wire& RegWrite() { return Get(5); }
-		const Wire& SltOp() { return Get(6); }
+
+		const Wire& Branch() const { return Get(0); }
+		const Wire& LoadOp() const { return Get(1); }
+		const Wire& StoreOp() const { return Get(2); }
+		const Wire& RFormat() const { return Get(3); }
+		const Wire& AluBFromImm() const { return Get(4); }
+		const Wire& RegWrite() const { return Get(5); }
+		const Wire& SltOp() const { return Get(6); }
+		const Bundle<2> BranchSel() const { return Range<7,9>(); }
 	};
 
-	const Wire& Branch() { return branchOp.Out(); }
-	const Wire& LoadOp() { return loadOp.Out(); }
-	const Wire& StoreOp() { return storeOp.Out(); }
-	const Wire& RFormat() { return rFormat.Out(); }
-	const Wire& AluBFromImm() { return aluBImm.Out(); }
-	const Wire& RegWrite() { return regWrite.Out(); }
-	const Wire& SltOp() { return sltop.Out(); }
-	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadOp(), &StoreOp(), &RFormat(), &AluBFromImm(), &RegWrite(), &SltOp() }; }
+	const Wire& Branch() const { return out.Branch(); }
+	const Wire& LoadOp() const { return out.LoadOp(); }
+	const Wire& StoreOp() const { return out.StoreOp(); }
+	const Wire& RFormat() const { return out.RFormat(); }
+	const Wire& AluBFromImm() const { return out.AluBFromImm(); }
+	const Wire& RegWrite() const { return out.RegWrite(); }
+	const Wire& SltOp() const { return out.SltOp(); }
+	const Bundle<2> BranchSel() const { return out.BranchSel(); }
+	const OpcodeDecoderBundle& OutBundle() { return out; }
 
 	const Bundle<4>& AluControl() { return control.Out(); }
 
@@ -112,6 +119,8 @@ private:
 	AndGate addOp;
 	AndGate subOp;
 	MuxBundle<4, 2> control;
+
+	OpcodeDecoderBundle out;
 };
 
 
@@ -133,7 +142,7 @@ private:
 	0	000000	100111	NOR		Nor
 	0	000000	101010	SLT		Set on Less Than
 	0	000000	101011	SLTU	Set on Less Than Unsigned
-
+	
 	2	000010			J		Jump
 	3	000011			JAL		Jump and Link
 	4	000100			BEQ		Branch on Equal

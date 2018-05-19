@@ -11,7 +11,7 @@ void CPU::Connect()
 	// ******** STAGE 1 BEGIN - INSTRUCTION FETCH ************
 
 	// Program Counter
-	pcInMux.Connect({ pcIncrementer.Out(), bufEXMEM.pcJumpAddr.Out() }, bufEXMEM.OpcodeControl().Branch());
+	pcInMux.Connect({ pcIncrementer.Out(), bufEXMEM.pcJumpAddr.Out() }, branchTakenAnd.Out());
 	pc.Connect(pcInMux.Out(), Wire::ON);
 
 	// PC Increment. Instruction width is 4, hardwired.
@@ -36,7 +36,7 @@ void CPU::Connect()
 	
 	// ******** STAGE 2 END - INSTRUCTION DECODE ************
 
-	bufIDEX.Connect(bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.AsBundle(), opcodeControl.AluControl());
+	bufIDEX.Connect(bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.OutBundle(), opcodeControl.AluControl());
 
 	// ******** STAGE 3 BEGIN - EXECUTION ************
 	
@@ -46,15 +46,27 @@ void CPU::Connect()
 	aluBInputMux.Connect({ bufIDEX.reg2.Out(), bufIDEX.signExt.Out() }, bufIDEX.OpcodeControl().AluBFromImm());
 	alu.Connect(bufIDEX.reg1.Out(), aluBInputMux.Out(), bufIDEX.aluControl.Out());
 	
-	// PC Jump address calculation
+	// PC Jump address calculation (A + B, no carry)
 	pcJumpAdder.Connect(bufIDEX.PCinc.Out(), bufIDEX.signExt.Out(), Wire::OFF);
 	
 	// ******** STAGE 3 END - EXECUTION ************
 
-	bufEXMEM.Connect(regFileWriteAddrMux.Out(), bufIDEX.reg2.Out(), alu.Out(), pcJumpAdder.Out(), bufIDEX.OpcodeControl());
+	bufEXMEM.Connect(regFileWriteAddrMux.Out(), bufIDEX.reg2.Out(), alu.Out(), alu.Flags(), pcJumpAdder.Out(), bufIDEX.OpcodeControl());
 
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
 	
+	// Handles 4 branch instructions
+	//	000100	beq rs rt	 rs - rt		alu.zero()
+	//	000101	bneq rs rt	 rs - rt		NOT alu.zero()
+	//	000110	blez rs 0	 rs - 0			alu.negative or alu.zero()
+	//	000111	bgtz rs 0	 rs - 0			not (alu.negative or alu.zero())
+
+	// TODO: This is hacky, extract to component.
+	aluZeroInv.Connect(bufEXMEM.Flags().Zero());
+	aluNegOrZero.Connect(bufEXMEM.Flags().Negative(), bufEXMEM.Flags().Zero());
+	aluPos.Connect(aluNegOrZero.Out());
+	branchTakenMux.Connect({ &bufEXMEM.Flags().Zero(), &aluZeroInv.Out(), &aluNegOrZero.Out(), &aluPos.Out() }, bufEXMEM.OpcodeControl().BranchSel());
+	branchTakenAnd.Connect(branchTakenMux.Out(), bufEXMEM.OpcodeControl().Branch());
 	// Main Memory
 	mainMem.Connect(bufEXMEM.aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp());
 
@@ -64,7 +76,7 @@ void CPU::Connect()
 
 	// ******** STAGE 5 BEGIN - WRITEBACK ************
 	Bundle<32> sltExtended(Wire::OFF);
-	sltExtended.Connect(0, alu.Negative());
+	sltExtended.Connect(0, bufMEMWB.aluOut.Out()[31]);
 	regWriteDataMux.Connect({ bufMEMWB.aluOut.Out(), bufMEMWB.memOut.Out(), sltExtended, sltExtended }, 
 		{ &bufMEMWB.OpcodeControl().LoadOp(), &bufMEMWB.OpcodeControl().SltOp() });
 }
@@ -100,6 +112,11 @@ void CPU::Update3()
 void CPU::Update4()
 {
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
+	aluZeroInv.Update();
+	aluNegOrZero.Update();
+	aluPos.Update();
+	branchTakenMux.Update();
+	branchTakenAnd.Update();
 	mainMem.Update();
 	bufMEMWB.Update();
 }
