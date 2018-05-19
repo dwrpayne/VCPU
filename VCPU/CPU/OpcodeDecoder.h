@@ -71,7 +71,7 @@ public:
 		const Wire& AluBFromImm() const { return Get(4); }
 		const Wire& RegWrite() const { return Get(5); }
 		const Wire& SltOp() const { return Get(6); }
-		const Bundle<2> BranchSel() const { return Range<7,9>(); }
+		const Bundle<2> BranchSel() const { return Range<2>(7); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }

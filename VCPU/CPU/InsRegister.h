@@ -8,14 +8,14 @@ public:
 	InsRegister()
 		: Register<32>()
 	{
-		function = Out().Range<0, 6>();
-		shamt = Out().Range<6, 11>();
-		rdaddr = Out().Range<11, 16>();
-		rtaddr = Out().Range<16, 21>();
-		rsaddr = Out().Range<21, 26>();
-		opcode = Out().Range<26, 32>();
-		immediate = Out().Range<0, 16>();
-		address = Out().Range<0, 26>();
+		function = Out().Range<6>(0);
+		shamt = Out().Range<5>(6);
+		rdaddr = Out().Range<5>(11);
+		rtaddr = Out().Range<5>(16);
+		rsaddr = Out().Range<5>(21);
+		opcode = Out().Range<6>(26);
+		immediate = Out().Range<16>(0);
+		address = Out().Range<26>(0);
 	}
 
 	const Bundle<6>& Opcode() { return opcode; }

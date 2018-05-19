@@ -53,7 +53,7 @@ inline void Adder<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bund
 	// 11 - 1
 
 	bInv.Connect(b);
-	bInputMux.Connect({ Bundle<N>::OFF, Bundle<N>::ON, bInv.Out(), b }, sel.Range<1, 3>());
+	bInputMux.Connect({ Bundle<N>::OFF, Bundle<N>::ON, bInv.Out(), b }, sel.Range<2>(1));
 	adders.Connect(a, bInputMux.Out(), sel[0]);
 	overflow.Connect(a[N - 1], bInputMux.Out()[N - 1], adders.Out()[N-1], sel[2]);
 }

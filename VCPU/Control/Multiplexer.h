@@ -19,17 +19,17 @@ public:
 	const Wire& Out() { return muxOut.Out(); }
 
 private:
-	Multiplexer<N / 2> mux0;
-	Multiplexer<N / 2> mux1;
+	Multiplexer<N/2> mux0;
+	Multiplexer<N/2> mux1;
 	Multiplexer<2> muxOut;
 };
 
 template <unsigned int N>
 inline void Multiplexer<N>::Connect(const Bundle<N>& in, const Bundle<BITS>& sel)
 {
-	const Bundle<BITS - 1> local_sel = sel.Range<0, BITS - 1>();
-	mux0.Connect(in.Range<0, N / 2>(), local_sel);
-	mux1.Connect(in.Range<N / 2, N>(), local_sel);
+	const Bundle<BITS-1> local_sel = sel.Range<BITS - 1>(0);
+	mux0.Connect(in.Range<N/2>(0), local_sel);
+	mux1.Connect(in.Range<N/2>(N/2), local_sel);
 	muxOut.Connect({ &mux0.Out(), &mux1.Out() }, sel.Get(BITS - 1));
 }
 

@@ -20,7 +20,7 @@ void CPU::Connect()
 	pcIncrementer.Connect(pc.Out(), insWidth, Wire::OFF);
 
 	// Instruction memory
-	instructionMem.Connect(pc.Out().Range<0,InsMemory::ADDR_BITS>(), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
+	instructionMem.Connect(pc.Out().Range<InsMemory::ADDR_BITS>(0), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
 
 	// ******** STAGE 1 END - INSTRUCTION FETCH ************
 
@@ -67,7 +67,7 @@ void CPU::Connect()
 	branchTakenAnd.Connect(branchTakenMux.Out(), bufEXMEM.OpcodeControl().Branch());
 
 	// Main Memory
-	mainMem.Connect(bufEXMEM.aluOut.Out().Range<0,MainMemory::ADDR_BITS>(), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp());
+	mainMem.Connect(bufEXMEM.aluOut.Out().Range<MainMemory::ADDR_BITS>(0), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp());
 
 	// ******** STAGE 4 END - MEMORY STORE ************
 

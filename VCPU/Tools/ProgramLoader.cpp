@@ -4,7 +4,7 @@ ProgramLoader::ProgramLoader(CPU & cpu)
 	: insMemory(cpu.instructionMem)
 	, cur_addr(0)
 {
-	insMemory.Connect(addr_bundle.Range<0, CPU::InsMemory::ADDR_BITS>(), ins_bundle, Wire::ON);
+	insMemory.Connect(addr_bundle.Range<CPU::InsMemory::ADDR_BITS>(0), ins_bundle, Wire::ON);
 }
 
 void ProgramLoader::Load(const std::vector<unsigned int>& instructions)

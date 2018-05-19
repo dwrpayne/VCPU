@@ -54,17 +54,6 @@ public:
 		wires[n] = &wire;
 	}
 
-	template <unsigned int start, unsigned int end>
-	const Bundle<end - start> Range() const
-	{
-		Bundle<end - start> out;
-		for (int i = start; i < end; i++)
-		{
-			out.Connect(i - start, Get(i));
-		}
-		return out;
-	}
-
 	template <unsigned int WIDTH>
 	const Bundle<WIDTH> Range(unsigned int start) const
 	{

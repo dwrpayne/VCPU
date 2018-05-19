@@ -31,8 +31,8 @@ private:
 template<unsigned int N>
 inline void Decoder<N>::Connect(const Bundle<BITS>& in)
 {
-	dec1.Connect(in.Range<0, BITS1>());
-	dec2.Connect(in.Range<BITS1, BITS>());
+	dec1.Connect(in.Range<BITS1>(0));
+	dec2.Connect(in.Range<BITS2>(BITS1));
 
 	Bundle<N> a, b;
 	for (int i = 0; i < N; i+=N1)

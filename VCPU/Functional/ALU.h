@@ -114,7 +114,7 @@ inline ALU<N>::ALU()
 template<unsigned int N>
 inline void ALU<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<4>& control)
 {
-	adder.Connect(a, b, control.Range<0, 3>());
+	adder.Connect(a, b, control.Range<3>(0));
 	
 	// Logic
 	ands.Connect(a, b);
@@ -124,12 +124,12 @@ inline void ALU<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle
 
 	// Shift
 	Bundle<N> shiftL, shiftR;
-	shiftR.Connect(0, a.Range<1, N>());
+	shiftR.Connect(0, a.Range<N-1>(1));
 	shiftR.Connect(N - 1, Wire::OFF);
 	shiftL.Connect(0, Wire::OFF);
-	shiftL.Connect(1, a.Range<0, N - 1>());
+	shiftL.Connect(1, a.Range<N - 1>(0));
 
-	logicShiftMux.Connect({ ands.Out(), ors.Out(), xors.Out(), invs.Out(), shiftR, shiftL, Bundle<N>::OFF, Bundle<N>::OFF }, control.Range<0, 3>());
+	logicShiftMux.Connect({ ands.Out(), ors.Out(), xors.Out(), invs.Out(), shiftR, shiftL, Bundle<N>::OFF, Bundle<N>::OFF }, control.Range<3>(0));
 	outMux.Connect({ adder.Out(), logicShiftMux.Out() }, control[3]);
 
 	zeroOut.Connect(outMux.Out());

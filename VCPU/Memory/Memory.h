@@ -37,8 +37,8 @@ private:
 template<unsigned int N, unsigned int NReg>
 inline void Memory<N, NReg>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write)
 {
-	auto byteAddr = addr.Range<0, bits(WORD_LEN)>();
-	auto wordAddr = addr.Range<bits(WORD_LEN), ADDR_BITS>();
+	auto byteAddr = addr.Range<bits(WORD_LEN)>(0);
+	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_LEN)>(bits(WORD_LEN));
 
 	addrDecoder.Connect(wordAddr);
 	writeEnable.Connect(addrDecoder.Out(), Bundle<NReg>(write));
