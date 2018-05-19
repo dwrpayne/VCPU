@@ -10,6 +10,7 @@
 #include "NorGate.h"
 #include "MultiGate.h"
 #include "XorGate.h"
+#include "XNorGate.h"
 #include "Inverter.h"
 #include "SRLatch.h"
 #include "JKFlipFlop.h"
@@ -64,6 +65,14 @@ bool TestXorGate(const Wire& a, const Wire& b)
 	test.Connect(a, b);
 	test.Update();
 	return test.Out().On() == (a.On() ^ b.On());
+}
+
+bool TestXNorGate(const Wire& a, const Wire& b)
+{
+	XNorGate test;
+	test.Connect(a, b);
+	test.Update();
+	return test.Out().On() != (a.On() ^ b.On());
 }
 
 bool TestAndGate4(const Bundle<4>& b)
@@ -701,10 +710,10 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestXNorGate, FAIL_ONLY);
 	RUN_TEST(TestXorGateN, FAIL_ONLY);
 	RUN_TEST(TestSRLatch, FAIL_ONLY);
 	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
-	//RUN_TEST(TestJKFlipFlopPreset, FAIL_ONLY);
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);

@@ -133,6 +133,7 @@
     <ClCompile Include="Gates\NandGate.cpp" />
     <ClCompile Include="Gates\NorGate.cpp" />
     <ClCompile Include="Gates\OrGate.cpp" />
+    <ClCompile Include="Gates\XNorGate.cpp" />
     <ClCompile Include="Gates\XorGate.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory\DFlipFlop.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="Gates\NandGate.h" />
     <ClInclude Include="Gates\NorGate.h" />
     <ClInclude Include="Gates\OrGate.h" />
+    <ClInclude Include="Gates\XNorGate.h" />
     <ClInclude Include="Gates\XorGate.h" />
     <ClInclude Include="Memory\Counter.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />

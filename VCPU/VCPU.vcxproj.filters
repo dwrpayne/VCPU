@@ -78,6 +78,9 @@
     <ClCompile Include="Tools\Assembler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Gates\XNorGate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -192,6 +195,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tests\ComponentCost.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Gates\XNorGate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
