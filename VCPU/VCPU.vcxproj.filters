@@ -81,6 +81,9 @@
     <ClCompile Include="Gates\XNorGate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CPU\Cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -203,7 +206,7 @@
     <ClInclude Include="Gates\XNorGate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Memory\Cache.h">
+    <ClInclude Include="CPU\Cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

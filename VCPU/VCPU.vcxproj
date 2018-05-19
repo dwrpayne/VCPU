@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
+    <ClCompile Include="CPU\Cache.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\Cache.h" />
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\InsRegister.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
@@ -168,7 +170,6 @@
     <ClInclude Include="Gates\OrGate.h" />
     <ClInclude Include="Gates\XNorGate.h" />
     <ClInclude Include="Gates\XorGate.h" />
-    <ClInclude Include="Memory\Cache.h" />
     <ClInclude Include="Memory\CacheLine.h" />
     <ClInclude Include="Memory\Counter.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />

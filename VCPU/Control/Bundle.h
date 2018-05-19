@@ -65,6 +65,17 @@ public:
 		return out;
 	}
 
+	template <unsigned int WIDTH>
+	const Bundle<WIDTH> Range(unsigned int start) const
+	{
+		Bundle<WIDTH> out;
+		for (int i = 0; i < WIDTH; i++)
+		{
+			out.Connect(i, Get(i+start));
+		}
+		return out;
+	}
+
 	const Wire& Get(unsigned int n) const 
 	{
 		return *wires[n];
