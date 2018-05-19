@@ -34,14 +34,12 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
 		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadStore().On(), verbosity);
 		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
 		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
 		success &= TestState(i++, true, test.RFormat().On(), verbosity);
-		success &= TestState(i++, false, test.IFormat().On(), verbosity);
 		success &= TestState(i++, false, test.AluBFromImm().On(), verbosity);
 		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, (f == F_SLT || f == F_SLTU), test.SltInst().On(), verbosity);
+		success &= TestState(i++, (f == F_SLT || f == F_SLTU), test.SltOp().On(), verbosity);
 
 	}
 
@@ -61,14 +59,12 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
 		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadStore().On(), verbosity);
 		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
 		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
 		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, true, test.IFormat().On(), verbosity);
 		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
 		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, (op==OP_SLTI || op==OP_SLTIU), test.SltInst().On(), verbosity);
+		success &= TestState(i++, (op==OP_SLTI || op==OP_SLTIU), test.SltOp().On(), verbosity);
 	}
 
 	std::cout << "Testing Branch Ops" << std::endl;
@@ -83,14 +79,12 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
 		success &= TestState(i++, true, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadStore().On(), verbosity);
 		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
 		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
 		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, false, test.IFormat().On(), verbosity);
 		success &= TestState(i++, false, test.AluBFromImm().On(), verbosity);
 		success &= TestState(i++, false, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, false, test.SltInst().On(), verbosity);
+		success &= TestState(i++, false, test.SltOp().On(), verbosity);
 	}
 
 	std::cout << "Testing Load Ops" << std::endl;
@@ -108,14 +102,12 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
 		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, true, test.LoadStore().On(), verbosity);
 		success &= TestState(i++, true, test.LoadOp().On(), verbosity);
 		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
 		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, false, test.IFormat().On(), verbosity);
 		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
 		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, false, test.SltInst().On(), verbosity);
+		success &= TestState(i++, false, test.SltOp().On(), verbosity);
 	}
 
 	std::cout << "Testing Store Ops" << std::endl;
@@ -131,14 +123,12 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
 		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, true, test.LoadStore().On(), verbosity);
 		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
 		success &= TestState(i++, true, test.StoreOp().On(), verbosity);
 		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, false, test.IFormat().On(), verbosity);
 		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
 		success &= TestState(i++, false, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, false, test.SltInst().On(), verbosity);
+		success &= TestState(i++, false, test.SltOp().On(), verbosity);
 	}
 	return success;
 }
@@ -231,9 +221,9 @@ bool TestCPU(Verbosity verbosity)
 	success &= TestState(i++, 76, debugger.GetNextPCAddr(), verbosity);
 	success &= TestState(i++, 1887, debugger.GetMemoryVal(16), verbosity);
 
-	debugger.Step();																// sw 15 1 14  (store R1 into R15(14). R15 is 2 so mem 16
-	success &= TestState(i++, 84, debugger.GetNextPCAddr(), verbosity);
-	success &= TestState(i++, 1887, debugger.GetMemoryVal(16), verbosity);
+	debugger.Step();																// lw 5 11 -246 (load R5(-246) into R11.
+	success &= TestState(i++, 80, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
 
 	debugger.Step();																// beq 3 22 4
 	success &= TestState(i++, 88, debugger.GetNextPCAddr(), verbosity);

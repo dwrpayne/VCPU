@@ -66,7 +66,7 @@ void CPU::Connect()
 	Bundle<32> sltExtended(Wire::OFF);
 	sltExtended.Connect(0, alu.Negative());
 	regWriteDataMux.Connect({ bufMEMWB.aluOut.Out(), bufMEMWB.memOut.Out(), sltExtended, sltExtended }, 
-		{ &bufMEMWB.OpcodeControl().LoadOp(), &bufMEMWB.OpcodeControl().SltInst() });
+		{ &bufMEMWB.OpcodeControl().LoadOp(), &bufMEMWB.OpcodeControl().SltOp() });
 }
 
 void CPU::Update1()

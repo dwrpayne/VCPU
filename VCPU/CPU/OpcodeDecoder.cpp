@@ -22,7 +22,7 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	func2Inv.Connect(funcOpMux.Out()[2]);
 	func4Inv.Connect(funcOpMux.Out()[4]);
 
-	sltInst.Connect({ &funcOpMux.Out()[1], &func2Inv.Out(), &funcOpMux.Out()[3], &func4Inv.Out(), &loadstoreInv.Out() });
+	sltop.Connect({ &funcOpMux.Out()[1], &func2Inv.Out(), &funcOpMux.Out()[3], &func4Inv.Out(), &loadstoreInv.Out() });
 	mathOp.Connect({ &func2Inv.Out(), &branchOp.Out(), &loadstore.Out() });
 	addOr.Connect(loadstore.Out(), func1Inv.Out());
 	subOr.Connect(funcOpMux.Out()[1], branchOp.Out());
@@ -54,7 +54,7 @@ void OpcodeDecoder::Update()
 	func1Inv.Update();
 	func2Inv.Update();
 	func4Inv.Update();
-	sltInst.Update();
+	sltop.Update();
 	mathOp.Update();
 	addOr.Update();
 	subOr.Update();

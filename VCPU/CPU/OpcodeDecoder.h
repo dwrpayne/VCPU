@@ -48,7 +48,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 9;
+	static const int OUT_WIDTH = 7;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -56,30 +56,26 @@ public:
 		OpcodeDecoderBundle(std::initializer_list<const Wire*> list)
 			: Bundle<OUT_WIDTH>(list)
 		{}
-		OpcodeDecoderBundle(const Bundle<9>& other)
+		OpcodeDecoderBundle(const Bundle<OUT_WIDTH>& other)
 			: Bundle<OUT_WIDTH>(other)
 		{}
 		const Wire& Branch() { return Get(0); }
-		const Wire& LoadStore() { return Get(1); }
-		const Wire& LoadOp() { return Get(2); }
-		const Wire& StoreOp() { return Get(3); }
-		const Wire& RFormat() { return Get(4); }
-		const Wire& IFormat() { return Get(5); }
-		const Wire& AluBFromImm() { return Get(6); }
-		const Wire& RegWrite() { return Get(7); }
-		const Wire& SltInst() { return Get(8); }
+		const Wire& LoadOp() { return Get(1); }
+		const Wire& StoreOp() { return Get(2); }
+		const Wire& RFormat() { return Get(3); }
+		const Wire& AluBFromImm() { return Get(4); }
+		const Wire& RegWrite() { return Get(5); }
+		const Wire& SltOp() { return Get(6); }
 	};
 
 	const Wire& Branch() { return branchOp.Out(); }
-	const Wire& LoadStore() { return loadstore.Out(); }
 	const Wire& LoadOp() { return loadOp.Out(); }
 	const Wire& StoreOp() { return storeOp.Out(); }
 	const Wire& RFormat() { return rFormat.Out(); }
-	const Wire& IFormat() { return immOp.Out(); }
 	const Wire& AluBFromImm() { return aluBImm.Out(); }
 	const Wire& RegWrite() { return regWrite.Out(); }
-	const Wire& SltInst() { return sltInst.Out(); }
-	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadStore(), &LoadOp(), &StoreOp(), &RFormat(), &IFormat(), &AluBFromImm(), &RegWrite(), &SltInst() }; }
+	const Wire& SltOp() { return sltop.Out(); }
+	const OpcodeDecoderBundle AsBundle() { return { &Branch(), &LoadOp(), &StoreOp(), &RFormat(), &AluBFromImm(), &RegWrite(), &SltOp() }; }
 
 	const Bundle<4>& AluControl() { return control.Out(); }
 
@@ -102,7 +98,7 @@ private:
 	Inverter func4Inv;
 	Inverter branchInv;
 	Inverter loadstoreInv;
-	AndGateN<5> sltInst;
+	AndGateN<5> sltop;
 	OrGateN<3> mathOp;
 	OrGate addOr;
 	OrGate subOr;
