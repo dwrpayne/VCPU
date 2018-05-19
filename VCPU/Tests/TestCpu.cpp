@@ -1,6 +1,7 @@
 #include <vector>
 #include "TestCPU.h"
 #include "TestHelpers.h"
+#include "CPU/Cache.h"
 #include "CPU/CPU.h"
 #include "Tools/MagicBundle.h"
 #include "Instructions.h"
@@ -64,7 +65,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, test.RFormat().On(), verbosity);
 		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
 		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, (op==OP_SLTI || op==OP_SLTIU), test.SltOp().On(), verbosity);
+		success &= TestState(i++, (op == OP_SLTI || op == OP_SLTIU), test.SltOp().On(), verbosity);
 	}
 
 	std::cout << "Testing Branch Ops" << std::endl;
@@ -130,6 +131,79 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, test.RegWrite().On(), verbosity);
 		success &= TestState(i++, false, test.SltOp().On(), verbosity);
 	}
+	return success;
+}
+
+bool TestCache(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	Memory<256, 256>* pMainMem = new Memory<256, 256>();
+
+	MagicBundle<256> data256;
+	std::array<MagicBundle<32>, 8> data;
+	for (int i = 0; i < 8; i++)
+	{
+		data256.Connect(i * 32, data[i]);
+	}
+	Wire load(true);
+	MagicBundle<13> addr;
+	pMainMem->Connect(addr, data256, load);
+
+
+	for (int i = 0; i < 8; i++)
+	{
+		data[i].Write(100000000 + 1111111 * i);
+	}
+	addr.Write(8);
+	pMainMem->Update();
+
+	for (int i = 0; i < 8; i++)
+	{
+		data[i].Write(200000000 + 1111111 * i);
+	}
+	addr.Write(68);
+	pMainMem->Update();
+	
+	Cache* pCache = new Cache();
+	Cache& test = *pCache;
+	test.Connect(addr, pMainMem->Out(), Wire::OFF);
+	
+	addr.Write(8);
+	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	pMainMem->Update();
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	addr.Write(4);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	addr.Write(20);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	addr.Write(16);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+
+	addr.Write(64);
+	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	pMainMem->Update();
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	addr.Write(70);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+
 	return success;
 }
 
@@ -236,7 +310,7 @@ bool TestCPU(Verbosity verbosity)
 
 	debugger.Step();																// bne 3 22 -38 (should not take)
 	success &= TestState(i++, 104, debugger.GetNextPCAddr(), verbosity);
-	
+
 	debugger.Step();																// and 0 0 0
 	success &= TestState(i++, 108, debugger.GetNextPCAddr(), verbosity);
 
@@ -267,7 +341,7 @@ bool TestCPU(Verbosity verbosity)
 
 	debugger.Step();																// bgtz 16 0 20 (should take)
 	success &= TestState(i++, 192, debugger.GetNextPCAddr(), verbosity);
-	
+
 	debugger.Step();																// beq 1 11 -196 (should take back to start
 	success &= TestState(i++, 0, debugger.GetNextPCAddr(), verbosity);
 
@@ -280,6 +354,7 @@ bool RunCPUTests()
 {
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
+	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST(TestCPU, FAIL_ONLY);
 
 	return success;

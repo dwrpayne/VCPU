@@ -14,9 +14,9 @@ class Cache : public Component
 public:
 	static const int MAIN_MEMORY_BYTES = 8192;
 	static const int CACHE_SIZE_BYTES = 512;
-	static const int ADDR_BITS = 16;
 	static const int WORD_SIZE = 32;
 	static const int CACHE_LINE_BITS = 256;
+	static const int ADDR_BITS = bits(MAIN_MEMORY_BYTES);
 	static const int MAIN_MEMORY_LINES = MAIN_MEMORY_BYTES * 8 / CACHE_LINE_BITS;
 	static const int NUM_CACHE_LINES = CACHE_SIZE_BYTES * 8 / CACHE_LINE_BITS;
 	static const int CACHE_INDEX_BITS = bits(NUM_CACHE_LINES);
@@ -26,22 +26,25 @@ public:
 
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<WORD_SIZE> DataBundle;
+	typedef Bundle<CACHE_LINE_BITS> CacheLineDataBundle;
 	typedef Bundle<CACHE_OFFSET_BITS> CacheOffsetBundle;
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
 
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
+	void Connect(const AddrBundle& addr, const CacheLineDataBundle& data, const Wire& write);
 	void Update();
 
 	const DataBundle& Out() { return outDataMux.Out(); }
+	const Wire& CacheHit() { return cacheHitAnd.Out(); }
 
 private:
-	//Memory<CACHE_LINE_BITS, MAIN_MEMORY_LINES> mainMem;
 	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> addrDecoder;
 	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
 	AndGateN<NUM_CACHE_LINES> cacheHitAnd;
+	Inverter cacheMiss;
+
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
