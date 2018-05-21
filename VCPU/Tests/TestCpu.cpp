@@ -152,16 +152,16 @@ bool TestCache(Verbosity verbosity)
 	pMainMem->Connect(addr, data256, load);
 
 
-	for (int i = 0; i < 8; i++)
+	for (int a = 0; a < 8; a++)
 	{
-		data[i].Write(100000000 + 1111111 * i);
+		data[a].Write(100000000 + 1111111 * a);
 	}
 	addr.Write(8);
 	pMainMem->Update();
 
-	for (int i = 0; i < 8; i++)
+	for (int a = 0; a < 8; ++a)
 	{
-		data[i].Write(200000000 + 1111111 * i);
+		data[a].Write(200000000 + 1111111 * a);
 	}
 	addr.Write(68);
 	pMainMem->Update();
@@ -176,42 +176,23 @@ bool TestCache(Verbosity verbosity)
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
 	pMainMem->Update();
+	for (int a = 0; a < 8; a++)
+	{
+		addr.Write(4*a);
+		test.Update();
+		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+		success &= TestState(i++, 100000000 + 1111111 * a, test.Out().Read(), verbosity);
+	}
+	addr.Write(88);
 	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(4);
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(8);
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(10);
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(12);
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(16);
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-
-	addr.Write(64);
-	test.Update();
-	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
 	pMainMem->Update();
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(70);
-	test.Update();
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	for (int a = 0; a < 8; a++)
+	{
+		addr.Write(64 + 4*a);
+		test.Update();
+		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+		success &= TestState(i++, 200000000 + 1111111 * a, test.Out().Read(), verbosity);
+	}
 
 	return success;
 }

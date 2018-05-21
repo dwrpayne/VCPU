@@ -29,8 +29,8 @@ void Cache::Connect(const AddrBundle & addr, const CacheLineDataBundle & data, c
 		cacheDataOuts[i] = cachelines[i].Out();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 	}
-	cacheHitAnd.Connect(cacheHitCollector);
-	cacheMiss.Connect(cacheHitAnd.Out());
+	cacheHitMux.Connect(cacheHitCollector, index);
+	cacheMiss.Connect(cacheHitMux.Out());
 	outCacheLineMux.Connect(cacheDataOuts, index);
 
 	std::array<DataBundle, CACHE_WORDS> dataWordBundles;
@@ -50,7 +50,7 @@ void Cache::Update()
 	{
 		line.Update();
 	}
-	cacheHitAnd.Update();
+	cacheHitMux.Update();
 	cacheMiss.Update();
 	outCacheLineMux.Update();
 	outDataMux.Update();

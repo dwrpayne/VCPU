@@ -36,14 +36,14 @@ public:
 	void Update();
 
 	const DataBundle& Out() { return outDataMux.Out(); }
-	const Wire& CacheHit() { return cacheHitAnd.Out(); }
+	const Wire& CacheHit() { return cacheHitMux.Out(); }
 
 private:
 	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> addrDecoder;
 	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
-	AndGateN<NUM_CACHE_LINES> cacheHitAnd;
+	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
 
 
