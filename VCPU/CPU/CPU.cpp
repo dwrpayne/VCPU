@@ -7,7 +7,7 @@ void CPU::Connect()
 	// Internal Bundles must be created first
 	Bundle<32> signExtImm(bufIFID.IR.Immediate()[15]);
 	signExtImm.Connect(0, bufIFID.IR.Immediate());
-	Wire go(true);
+	const Wire& go = Wire::ON;
 
 	// ******** STAGE 1 BEGIN - INSTRUCTION FETCH ************
 
@@ -21,11 +21,12 @@ void CPU::Connect()
 	pcIncrementer.Connect(pc.Out(), insWidth, Wire::OFF);
 
 	// Instruction memory
+	instructionCache.Connect(pc.Out().Range<13>(0), InsMemory::DataBundle(Wire::OFF), Wire::OFF, instructionMem.OutLine());
 	instructionMem.Connect(pc.Out().Range<InsMemory::ADDR_BITS>(0), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
 
 	// ******** STAGE 1 END - INSTRUCTION FETCH ************
 
-	bufIFID.Connect(go, instructionMem.Out(), pcIncrementer.Out());
+	bufIFID.Connect(go, instructionCache.Out(), pcIncrementer.Out());
 
 	// ******** STAGE 2 BEGIN - INSTRUCTION DECODE ************
 		
@@ -68,11 +69,12 @@ void CPU::Connect()
 	branchTakenAnd.Connect(branchTakenMux.Out(), bufEXMEM.OpcodeControl().Branch());
 
 	// Main Memory
+	cache.Connect(bufEXMEM.aluOut.Out().Range<13>(0), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp(), mainMem.OutLine());
 	mainMem.Connect(bufEXMEM.aluOut.Out().Range<MainMemory::ADDR_BITS>(0), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp());
 
 	// ******** STAGE 4 END - MEMORY STORE ************
 
-	bufMEMWB.Connect(go, bufEXMEM.Rwrite.Out(), bufEXMEM.aluOut.Out(), mainMem.Out(), bufEXMEM.OpcodeControl());
+	bufMEMWB.Connect(go, bufEXMEM.Rwrite.Out(), bufEXMEM.aluOut.Out(), cache.Out(), bufEXMEM.OpcodeControl());
 
 	// ******** STAGE 5 BEGIN - WRITEBACK ************
 	Bundle<32> sltExtended(Wire::OFF);
@@ -87,7 +89,9 @@ void CPU::Update1()
 	pcInMux.Update();
 	pc.Update();
 	pcIncrementer.Update();
+	instructionCache.Update();
 	instructionMem.Update();
+	instructionCache.Update();
 	bufIFID.Update();
 }
 
@@ -117,7 +121,9 @@ void CPU::Update4()
 	aluPos.Update();
 	branchTakenMux.Update();
 	branchTakenAnd.Update();
+	cache.Update();
 	mainMem.Update();
+	cache.Update();
 	bufMEMWB.Update();
 }
 

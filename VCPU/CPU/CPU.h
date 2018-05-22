@@ -10,6 +10,7 @@
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"
 #include "PipelineBuffers.h"
+#include "Cache.h"
 
 class CPU : public Component
 {
@@ -34,7 +35,8 @@ private:
 	MuxBundle<32, 2> pcInMux;
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
-		
+	
+	Cache instructionCache;
 	InsMemory instructionMem;
 	BufferIFID bufIFID;
 	
@@ -57,6 +59,7 @@ private:
 	Multiplexer<4> branchTakenMux;
 	AndGate branchTakenAnd;
 
+	Cache cache;
 	MainMemory mainMem;
 
 	BufferMEMWB bufMEMWB;
