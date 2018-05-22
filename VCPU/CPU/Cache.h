@@ -9,14 +9,11 @@
 #include "CacheLine.h"
 #include "Memory.h"
 
+template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES=2048>
 class Cache : public Component
 {
 public:
-	static const int MAIN_MEMORY_BYTES = 8192;
-	static const int CACHE_SIZE_BYTES = 512;
-	static const int WORD_SIZE = 32;
 	static const int WORD_BYTES = WORD_SIZE / 8;
-	static const int CACHE_LINE_BITS = 256;
 	static const int ADDR_BITS = bits(MAIN_MEMORY_BYTES);
 	static const int MAIN_MEMORY_LINES = MAIN_MEMORY_BYTES * 8 / CACHE_LINE_BITS;
 	static const int NUM_CACHE_LINES = CACHE_SIZE_BYTES * 8 / CACHE_LINE_BITS;
@@ -54,3 +51,60 @@ private:
 	
 	friend class Debugger;
 };
+
+
+template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
+void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const CacheLineDataBundle& mem_data)
+{
+	read.Connect(write);
+
+	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
+	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));
+
+	CacheOffsetBundle offset = wordAddr.Range<CACHE_OFFSET_BITS>(0);
+	CacheIndexBundle index = wordAddr.Range<CACHE_INDEX_BITS>(CACHE_OFFSET_BITS);
+	TagBundle tag = wordAddr.Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);
+
+	indexDecoder.Connect(index);
+	writeEnable.Connect(indexDecoder.Out(), Bundle<NUM_CACHE_LINES>(readMiss.Out()));
+
+	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
+	Bundle<NUM_CACHE_LINES> cacheHitCollector;
+
+	for (int i = 0; i < NUM_CACHE_LINES; ++i)
+	{
+		cachelines[i].Connect(tag, offset, write, data, writeEnable.Out()[i], mem_data);
+		cacheLineDataOuts[i] = cachelines[i].OutLine();
+		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
+	}
+	cacheHitMux.Connect(cacheHitCollector, index);
+	cacheMiss.Connect(cacheHitMux.Out());
+	readMiss.Connect(read.Out(), cacheMiss.Out());
+
+	outCacheLineMux.Connect(cacheLineDataOuts, index);
+
+	std::array<DataBundle, CACHE_WORDS> dataWordBundles;
+	for (int i = 0; i < CACHE_WORDS; i++)
+	{
+		dataWordBundles[i] = outCacheLineMux.Out().Range<WORD_SIZE>(i*WORD_SIZE);
+	}
+
+	outDataMux.Connect(dataWordBundles, offset);
+}
+
+template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
+void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
+{
+	indexDecoder.Update();
+	writeEnable.Update();
+	for (auto& line : cachelines)
+	{
+		line.Update();
+	}
+	cacheHitMux.Update();
+	cacheMiss.Update();
+	read.Update();
+	readMiss.Update();
+	outCacheLineMux.Update();
+	outDataMux.Update();
+}

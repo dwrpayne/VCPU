@@ -125,7 +125,6 @@
   <ItemGroup>
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
-    <ClCompile Include="CPU\Cache.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />

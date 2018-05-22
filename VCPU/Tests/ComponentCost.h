@@ -20,6 +20,7 @@ void PrintComponentCosts()
 	typedef std::array<Register<256>, 256> RegArray256256;
 	typedef RegisterFile<32, 32> RegisterFile3232;
 	typedef CacheLine<32, 8, 13> CacheLine32813;
+	typedef Cache<32, 512, 256> Cache32512256;
 
 	PRINT_COST(AndGate);
 	PRINT_COST(Inverter);
@@ -61,6 +62,6 @@ void PrintComponentCosts()
 
 	PRINT_COST_NEW(CPU::InsMemory);
 	PRINT_COST_NEW(CPU::MainMemory);
-	PRINT_COST_NEW(Cache);
+	PRINT_COST_NEW(Cache32512256);
 	PRINT_COST_NEW(CPU);
 }

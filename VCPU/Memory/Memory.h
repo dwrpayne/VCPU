@@ -17,7 +17,7 @@ class Memory : public Component
 {
 public:
 	static const unsigned int WORD_LEN = N / 8;
-	static const unsigned int BYTES = N * NReg * WORD_LEN;
+	static const unsigned int BYTES = NReg * WORD_LEN;
 	static const unsigned int ADDR_BITS = bits(NReg) + bits(WORD_LEN);
 	static const unsigned int CACHE_WORDS = NCacheLine / N;
 	static const unsigned int OFFSET_BITS = bits(CACHE_WORDS);

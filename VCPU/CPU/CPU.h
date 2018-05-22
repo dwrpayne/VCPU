@@ -21,7 +21,9 @@ public:
 	int cycles;
 
 	typedef Memory<32, 128, 256> InsMemory;
-	typedef Memory<32, 128, 256> MainMemory; // Todo: cache levels
+	typedef Memory<32, 1024, 256> MainMemory;
+	typedef Cache<32, 64, 256, InsMemory::BYTES> InsCache;
+	typedef Cache<32, 256, 256, MainMemory::BYTES> MainCache;
 	typedef RegisterFile<32, 32> RegFile;
 
 	
@@ -36,7 +38,7 @@ private:
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
 	
-	Cache instructionCache;
+	InsCache instructionCache;
 	InsMemory instructionMem;
 	BufferIFID bufIFID;
 	
@@ -59,7 +61,7 @@ private:
 	Multiplexer<4> branchTakenMux;
 	AndGate branchTakenAnd;
 
-	Cache cache;
+	MainCache cache;
 	MainMemory mainMem;
 
 	BufferMEMWB bufMEMWB;
