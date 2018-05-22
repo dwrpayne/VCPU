@@ -7,6 +7,7 @@ void CPU::Connect()
 	// Internal Bundles must be created first
 	Bundle<32> signExtImm(bufIFID.IR.Immediate()[15]);
 	signExtImm.Connect(0, bufIFID.IR.Immediate());
+	Wire go(true);
 
 	// ******** STAGE 1 BEGIN - INSTRUCTION FETCH ************
 
@@ -24,7 +25,7 @@ void CPU::Connect()
 
 	// ******** STAGE 1 END - INSTRUCTION FETCH ************
 
-	bufIFID.Connect(instructionMem.Out(), pcIncrementer.Out());
+	bufIFID.Connect(go, instructionMem.Out(), pcIncrementer.Out());
 
 	// ******** STAGE 2 BEGIN - INSTRUCTION DECODE ************
 		
@@ -36,7 +37,7 @@ void CPU::Connect()
 	
 	// ******** STAGE 2 END - INSTRUCTION DECODE ************
 
-	bufIDEX.Connect(bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.OutBundle(), opcodeControl.AluControl());
+	bufIDEX.Connect(go, bufIFID.IR.RtAddr(), bufIFID.IR.RdAddr(), signExtImm, regFile.Out1(), regFile.Out2(), bufIFID.PCinc.Out(), bufIFID.IR.Opcode(), opcodeControl.OutBundle(), opcodeControl.AluControl());
 
 	// ******** STAGE 3 BEGIN - EXECUTION ************
 	
@@ -51,7 +52,7 @@ void CPU::Connect()
 	
 	// ******** STAGE 3 END - EXECUTION ************
 
-	bufEXMEM.Connect(regFileWriteAddrMux.Out(), bufIDEX.reg2.Out(), alu.Out(), alu.Flags(), pcJumpAdder.Out(), bufIDEX.OpcodeControl());
+	bufEXMEM.Connect(go, regFileWriteAddrMux.Out(), bufIDEX.reg2.Out(), alu.Out(), alu.Flags(), pcJumpAdder.Out(), bufIDEX.OpcodeControl());
 
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
 	
@@ -71,7 +72,7 @@ void CPU::Connect()
 
 	// ******** STAGE 4 END - MEMORY STORE ************
 
-	bufMEMWB.Connect(bufEXMEM.Rwrite.Out(), bufEXMEM.aluOut.Out(), mainMem.Out(), bufEXMEM.OpcodeControl());
+	bufMEMWB.Connect(go, bufEXMEM.Rwrite.Out(), bufEXMEM.aluOut.Out(), mainMem.Out(), bufEXMEM.OpcodeControl());
 
 	// ******** STAGE 5 BEGIN - WRITEBACK ************
 	Bundle<32> sltExtended(Wire::OFF);

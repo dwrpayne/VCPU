@@ -32,23 +32,34 @@ public:
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
 
-	void Connect(const AddrBundle& addr, const CacheLineDataBundle& data, const Wire& write);
+	Cache();
+	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const CacheLineDataBundle& mem_data);
 	void Update();
 
 	const DataBundle& Out() { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
 
-private:
-	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
+	const CacheLineDataBundle& MemLineWrite() { return writeMemCacheLine; }
+	const Wire& MemWrite() { return writeToMem.Out(); }
 
-	Decoder<NUM_CACHE_LINES> addrDecoder;
+private:
+	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
+
+	Decoder<NUM_CACHE_LINES> indexDecoder;	
 	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
+	MultiGate<OrGate, NUM_CACHE_LINES> writeEnableOr;
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
 
+	MuxBundle<CACHE_LINE_BITS, 2> cacheLineDataWriteMux;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
+
+	Decoder<CACHE_WORDS> offsetDecoder;
+	std::array<MuxBundle<WORD_SIZE, 2>, CACHE_WORDS> writeLineMuxes;
+	CacheLineDataBundle writeMemCacheLine;
+	AndGate writeToMem;
 
 	friend class Debugger;
 };

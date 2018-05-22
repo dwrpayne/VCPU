@@ -1,4 +1,5 @@
 #include "CPU/CPU.h"
+#include "CPU/Cache.h"
 
 #define _PRINT_COST(obj) std::cout << Wire::WireCount() - cnt << "\t" << typeid(obj).name() << std::endl;
 #define PRINT_COST(type) {int cnt = Wire::WireCount(); type t; _PRINT_COST(t);}
@@ -10,7 +11,15 @@ void PrintComponentCosts()
 	typedef MuxBundle<32, 2> MuxBundle322;
 	typedef MuxBundle<32, 4> MuxBundle324;
 	typedef MuxBundle<6, 4> MuxBundle64;
+	typedef MuxBundle<256, 16> MuxBundle328;
+	typedef MuxBundle<32, 128> MuxBundle32128;
+	typedef MuxBundle<32, 2048> MuxBundle322048;
+	typedef MuxBundle<256, 256> MuxBundle256256;
+	typedef std::array<Register<32>,128> RegArray32128;
+	typedef std::array<Register<32>, 2048> RegArray322048;
+	typedef std::array<Register<256>, 256> RegArray256256;
 	typedef RegisterFile<32, 32> RegisterFile3232;
+	typedef CacheLine<32, 8, 13> CacheLine32813;
 
 	PRINT_COST(AndGate);
 	PRINT_COST(Inverter);
@@ -40,10 +49,18 @@ void PrintComponentCosts()
 	PRINT_COST(MuxBundle322);
 	PRINT_COST(MuxBundle324);
 	PRINT_COST(MuxBundle64);
+	PRINT_COST_NEW(MuxBundle32128);
+	PRINT_COST_NEW(MuxBundle322048);
+	PRINT_COST_NEW(MuxBundle256256);
+	PRINT_COST_NEW(RegArray32128);
+	PRINT_COST_NEW(RegArray322048);
+	PRINT_COST_NEW(RegArray256256);
 	PRINT_COST(ALU<32>);
 	PRINT_COST(RegisterFile3232);
+	PRINT_COST(CacheLine32813);
 
 	PRINT_COST_NEW(CPU::InsMemory);
 	PRINT_COST_NEW(CPU::MainMemory);
+	PRINT_COST_NEW(Cache);
 	PRINT_COST_NEW(CPU);
 }

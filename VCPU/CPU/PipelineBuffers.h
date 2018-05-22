@@ -9,10 +9,10 @@
 class BufferIFID : public Component
 {
 public:
-	void Connect(const Bundle<32>& instruction, const Bundle<32>& pcInc)
+	void Connect(const Wire& go, const Bundle<32>& instruction, const Bundle<32>& pcInc)
 	{
-		IR.Connect(instruction, Wire::ON);
-		PCinc.Connect(pcInc, Wire::ON);
+		IR.Connect(instruction, go);
+		PCinc.Connect(pcInc, go);
 	}
 	void Update()
 	{
@@ -27,17 +27,17 @@ public:
 class BufferIDEX : public Component
 {
 public:
-	void Connect(const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& signExtImm, const Bundle<32>& regR1, const Bundle<32>& regR2, const Bundle<32> pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol)
+	void Connect(const Wire& go, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& signExtImm, const Bundle<32>& regR1, const Bundle<32>& regR2, const Bundle<32> pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol)
 	{
-		RT.Connect(rt, Wire::ON);
-		RD.Connect(rd, Wire::ON);
-		signExt.Connect(signExtImm, Wire::ON);
-		reg1.Connect(regR1, Wire::ON);
-		reg2.Connect(regR2, Wire::ON);
-		PCinc.Connect(pcInc, Wire::ON);
-		opcode.Connect(op, Wire::ON);
-		opcodeControl.Connect(opcodeDec, Wire::ON);
-		aluControl.Connect(alucontrol, Wire::ON);
+		RT.Connect(rt, go);
+		RD.Connect(rd, go);
+		signExt.Connect(signExtImm, go);
+		reg1.Connect(regR1, go);
+		reg2.Connect(regR2, go);
+		PCinc.Connect(pcInc, go);
+		opcode.Connect(op, go);
+		opcodeControl.Connect(opcodeDec, go);
+		aluControl.Connect(alucontrol, go);
 	}
 	void Update()
 	{
@@ -69,14 +69,14 @@ public:
 class BufferEXMEM : public Component
 {
 public:
-	void Connect(const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, const Bundle<32>& pcjumpAdd, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, const Bundle<32>& pcjumpAdd, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
-		Rwrite.Connect(rwrite, Wire::ON);
-		reg2.Connect(regR2, Wire::ON);
-		aluOut.Connect(aluout, Wire::ON);
-		aluFlags.Connect(flags, Wire::ON);
-		pcJumpAddr.Connect(pcjumpAdd, Wire::ON);
-		opcodeControl.Connect(opcodeDec, Wire::ON);
+		Rwrite.Connect(rwrite, go);
+		reg2.Connect(regR2, go);
+		aluOut.Connect(aluout, go);
+		aluFlags.Connect(flags, go);
+		pcJumpAddr.Connect(pcjumpAdd, go);
+		opcodeControl.Connect(opcodeDec, go);
 	}
 	void Update()
 	{
@@ -103,12 +103,12 @@ public:
 class BufferMEMWB : public Component
 {
 public:
-	void Connect(const Bundle<5>& rwrite, const Bundle<32>& aluout, const Bundle<32>& memout, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& aluout, const Bundle<32>& memout, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
-		Rwrite.Connect(rwrite, Wire::ON);
-		aluOut.Connect(aluout, Wire::ON);
-		memOut.Connect(memout, Wire::ON);
-		opcodeControl.Connect(opcodeDec, Wire::ON);
+		Rwrite.Connect(rwrite, go);
+		aluOut.Connect(aluout, go);
+		memOut.Connect(memout, go);
+		opcodeControl.Connect(opcodeDec, go);
 	}
 	void Update()
 	{

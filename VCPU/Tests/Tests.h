@@ -385,14 +385,40 @@ bool TestCounter(Verbosity verbosity)
 	int i = 0;
 	const int bits = 5;
 	Counter<bits> test;
-	MagicBundle<bits> data(0);
-	Wire load;
-	test.Connect(data, load);
+	Wire clear(false);
+	Wire enable(false);
+	test.Connect(clear, enable);
+	test.Update();
+	enable.Set(true);
 
-	for (unsigned int cycle = 0; cycle < 50; ++cycle)
+	for (unsigned int cycle = 1; cycle < 50; ++cycle)
 	{
 		test.Update();
 		success &= TestState(i++, cycle%pow2(bits), test.Out().UnsignedRead(), verbosity);
+	}
+	enable.Set(false);
+	for (unsigned int cycle = 0; cycle < 5; ++cycle)
+	{
+		test.Update();
+		success &= TestState(i++, 17U, test.Out().UnsignedRead(), verbosity);
+	}
+	clear.Set(true);
+	for (unsigned int cycle = 0; cycle < 5; ++cycle)
+	{
+		test.Update();
+		success &= TestState(i++, 0U, test.Out().UnsignedRead(), verbosity);
+	}
+	enable.Set(true);
+	for (unsigned int cycle = 0; cycle < 5; ++cycle)
+	{
+		test.Update();
+		success &= TestState(i++, 0U, test.Out().UnsignedRead(), verbosity);
+	}
+	clear.Set(false);
+	for (unsigned int cycle = 1; cycle < 50; ++cycle)
+	{
+		test.Update();
+		success &= TestState(i++, (cycle)%pow2(bits), test.Out().UnsignedRead(), verbosity);
 	}
 
 	return success;
@@ -705,35 +731,70 @@ bool TestCacheLine(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	CacheLine<32, 20> test;
-	MagicBundle<32> data;
+	CacheLine<8, 4, 20> test;
+	MagicBundle<2> offset;
+	MagicBundle<8> dataword;
+	MagicBundle<32> dataline;
 	MagicBundle<20> tag;
-	Wire load(false);
-	test.Connect(tag, data, load);
+	Wire writesrc(false);
+	Wire writeenable(false);
+
+	test.Connect(tag, offset, writesrc, dataword, writeenable, dataline);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 
-	data.Write(1234);
+	dataline.Write(185999660);
 	tag.Write(987);
-	load.Set(true);
+	writesrc.Set(true);
+	writeenable.Set(true);
 	test.Update();
-	success &= TestState(i++, 1234, test.Out().Read(), verbosity);
+	success &= TestState(i++, 185999660, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
-	data.Write(9764);
+	dataline.Write(100000);
 	tag.Write(123);
-	load.Set(false);
-	test.Update();
-	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-
-	tag.Write(988);
+	writeenable.Set(false);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 
 	tag.Write(987);
 	test.Update();
-	success &= TestState(i++, 1234, test.Out().Read(), verbosity);
+	success &= TestState(i++, 185999660, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+
+	dataword.Write(1);
+	writesrc.Set(false);
+	writeenable.Set(true);
+	offset.Write(0U);
+	test.Update();
+	success &= TestState(i++, 185999617, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	
+	dataword.Write(2);
+	writesrc.Set(false);
+	writeenable.Set(true);
+	offset.Write(1U);
+	test.Update();
+	success &= TestState(i++, 185991681, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+
+	dataword.Write(3);
+	writesrc.Set(false);
+	writeenable.Set(true);
+	offset.Write(2U);
+	test.Update();
+	success &= TestState(i++, 184746497, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+
+	dataword.Write(4);
+	writesrc.Set(false);
+	writeenable.Set(true);
+	offset.Write(3U);
+	test.Update();
+	success &= TestState(i++, 67305985, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	
+
 
 	return success;
 }

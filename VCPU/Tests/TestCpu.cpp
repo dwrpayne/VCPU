@@ -139,37 +139,34 @@ bool TestCache(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	Memory<256, 256>* pMainMem = new Memory<256, 256>();
+	Memory<32, 2048>* pMainMem = new Memory<32, 2048>();
 
-	MagicBundle<256> data256;
-	std::array<MagicBundle<32>, 8> data;
-	for (int i = 0; i < 8; i++)
-	{
-		data256.Connect(i * 32, data[i]);
-	}
+	MagicBundle<32> data;
+	MagicBundle<32> cacheData;
+	Wire cachewrite(false);
 	Wire load(true);
 	MagicBundle<13> addr;
-	pMainMem->Connect(addr, data256, load);
+	pMainMem->Connect(addr, data, load);
 
 
 	for (int a = 0; a < 8; a++)
 	{
-		data[a].Write(100000000 + 1111111 * a);
+		addr.Write(0 + 4 * a);
+		data.Write(100000000 + 1111111 * a);
+		pMainMem->Update();
 	}
-	addr.Write(8);
-	pMainMem->Update();
 
 	for (int a = 0; a < 8; ++a)
 	{
-		data[a].Write(200000000 + 1111111 * a);
+		addr.Write(64 + 4*a );
+		data.Write(200000000 + 1111111 * a);
+		pMainMem->Update();
 	}
-	addr.Write(68);
-	pMainMem->Update();
 	load.Set(false);
 	
 	Cache* pCache = new Cache();
 	Cache& test = *pCache;
-	test.Connect(addr, pMainMem->Out(), Wire::OFF);
+	//test.Connect(addr, cacheData, cachewrite, pMainMem->Out());
 	
 	addr.Write(0);
 	test.Update();
@@ -189,6 +186,21 @@ bool TestCache(Verbosity verbosity)
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(64 + 4*a);
+		test.Update();
+		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+		success &= TestState(i++, 200000000 + 1111111 * a, test.Out().Read(), verbosity);
+	}
+
+	cacheData.Write(4444);
+	addr.Write(4);
+	cachewrite.Set(true);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	pMainMem->Update();
+	for (int a = 0; a < 8; a++)
+	{
+		addr.Write(64 + 4 * a);
 		test.Update();
 		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 		success &= TestState(i++, 200000000 + 1111111 * a, test.Out().Read(), verbosity);

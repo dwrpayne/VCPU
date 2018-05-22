@@ -12,7 +12,7 @@ class Counter : public Component
 {
 public:
 	Counter();
-	void Connect(const Bundle<N>& data, const Wire& load);
+	void Connect(const Wire& clear, const Wire& enable);
 	void Update();
 
 	const Bundle<N>& Out() { return out; }
@@ -21,8 +21,10 @@ public:
 private:
 	std::array<JKFlipFlop, N> bits;
 	std::array<AndGate, N - 2> ands;
-	MuxBundle<N, 2> loadMux;
-	InverterN<N> invData;
+	std::array<AndGate, N> enables;
+	Inverter clearInv;
+	std::array<OrGate, N> kInput;
+	std::array<AndGate, N> jInput;
 	Bundle<N> out;
 };
 
@@ -36,7 +38,7 @@ inline Counter<N>::Counter()
 }
 
 template<unsigned int N>
-inline void Counter<N>::Connect(const Bundle<N>& data, const Wire & load)
+inline void Counter<N>::Connect(const Wire& clear, const Wire& enable)
 {
 	Bundle<N> inputs;
 	inputs.Connect(0, Wire::ON);
@@ -49,9 +51,13 @@ inline void Counter<N>::Connect(const Bundle<N>& data, const Wire & load)
 		ands[i].Connect(ands[i - 1].Out(), bits[i + 1].Q());
 		inputs.Connect(i+2, ands[i].Out());
 	}
+	clearInv.Connect(clear);
 	for (int i = 0; i < N; ++i)
 	{
-		bits[i].Connect(inputs[i], inputs[i]);
+		enables[i].Connect(inputs[i], enable);
+		jInput[i].Connect(enables[i].Out(), clearInv.Out());
+		kInput[i].Connect(enables[i].Out(), clear);
+		bits[i].Connect(jInput[i].Out(), kInput[i].Out());
 	}
 }
 
@@ -62,8 +68,12 @@ inline void Counter<N>::Update()
 	{
 		a.Update();
 	}
-	for (int i = N-1; i >= 0; --i)
+	clearInv.Update();
+	for (int i = N - 1; i >= 0; --i)
 	{
+		enables[i].Update();
+		jInput[i].Update();
+		kInput[i].Update();
 		bits[i].Update();
 	}
 }

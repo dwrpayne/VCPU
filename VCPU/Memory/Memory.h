@@ -10,13 +10,14 @@
 // Memory is stored in words (32 bit registers)
 // But addressed by byte, so addresses take 2 bits more than the # of 32-bit registers
 
-template <unsigned int N, unsigned int NReg>
+template <unsigned int N, unsigned int NReg, unsigned int NCacheLine=N*2>
 class Memory : public Component
 {
 public:
 	static const unsigned int WORD_LEN = N / 8;
 	static const unsigned int BYTES = N * NReg * WORD_LEN;
 	static const unsigned int ADDR_BITS = bits(NReg) + bits(WORD_LEN);
+	static const unsigned int OFFSET_BITS = bits(NCacheLine / N);
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
 
@@ -31,11 +32,12 @@ private:
 	std::array<Register<N>, NReg> registers;
 	MuxBundle<N, NReg> outMux;
 
+
 	friend class Debugger;
 };
 
-template<unsigned int N, unsigned int NReg>
-inline void Memory<N, NReg>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write)
+template<unsigned int N, unsigned int NReg, unsigned int NCacheLine = N>
+inline void Memory<N, NReg, NCacheLine>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write)
 {
 	auto byteAddr = addr.Range<bits(WORD_LEN)>(0);
 	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_LEN)>(bits(WORD_LEN));
@@ -52,8 +54,8 @@ inline void Memory<N, NReg>::Connect(const AddrBundle & addr, const DataBundle &
 	outMux.Connect(regOuts, wordAddr);
 }
 
-template<unsigned int N, unsigned int NReg>
-inline void Memory<N, NReg>::Update()
+template<unsigned int N, unsigned int NReg, unsigned int NCacheLine = N>
+inline void Memory<N, NReg, NCacheLine>::Update()
 {
 	addrDecoder.Update();
 	writeEnable.Update();
