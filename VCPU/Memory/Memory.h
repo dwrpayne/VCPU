@@ -5,6 +5,8 @@
 #include "Register.h"
 #include "Decoder.h"
 #include "MultiGate.h"
+#include "Counter.h"
+#include "Decoder.h"
 #include "MuxBundle.h"
 
 // Memory is stored in words (32 bit registers)
@@ -17,14 +19,17 @@ public:
 	static const unsigned int WORD_LEN = N / 8;
 	static const unsigned int BYTES = N * NReg * WORD_LEN;
 	static const unsigned int ADDR_BITS = bits(NReg) + bits(WORD_LEN);
-	static const unsigned int OFFSET_BITS = bits(NCacheLine / N);
+	static const unsigned int CACHE_WORDS = NCacheLine / N;
+	static const unsigned int OFFSET_BITS = bits(CACHE_WORDS);
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
 
+	Memory();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
 	void Update();
 
 	const DataBundle& Out() { return outMux.Out(); }
+	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:
 	Decoder<NReg> addrDecoder;
@@ -32,15 +37,28 @@ private:
 	std::array<Register<N>, NReg> registers;
 	MuxBundle<N, NReg> outMux;
 
+	Counter<OFFSET_BITS> burstCounter;
+	Decoder<CACHE_WORDS> counterDecoder;
+	std::array<Register<N>, CACHE_WORDS> outBufferWords;
+	Bundle<NCacheLine> outLine;
 
 	friend class Debugger;
 };
+
+template<unsigned int N, unsigned int NReg, unsigned int NCacheLine>
+inline Memory<N, NReg, NCacheLine>::Memory()
+{
+	for (int i = 0; i < CACHE_WORDS; ++i)
+	{
+		outLine.Connect(i*N, outBufferWords[i].Out());
+	}
+}
 
 template<unsigned int N, unsigned int NReg, unsigned int NCacheLine = N>
 inline void Memory<N, NReg, NCacheLine>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write)
 {
 	auto byteAddr = addr.Range<bits(WORD_LEN)>(0);
-	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_LEN)>(bits(WORD_LEN));
+	auto wordAddr = addr.Range<bits(NReg)>(bits(WORD_LEN));
 
 	addrDecoder.Connect(wordAddr);
 	writeEnable.Connect(addrDecoder.Out(), Bundle<NReg>(write));
@@ -51,7 +69,19 @@ inline void Memory<N, NReg, NCacheLine>::Connect(const AddrBundle & addr, const 
 		registers[i].Connect(data, writeEnable.Out()[i]);
 		regOuts[i] = registers[i].Out();
 	}
-	outMux.Connect(regOuts, wordAddr);
+	burstCounter.Connect(Wire::OFF, Wire::ON);
+	counterDecoder.Connect(burstCounter.Out());
+
+	auto b = wordAddr;
+	b.Connect(0, burstCounter.Out());
+
+	outMux.Connect(regOuts, b);
+	
+	for (int i = 0; i < CACHE_WORDS; ++i)
+	{
+		outBufferWords[i].Connect(outMux.Out(), counterDecoder.Out()[i]);
+		outLine.Connect(i*N, outBufferWords[i].Out());
+	}
 }
 
 template<unsigned int N, unsigned int NReg, unsigned int NCacheLine = N>
@@ -63,5 +93,15 @@ inline void Memory<N, NReg, NCacheLine>::Update()
 	{
 		reg.Update();
 	}
-	outMux.Update();
+	for (int i = 0; i < CACHE_WORDS; ++i)
+	{
+		burstCounter.Update();
+		counterDecoder.Update();
+
+		outMux.Update();
+		for (auto& reg : outBufferWords)
+		{
+			reg.Update();
+		}
+	}
 }

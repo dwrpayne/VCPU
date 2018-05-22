@@ -20,12 +20,41 @@ public:
 
 private:
 	std::array<JKFlipFlop, N> bits;
-	std::array<AndGate, N - 2> ands;
+	std::array<AndGate, N-2> ands;
 	std::array<AndGate, N> enables;
 	Inverter clearInv;
 	std::array<OrGate, N> kInput;
 	std::array<AndGate, N> jInput;
 	Bundle<N> out;
+};
+
+template <>
+class Counter<1> : public Component
+{
+public:
+	void Connect(const Wire& clear, const Wire& enable)
+	{
+		clearInv.Connect(clear);
+		jInput.Connect(enable, clearInv.Out());
+		kInput.Connect(enable, clear);
+		bit.Connect(jInput.Out(), kInput.Out());
+	}
+	void Update()
+	{
+		clearInv.Update();
+		jInput.Update();
+		kInput.Update();
+		bit.Update();
+	}
+
+	const Bundle<1> Out() { return { &bit.Q() }; }
+
+
+private:
+	JKFlipFlop bit;
+	Inverter clearInv;
+	OrGate kInput;
+	AndGate jInput;
 };
 
 template<unsigned int N>

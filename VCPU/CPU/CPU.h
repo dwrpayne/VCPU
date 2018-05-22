@@ -19,8 +19,8 @@ public:
 
 	int cycles;
 
-	typedef Memory<32, 128> InsMemory;
-	typedef Memory<32, 128> MainMemory; // Todo: cache levels
+	typedef Memory<32, 128, 256> InsMemory;
+	typedef Memory<32, 128, 256> MainMemory; // Todo: cache levels
 	typedef RegisterFile<32, 32> RegFile;
 
 	

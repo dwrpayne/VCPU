@@ -17,7 +17,7 @@ public:
 	typedef Bundle<LINE_BITS> LineBundle;
 
 	CacheLine();
-	void Connect(Bundle<NTag> tagin, Bundle<OFFSET_ADDR> offset, const Wire& writesrc, const WordBundle& dataword, const Wire& writeenable, const LineBundle& dataline);
+	void Connect(Bundle<NTag> tagin, Bundle<OFFSET_ADDR> offset, const Wire& writeword, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline);
 	void Update();
 
 	const WordBundle& OutWord() { return outWordMux.Out(); }
@@ -25,19 +25,20 @@ public:
 	const Wire& CacheHit() { return cacheHit.Out(); }
 
 private:
-	AndGate tagWriteAnd;
+	OrGate writeOr;
 	Register<NTag> tag;
 	MultiGate<XNorGate, NTag> tagMatcher;
 	AndGateN<NTag> tagAllMatch; 
 	DFlipFlop valid;
 	AndGate cacheHit;
 
-	AndGate writeAllow;
+	AndGate writeWordAndHit;
+	OrGate writeAllow;
 	std::array<Register<N>, Nwords> words;
 	Decoder<Nwords> offsetDecoder;
-	std::array<MuxBundle<N, 2>, Nwords> writeMux;
-	MultiGate<OrGate, Nwords> writeWordSelect;
-	MultiGate<AndGate, Nwords> writeWordEnable;
+	std::array<MuxBundle<N, 2>, Nwords> writeDataMux;
+	MultiGate<OrGate, Nwords> writeWordSelectOr;
+	MultiGate<AndGate, Nwords> writeWordEnableAnd;
 
 	LineBundle outLineBundle;
 };
@@ -52,48 +53,45 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
-void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, Bundle<OFFSET_ADDR> offset, const Wire& writesrc, const WordBundle& dataword, const Wire& writeenable, const LineBundle& dataline)
+void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, Bundle<OFFSET_ADDR> offset, const Wire& writeword, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline)
 {
-	tagWriteAnd.Connect(writesrc, writeenable);
-	tag.Connect(tagin, tagWriteAnd.Out());
+	writeOr.Connect(writeword, writeline);
+	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
 	tagAllMatch.Connect(tagMatcher.Out());
-	valid.Connect(writesrc, writesrc);
+	valid.Connect(writeline, writeline);
 	cacheHit.Connect(tagAllMatch.Out(), valid.Q());
 
-	writeAllow.Connect(cacheHit.Out(), writeenable);
+	writeWordAndHit.Connect(writeword, cacheHit.Out());
+	writeAllow.Connect(writeWordAndHit.Out(), writeline);
 	offsetDecoder.Connect(offset);
-	writeWordSelect.Connect(offsetDecoder.Out(), Bundle<Nwords>(writesrc));
-	writeWordEnable.Connect(writeWordSelect.Out(), Bundle<Nwords>(writeAllow.Out()));
-	std::array<WordBundle, Nwords> wordOutBundles;
+	writeWordSelectOr.Connect(offsetDecoder.Out(), Bundle<Nwords>(writeline));
+	writeWordEnableAnd.Connect(writeWordSelectOr.Out(), Bundle<Nwords>(writeAllow.Out()));
 	for (int i = 0; i < Nwords; i++)
 	{
-		writeMux[i].Connect({ dataword, dataline.Range<N>(i*N) }, writesrc);
-		words[i].Connect(writeMux[i].Out(), writeWordEnable.Out()[i]);
-		wordOutBundles[i] = words[i].Out();
+		writeDataMux[i].Connect({ dataword, dataline.Range<N>(i*N) }, writeline);
+		words[i].Connect(writeDataMux[i].Out(), writeWordEnableAnd.Out()[i]);
 	}	
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
 inline void CacheLine<N, Nwords, NTag>::Update()
 {
-	tagWriteAnd.Update();
+	writeOr.Update();
 	tag.Update();
 	tagMatcher.Update();
 	tagAllMatch.Update();
 	valid.Update();
 	cacheHit.Update();
+
+	writeWordAndHit.Update();
 	writeAllow.Update();
 	offsetDecoder.Update();
-
+	writeWordSelectOr.Update();
+	writeWordEnableAnd.Update();
 	for (int i = 0; i < Nwords; i++)
 	{
-		writeMux[i].Update();
-	}
-	writeWordSelect.Update();
-	writeWordEnable.Update();
-	for (int i = 0; i < Nwords; i++)
-	{
+		writeDataMux[i].Update();
 		words[i].Update();
 	}
 }

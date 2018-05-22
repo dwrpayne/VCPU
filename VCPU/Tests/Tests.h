@@ -736,24 +736,24 @@ bool TestCacheLine(Verbosity verbosity)
 	MagicBundle<8> dataword;
 	MagicBundle<32> dataline;
 	MagicBundle<20> tag;
-	Wire writesrc(false);
-	Wire writeenable(false);
+	Wire writeword(false);
+	Wire writeline(false);
 
-	test.Connect(tag, offset, writesrc, dataword, writeenable, dataline);
+	test.Connect(tag, offset, writeword, dataword, writeline, dataline);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 
 	dataline.Write(185999660);
 	tag.Write(987);
-	writesrc.Set(true);
-	writeenable.Set(true);
+	writeword.Set(false);
+	writeline.Set(true);
 	test.Update();
 	success &= TestState(i++, 185999660, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	dataline.Write(100000);
 	tag.Write(123);
-	writeenable.Set(false);
+	writeline.Set(false);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 
@@ -763,32 +763,26 @@ bool TestCacheLine(Verbosity verbosity)
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	dataword.Write(1);
-	writesrc.Set(false);
-	writeenable.Set(true);
+	writeword.Set(true);
+	writeline.Set(false);
 	offset.Write(0U);
 	test.Update();
 	success &= TestState(i++, 185999617, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	
 	dataword.Write(2);
-	writesrc.Set(false);
-	writeenable.Set(true);
 	offset.Write(1U);
 	test.Update();
 	success &= TestState(i++, 185991681, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	dataword.Write(3);
-	writesrc.Set(false);
-	writeenable.Set(true);
 	offset.Write(2U);
 	test.Update();
 	success &= TestState(i++, 184746497, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	dataword.Write(4);
-	writesrc.Set(false);
-	writeenable.Set(true);
 	offset.Write(3U);
 	test.Update();
 	success &= TestState(i++, 67305985, test.OutLine().Read(), verbosity);
