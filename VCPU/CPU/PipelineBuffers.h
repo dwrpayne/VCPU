@@ -103,25 +103,22 @@ public:
 class BufferMEMWB : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& aluout, const Bundle<32>& memout, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& rwritedata, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
 		Rwrite.Connect(rwrite, go);
-		aluOut.Connect(aluout, go);
-		memOut.Connect(memout, go);
+		RWriteData.Connect(rwritedata, go);
 		opcodeControl.Connect(opcodeDec, go);
 	}
 	void Update()
 	{
 		Rwrite.Update();
-		aluOut.Update();
-		memOut.Update();
+		RWriteData.Update();
 		opcodeControl.Update();
 	}
 
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> Rwrite;
-	Register<32> aluOut;
-	Register<32> memOut;
+	Register<32> RWriteData;
 	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 };

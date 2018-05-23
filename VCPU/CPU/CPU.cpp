@@ -7,6 +7,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect();
 	void Update();
+	void Update2();
 	const BufferIFID& Out() const { return bufIFID; }
 private:
 	MuxBundle<32, 2> pcInMux;
@@ -25,6 +26,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect();
 	void Update();
+	void Update2();
 	const BufferIDEX& Out() const { return bufIDEX; }
 private:
 	OpcodeDecoder opcodeControl;
@@ -40,6 +42,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect();
 	void Update();
+	void Update2();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
 private:
 	MuxBundle<CPU::RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
@@ -57,26 +60,15 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect();
 	void Update();
+	void Update2();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 	const Wire& BranchTaken() const { return branchDetector.Out(); }
 private:
 	BranchDetector branchDetector;
 	CPU::MainCache cache;
 	CPU::MainMemory mainMem;
-	BufferMEMWB bufMEMWB;
-
-	friend class CPU;
-};
-
-class CPU::Stage5 : public PipelineStage
-{
-public:
-	using PipelineStage::PipelineStage;
-	void Connect();
-	void Update();
-	const Bundle<32>& OutRegWriteData() const { return regWriteDataMux.Out(); }
-private:
 	MuxBundle<32, 4> regWriteDataMux;
+	BufferMEMWB bufMEMWB;
 
 	friend class CPU;
 };
@@ -107,7 +99,7 @@ void CPU::Stage2::Connect()
 
 	// Register File
 	regFile.Connect(cpu.stage1->Out().IR.RsAddr(), cpu.stage1->Out().IR.RtAddr(),
-		cpu.stage4->Out().Rwrite.Out(), cpu.stage5->OutRegWriteData(),
+		cpu.stage4->Out().Rwrite.Out(), cpu.stage4->Out().RWriteData.Out(),
 		cpu.stage4->Out().OpcodeControl().RegWrite());
 
 	Bundle<32> signExtImm(cpu.stage1->Out().IR.Immediate()[15]);
@@ -147,17 +139,13 @@ void CPU::Stage4::Connect()
 	mainMem.Connect(cpu.stage3->Out().aluOut.Out().Range<MainMemory::ADDR_BITS>(0), cpu.stage3->Out().reg2.Out(), 
 		cpu.stage3->Out().OpcodeControl().StoreOp());
 
-	bufMEMWB.Connect(Wire::ON, cpu.stage3->Out().Rwrite.Out(), cpu.stage3->Out().aluOut.Out(), 
-		cache.Out(), cpu.stage3->Out().OpcodeControl());
-}
-
-void CPU::Stage5::Connect()
-{
 	Bundle<32> sltExtended(Wire::OFF);
-	sltExtended.Connect(0, cpu.stage4->Out().aluOut.Out()[31]);
+	sltExtended.Connect(0, cpu.stage3->Out().Flags().Negative());
 
-	regWriteDataMux.Connect({ cpu.stage4->Out().aluOut.Out(), cpu.stage4->Out().memOut.Out(), sltExtended, sltExtended },
-		{ &cpu.stage4->Out().OpcodeControl().LoadOp(), &cpu.stage4->Out().OpcodeControl().SltOp() });
+	regWriteDataMux.Connect({ cpu.stage3->Out().aluOut.Out(), cache.Out(), sltExtended, sltExtended },
+		{ &cpu.stage3->Out().OpcodeControl().LoadOp(), &cpu.stage3->Out().OpcodeControl().SltOp() });
+
+	bufMEMWB.Connect(Wire::ON, cpu.stage3->Out().Rwrite.Out(), regWriteDataMux.Out(), cpu.stage3->Out().OpcodeControl());
 }
 
 void CPU::Stage1::Update()
@@ -169,6 +157,9 @@ void CPU::Stage1::Update()
 	instructionCache.Update();
 	instructionMem.Update();
 	instructionCache.Update();
+}
+void CPU::Stage1::Update2()
+{
 	bufIFID.Update();
 }
 
@@ -177,6 +168,9 @@ void CPU::Stage2::Update()
 	// ******** STAGE 2 INSTRUCTION DECODE ************
 	opcodeControl.Update();
 	regFile.Update();
+}
+void CPU::Stage2::Update2()
+{
 	bufIDEX.Update();
 }
 
@@ -187,6 +181,9 @@ void CPU::Stage3::Update()
 	aluBInputMux.Update();
 	alu.Update();
 	pcJumpAdder.Update();
+}
+void CPU::Stage3::Update2()
+{
 	bufEXMEM.Update();
 }
 
@@ -197,13 +194,11 @@ void CPU::Stage4::Update()
 	cache.Update();
 	mainMem.Update();
 	cache.Update();
-	bufMEMWB.Update();
-}
-
-void CPU::Stage5::Update()
-{
-	// ******** STAGE 5 BEGIN - WRITEBACK ************
 	regWriteDataMux.Update();
+}
+void CPU::Stage4::Update2()
+{
+	bufMEMWB.Update();
 }
 
 
@@ -212,7 +207,6 @@ CPU::CPU()
 	, stage2(new Stage2(*this))
 	, stage3(new Stage3(*this))
 	, stage4(new Stage4(*this))
-	, stage5(new Stage5(*this))
 {
 }
 
@@ -222,17 +216,19 @@ void CPU::Connect()
 	stage2->Connect();
 	stage3->Connect();
 	stage4->Connect();
-	stage5->Connect();
 	cycles = 0;
 }
 
 void CPU::Update()
 {
 	stage1->Update();
+	stage1->Update2();
 	stage2->Update();
+	stage2->Update2();
 	stage3->Update();
+	stage3->Update2();
 	stage4->Update();
-	stage5->Update();
+	stage4->Update2();
 	cycles++;
 }
 

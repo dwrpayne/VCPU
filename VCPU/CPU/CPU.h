@@ -51,13 +51,11 @@ private:
 	class Stage2;
 	class Stage3;
 	class Stage4;
-	class Stage5;
 
 	Stage1* stage1;
 	Stage2* stage2;
 	Stage3* stage3;
 	Stage4* stage4;
-	Stage5* stage5;
 
 	friend class ProgramLoader;
 	friend class Debugger;
