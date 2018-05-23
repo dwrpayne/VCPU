@@ -123,6 +123,7 @@
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BranchDetector.cpp" />
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BranchDetector.h" />
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />

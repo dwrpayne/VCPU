@@ -7,7 +7,7 @@ void CPU::Connect()
 	// Internal Bundles must be created first
 	Bundle<32> signExtImm(bufIFID.IR.Immediate()[15]);
 	signExtImm.Connect(0, bufIFID.IR.Immediate());
-	const Wire& go = Wire::ON;
+	const Wire& go = Wire::ON; // cache.CacheHit();
 
 	// ******** STAGE 1 BEGIN - INSTRUCTION FETCH ************
 
@@ -57,16 +57,7 @@ void CPU::Connect()
 
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
 	
-	// TODO: This is hacky, extract to component.  Handles 4 branch instructions  
-	//	000100	beq rs rt	 rs - rt		alu.zero()
-	//	000101	bneq rs rt	 rs - rt		NOT alu.zero()
-	//	000110	blez rs 0	 rs - 0			alu.negative or alu.zero()
-	//	000111	bgtz rs 0	 rs - 0			not (alu.negative or alu.zero())
-	aluZeroInv.Connect(bufEXMEM.Flags().Zero());
-	aluNegOrZero.Connect(bufEXMEM.Flags().Negative(), bufEXMEM.Flags().Zero());
-	aluPos.Connect(aluNegOrZero.Out());
-	branchTakenMux.Connect({ &bufEXMEM.Flags().Zero(), &aluZeroInv.Out(), &aluNegOrZero.Out(), &aluPos.Out() }, bufEXMEM.OpcodeControl().BranchSel());
-	branchTakenAnd.Connect(branchTakenMux.Out(), bufEXMEM.OpcodeControl().Branch());
+	branchDetector.Connect(bufEXMEM.Flags().Zero(), bufEXMEM.Flags().Negative(), bufEXMEM.OpcodeControl().BranchSel(), bufEXMEM.OpcodeControl().Branch());
 
 	// Main Memory
 	cache.Connect(bufEXMEM.aluOut.Out().Range<MainMemory::ADDR_BITS>(0), bufEXMEM.reg2.Out(), bufEXMEM.OpcodeControl().StoreOp(), mainMem.OutLine());
@@ -116,11 +107,7 @@ void CPU::Update3()
 void CPU::Update4()
 {
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
-	aluZeroInv.Update();
-	aluNegOrZero.Update();
-	aluPos.Update();
-	branchTakenMux.Update();
-	branchTakenAnd.Update();
+	branchDetector.Update();
 	cache.Update();
 	mainMem.Update();
 	cache.Update();

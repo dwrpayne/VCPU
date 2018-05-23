@@ -9,8 +9,10 @@
 
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"
+#include "BranchDetector.h"
 #include "PipelineBuffers.h"
 #include "Cache.h"
+
 
 class CPU : public Component
 {
@@ -54,12 +56,7 @@ private:
 
 	BufferEXMEM bufEXMEM;
 
-	// TODO: Extract these gates into a Component
-	Inverter aluZeroInv;
-	OrGate aluNegOrZero;
-	Inverter aluPos;
-	Multiplexer<4> branchTakenMux;
-	AndGate branchTakenAnd;
+	BranchDetector branchDetector;
 
 	MainCache cache;
 	MainMemory mainMem;
