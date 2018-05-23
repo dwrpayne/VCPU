@@ -10,7 +10,7 @@ public:
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out() { return out; }
+	const Wire& Out() const { return out; }
 
 private:
 	const Wire* in1;
@@ -25,7 +25,7 @@ public:
 	void Connect(const Bundle<N>& wires);
 	void Update();
 
-	const Wire& Out() { return ors[N - 2].Out(); }
+	const Wire& Out() const { return ors[N - 2].Out(); }
 
 private:
 	std::array<OrGate, N - 1> ors;

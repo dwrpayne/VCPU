@@ -52,7 +52,7 @@ public:
 		aluControl.Update();
 	}
 
-	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
+	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> RT;
 	Register<5> RD;
@@ -88,9 +88,9 @@ public:
 		opcodeControl.Update();
 	}
 	
-	ALU<32>::ALUFlags Flags() { return ALU<32>::ALUFlags(aluFlags.Out()); }
+	ALU<32>::ALUFlags Flags() const { return ALU<32>::ALUFlags(aluFlags.Out()); }
 
-	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
+	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> Rwrite;
 	Register<32> reg2;
@@ -118,7 +118,7 @@ public:
 		opcodeControl.Update();
 	}
 
-	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
+	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	Register<5> Rwrite;
 	Register<32> aluOut;

@@ -18,14 +18,14 @@ public:
 		address = Out().Range<26>(0);
 	}
 
-	const Bundle<6>& Opcode() { return opcode; }
-	const Bundle<5>& RsAddr() { return rsaddr; }
-	const Bundle<5>& RtAddr() { return rtaddr; }
-	const Bundle<5>& RdAddr() { return rdaddr; }
-	const Bundle<5>& Shamt() { return shamt; }
-	const Bundle<6>& Function() { return function; }
-	const Bundle<16>& Immediate() { return immediate; }
-	const Bundle<26>& Address() { return address; }
+	const Bundle<6>& Opcode() const { return opcode; }
+	const Bundle<5>& RsAddr() const { return rsaddr; }
+	const Bundle<5>& RtAddr()  const { return rtaddr; }
+	const Bundle<5>& RdAddr()  const { return rdaddr; }
+	const Bundle<5>& Shamt()  const { return shamt; }
+	const Bundle<6>& Function()  const { return function; }
+	const Bundle<16>& Immediate()  const { return immediate; }
+	const Bundle<26>& Address()  const { return address; }
 
 private:
 	Bundle<6> opcode;

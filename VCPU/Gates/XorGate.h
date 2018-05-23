@@ -12,7 +12,7 @@ public:
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out() { return and.Out(); }
+	const Wire& Out() const { return and.Out(); }
 
 private:
 	NandGate nand;

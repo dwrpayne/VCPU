@@ -10,7 +10,7 @@ public:
 	void Connect(const Wire& a);
 	void Update();
 
-	const Wire& Out() { return out; }
+	const Wire& Out() const { return out; }
 	
 private:
 	const Wire* in;
@@ -26,7 +26,7 @@ public:
 	void Connect(const Bundle<N>& wires);
 	void Update();
 
-	const Bundle<N>& Out() { return out; }
+	const Bundle<N>& Out() const { return out; }
 
 private:
 	std::array<Inverter, N> invs;

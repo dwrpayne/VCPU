@@ -11,7 +11,7 @@ public:
 	void Connect(const Bundle<N>& a, const Bundle<N>& b);
 	void Update();
 
-	const Bundle<N>& Out() { return out; }
+	const Bundle<N>& Out() const { return out; }
 
 private:
 	std::array<Gate, N> gates;

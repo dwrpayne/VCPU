@@ -12,7 +12,7 @@ public:
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out() { return inv.Out(); }
+	const Wire& Out() const { return inv.Out(); }
 
 private:
 	OrGate or;
@@ -26,7 +26,7 @@ public:
 	void Connect(const Bundle<N>& bundle);
 	void Update();
 
-	const Wire& Out() { return inv.Out(); }
+	const Wire& Out() const { return inv.Out(); }
 	
 private:
 	OrGateN<N> ors;

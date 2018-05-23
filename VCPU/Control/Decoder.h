@@ -19,7 +19,7 @@ public:
 	void Connect(const Bundle<BITS>& in);
 	void Update();
 
-	const Bundle<N>& Out() { return ands.Out(); }
+	const Bundle<N>& Out() const { return ands.Out(); }
 
 
 private:
@@ -65,7 +65,7 @@ public:
 	void Connect(const Bundle<1>& in);
 	void Update();
 
-	const Bundle<2>& Out() { return out; }
+	const Bundle<2>& Out() const { return out; }
 
 
 private:

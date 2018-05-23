@@ -13,7 +13,7 @@ public:
 	void Connect(const Wire& a, const Wire& b, const Wire& sum, const Wire& enable);
 	void Update();
 
-	const Wire& Out() { return overflow.Out(); }
+	const Wire& Out() const { return overflow.Out(); }
 
 private:
 	Inverter invA;

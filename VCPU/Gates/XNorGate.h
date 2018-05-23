@@ -11,7 +11,7 @@ public:
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out() { return orGate.Out(); }
+	const Wire& Out() const { return orGate.Out(); }
 
 private:
 	AndGate and;

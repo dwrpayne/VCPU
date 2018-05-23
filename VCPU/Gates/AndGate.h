@@ -12,7 +12,7 @@ public:
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out() { return out; }
+	const Wire& Out() const { return out; }
 
 
 private:
@@ -29,7 +29,7 @@ public:
 	void Connect(const Bundle<N>& wires);
 	void Update();
 
-	const Wire& Out() { return ands[N-2].Out(); }
+	const Wire& Out() const { return ands[N-2].Out(); }
 	
 
 private:

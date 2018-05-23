@@ -16,7 +16,7 @@ public:
 	void Connect(const Bundle<N>& in, const Bundle<BITS>& sel);
 	void Update();
 
-	const Wire& Out() { return muxOut.Out(); }
+	const Wire& Out() const { return muxOut.Out(); }
 
 private:
 	Multiplexer<N/2> mux0;
@@ -49,7 +49,7 @@ public:
 	void Connect(const Bundle<2>& in, const Wire& sel);
 	void Update();
 	
-	const Wire& Out() { return orOut.Out(); }
+	const Wire& Out() const { return orOut.Out(); }
 
 private:
 	Inverter inv;

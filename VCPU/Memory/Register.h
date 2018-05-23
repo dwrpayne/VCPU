@@ -12,7 +12,7 @@ public:
 	void Connect(const Bundle<N>& data, const Wire& load);
 	void Update();
 
-	const Bundle<N>& Out() { return out; }
+	const Bundle<N>& Out() const { return out; }
 
 private:
 	std::array<DFlipFlop, N> bits;

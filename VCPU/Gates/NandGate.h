@@ -11,7 +11,7 @@ public:
 	void Connect(const Wire& a, const Wire& b);
 	void Update();
 
-	const Wire& Out() { return inv.Out(); }
+	const Wire& Out() const { return inv.Out(); }
 
 private:
 	AndGate and;
@@ -25,7 +25,7 @@ public:
 	void Connect(const Bundle<N>& bundle);
 	void Update();
 
-	const Wire& Out() { return inv.Out(); }
+	const Wire& Out() const { return inv.Out(); }
 
 private:
 	AndGateN<N> ands;

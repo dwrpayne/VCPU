@@ -32,7 +32,7 @@ public:
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const CacheLineDataBundle& mem_data);
 	void Update();
 
-	const DataBundle& Out() { return outDataMux.Out(); }
+	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
 	
 private:

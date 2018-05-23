@@ -11,8 +11,8 @@ public:
 	void Connect(const Wire& j, const Wire& k);
 	void Update();
 
-	const Wire& Q() { return latch.Q(); }
-	const Wire& NotQ() { return latch.NotQ(); }
+	const Wire& Q() const { return latch.Q(); }
+	const Wire& NotQ() const { return latch.NotQ(); }
 
 private:
 	AndGate andj;

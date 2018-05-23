@@ -10,8 +10,8 @@ public:
 	void Connect(const Wire& s, const Wire& r);
 	void Update();
 
-	const Wire& Q() { return norr.Out(); }
-	const Wire& NotQ() { return nors.Out(); }
+	const Wire& Q() const { return norr.Out(); }
+	const Wire& NotQ() const { return nors.Out(); }
 
 private:
 	NorGate norr;

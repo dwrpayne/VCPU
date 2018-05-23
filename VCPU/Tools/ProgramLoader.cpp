@@ -1,7 +1,7 @@
 #include "ProgramLoader.h"
 
 ProgramLoader::ProgramLoader(CPU & cpu)
-	: insMemory(cpu.instructionMem)
+	: insMemory(cpu.InstructionMem())
 	, cur_addr(0)
 {
 	insMemory.Connect(addr_bundle.Range<CPU::InsMemory::ADDR_BITS>(0), ins_bundle, Wire::ON);

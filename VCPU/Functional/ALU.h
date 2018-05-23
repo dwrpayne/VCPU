@@ -70,7 +70,7 @@ public:
 	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<4>& control);
 	void Update();
 
-	const Bundle<N>& Out() { return outMux.Out(); }
+	const Bundle<N>& Out() const { return outMux.Out(); }
 
 	class ALUFlags : public Bundle<4>
 	{

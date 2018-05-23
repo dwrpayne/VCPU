@@ -17,8 +17,7 @@
 class CPU : public Component
 {
 public:
-	void Connect();
-	void Update();
+	CPU();
 
 	int cycles;
 
@@ -28,42 +27,37 @@ public:
 	typedef Cache<32, 256, 256, MainMemory::BYTES> MainCache;
 	typedef RegisterFile<32, 32> RegFile;
 
-	
+	void Connect();
+	void Update();
+
 private:
-	void Update1();
-	void Update2();
-	void Update3();
-	void Update4();
-	void Update5();
+	class PipelineStage : public Component
+	{
+	public:
+		PipelineStage(CPU& c)
+			: cpu(c)
+		{}
+	protected:
+		CPU& cpu;
+	};
 
-	MuxBundle<32, 2> pcInMux;
-	Register<32> pc;
-	FullAdderN<32> pcIncrementer;
-	
-	InsCache instructionCache;
-	InsMemory instructionMem;
-	BufferIFID bufIFID;
-	
-	OpcodeDecoder opcodeControl;
-	RegFile regFile;
+	Register<32> PC();
+	InsMemory& InstructionMem();
+	MainMemory& MainMem();
+	RegFile& Registers();
 
-	BufferIDEX bufIDEX;
+private:
+	class Stage1;
+	class Stage2;
+	class Stage3;
+	class Stage4;
+	class Stage5;
 
-	FullAdderN<32> pcJumpAdder;
-	MuxBundle<32, 2> aluBInputMux;
-	ALU<32> alu;
-	MuxBundle<RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
-
-	BufferEXMEM bufEXMEM;
-
-	BranchDetector branchDetector;
-
-	MainCache cache;
-	MainMemory mainMem;
-
-	BufferMEMWB bufMEMWB;
-
-	MuxBundle<32, 4> regWriteDataMux;
+	Stage1* stage1;
+	Stage2* stage2;
+	Stage3* stage3;
+	Stage4* stage4;
+	Stage5* stage5;
 
 	friend class ProgramLoader;
 	friend class Debugger;

@@ -12,6 +12,7 @@ class BranchDetector : public Component
 public:
 	void Connect(const Wire& aluzero, const Wire& aluneg, const Bundle<2>& branchsel, const Wire& enable);
 	void Update();
+	const Wire& Out() const { return branchTakenAnd.Out(); }
 
 private:
 	Inverter aluZeroInv;

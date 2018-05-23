@@ -15,7 +15,7 @@ public:
 	void Connect(const Wire& clear, const Wire& enable);
 	void Update();
 
-	const Bundle<N>& Out() { return out; }
+	const Bundle<N>& Out() const { return out; }
 
 
 private:
@@ -47,7 +47,7 @@ public:
 		bit.Update();
 	}
 
-	const Bundle<1> Out() { return { &bit.Q() }; }
+	const Bundle<1> Out() const { return { &bit.Q() }; }
 
 
 private:

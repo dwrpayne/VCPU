@@ -33,7 +33,7 @@ public:
 	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Wire& cin);
 	void Update();
 
-	const Bundle<N>& Out() { return sum; }
+	const Bundle<N>& Out() const { return sum; }
 	const Wire& Cout() { return adders[N - 1].Cout(); }
 
 private:

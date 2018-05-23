@@ -31,7 +31,7 @@ public:
 	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<3>& sel);
 	void Update();
 
-	const Bundle<N>& Out() { return adders.Out(); }
+	const Bundle<N>& Out() const { return adders.Out(); }
 	const Wire& Cout() { return adders.Cout(); }
 	const Wire& Overflow() { return overflow.Out(); }
 

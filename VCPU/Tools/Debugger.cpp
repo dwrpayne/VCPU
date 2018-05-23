@@ -55,22 +55,22 @@ void Debugger::Step()
 
 int Debugger::GetRegisterVal(int reg)
 {
-	return pCPU->regFile.registers[reg].Out().Read();
+	return pCPU->Registers().registers[reg].Out().Read();
 }
 
 int Debugger::GetMemoryVal(int addr)
 {
-	return pCPU->mainMem.registers[addr / CPU::MainMemory::WORD_LEN].Out().Read();
+	return pCPU->MainMem().registers[addr / CPU::MainMemory::WORD_LEN].Out().Read();
 }
 
 int Debugger::GetNextPCAddr()
 {
-	return pCPU->pc.Out().Read();
+	return pCPU->PC().Out().Read();
 }
 
 void Debugger::PrintInstruction()
 {
-	unsigned int addr = pCPU->pc.Out().UnsignedRead() / 4;
+	unsigned int addr = pCPU->PC().Out().UnsignedRead() / 4;
 	auto line = pAssembler->GetSourceLine(addr);
 	std::cout << pCPU->cycles << "\t0x" << std::hex << GetNextPCAddr() << std::dec << "\t" << line << std::endl;
 }

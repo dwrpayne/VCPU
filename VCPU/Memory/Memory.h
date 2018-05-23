@@ -28,7 +28,7 @@ public:
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
 	void Update();
 
-	const DataBundle& Out() { return outMux.Out(); }
+	const DataBundle& Out() const { return outMux.Out(); }
 	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:

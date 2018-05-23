@@ -20,7 +20,7 @@ public:
 
 	void Update();
 
-	const Bundle<N>& Out() { return out; }
+	const Bundle<N>& Out() const { return out; }
 
 private:
 #ifdef DEBUG
