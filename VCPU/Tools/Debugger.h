@@ -14,6 +14,7 @@ public:
 	int GetNextPCAddr();
 
 	void SetInstructionPrint(bool state) { bPrintInstruction = state; }
+	void SetRegisterPrint(bool state) { bPrintRegisters = state; }
 
 private:
 	void PrintInstruction();

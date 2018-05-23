@@ -369,12 +369,30 @@ bool TestCPU(Verbosity verbosity)
 }
 
 
+bool TestCPUPipeline(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testopspipe.vasm");
+	debugger.SetInstructionPrint(true);
+	debugger.SetRegisterPrint(true);
+
+	for (int i = 0; i < 50; ++i)
+	{
+		debugger.Step();
+	}
+
+	return success;
+}
+
 bool RunCPUTests()
 {
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST(TestCPU, FAIL_ONLY);
+	//RUN_TEST(TestCPU, FAIL_ONLY);
+	RUN_TEST(TestCPUPipeline, FAIL_ONLY);
 
 	return success;
 }

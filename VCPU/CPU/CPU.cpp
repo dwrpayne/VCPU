@@ -222,13 +222,13 @@ void CPU::Connect()
 void CPU::Update()
 {
 	stage1->Update();
-	stage1->Update2();
 	stage2->Update();
-	stage2->Update2();
 	stage3->Update();
-	stage3->Update2();
 	stage4->Update();
 	stage4->Update2();
+	stage3->Update2();
+	stage2->Update2();
+	stage1->Update2();
 	cycles++;
 }
 
