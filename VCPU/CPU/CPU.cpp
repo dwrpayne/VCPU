@@ -1,4 +1,6 @@
 #include "CPU.h"
+#include <vector>
+#include <future>
 
 
 class CPU::Stage1 : public PipelineStage
@@ -221,10 +223,15 @@ void CPU::Connect()
 
 void CPU::Update()
 {
-	stage1->Update();
-	stage2->Update();
-	stage3->Update();
-	stage4->Update();
+	std::vector<std::future<void>> futures;
+	futures.push_back(std::async([this]() {stage1->Update(); }));
+	futures.push_back(std::async([this]() {stage2->Update(); }));
+	futures.push_back(std::async([this]() {stage3->Update(); }));
+	futures.push_back(std::async([this]() {stage4->Update(); }));
+	for (auto& f : futures)
+	{
+		f.get();
+	}
 	stage4->Update2();
 	stage3->Update2();
 	stage2->Update2();

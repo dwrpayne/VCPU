@@ -377,11 +377,7 @@ bool TestCPUPipeline(Verbosity verbosity)
 	Debugger debugger("testopspipe.vasm");
 	debugger.SetInstructionPrint(true);
 	debugger.SetRegisterPrint(true);
-
-	for (int i = 0; i < 50; ++i)
-	{
-		debugger.Step();
-	}
+	debugger.Start();
 
 	return success;
 }
