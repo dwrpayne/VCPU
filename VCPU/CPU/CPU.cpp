@@ -16,7 +16,6 @@ private:
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
 	CPU::InsCache instructionCache;
-	CPU::InsMemory instructionMem;
 	BufferIFID bufIFID;
 
 	friend class CPU;
@@ -68,7 +67,6 @@ public:
 private:
 	BranchDetector branchDetector;
 	CPU::MainCache cache;
-	CPU::MainMemory mainMem;
 	MuxBundle<32, 4> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
 
@@ -88,8 +86,7 @@ void CPU::Stage1::Connect()
 	pcIncrementer.Connect(pc.Out(), insWidth, Wire::OFF);
 
 	// Instruction memory
-	instructionCache.Connect(pc.Out().Range<InsMemory::ADDR_BITS>(0), InsMemory::DataBundle(Wire::OFF), Wire::OFF, instructionMem.OutLine());
-	instructionMem.Connect(pc.Out().Range<InsMemory::ADDR_BITS>(0), InsMemory::DataBundle(Wire::OFF), Wire::OFF);
+	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF);
 	
 	bufIFID.Connect(Wire::ON, instructionCache.Out(), pcIncrementer.Out());
 }
@@ -135,10 +132,7 @@ void CPU::Stage4::Connect()
 		cpu.stage3->Out().OpcodeControl().BranchSel(), cpu.stage3->Out().OpcodeControl().Branch());
 
 	// Main Memory
-	cache.Connect(cpu.stage3->Out().aluOut.Out().Range<MainMemory::ADDR_BITS>(0), cpu.stage3->Out().reg2.Out(), 
-		cpu.stage3->Out().OpcodeControl().StoreOp(), mainMem.OutLine());
-
-	mainMem.Connect(cpu.stage3->Out().aluOut.Out().Range<MainMemory::ADDR_BITS>(0), cpu.stage3->Out().reg2.Out(), 
+	cache.Connect(cpu.stage3->Out().aluOut.Out().Range<MainCache::ADDR_BITS>(0), cpu.stage3->Out().reg2.Out(), 
 		cpu.stage3->Out().OpcodeControl().StoreOp());
 
 	Bundle<32> sltExtended(Wire::OFF);
@@ -156,8 +150,6 @@ void CPU::Stage1::Update()
 	pcInMux.Update();
 	pc.Update();
 	pcIncrementer.Update();
-	instructionCache.Update();
-	instructionMem.Update();
 	instructionCache.Update();
 }
 void CPU::Stage1::Update2()
@@ -193,8 +185,6 @@ void CPU::Stage4::Update()
 {
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
 	branchDetector.Update();
-	cache.Update();
-	mainMem.Update();
 	cache.Update();
 	regWriteDataMux.Update();
 }
@@ -244,14 +234,14 @@ Register<32> CPU::PC()
 	return stage1->pc;
 }
 
-CPU::InsMemory& CPU::InstructionMem()
+CPU::InsCache& CPU::InstructionMem()
 {
-	return stage1->instructionMem;
+	return stage1->instructionCache;
 }
 
-CPU::MainMemory& CPU::MainMem()
+CPU::MainCache& CPU::MainMem()
 {
-	return stage4->mainMem;
+	return stage4->cache;
 }
 
 CPU::RegFile& CPU::Registers()

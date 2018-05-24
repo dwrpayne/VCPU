@@ -29,13 +29,14 @@ public:
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
 
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const CacheLineDataBundle& mem_data);
+	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
 	void Update();
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
 	
 private:
+	Memory<WORD_SIZE, MAIN_MEMORY_BYTES / WORD_BYTES, CACHE_LINE_BITS> mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;	
@@ -54,8 +55,9 @@ private:
 
 
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
-void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const CacheLineDataBundle& mem_data)
+void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write)
 {
+	mMemory.Connect(addr, data, write);
 	read.Connect(write);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
@@ -73,7 +75,7 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(tag, offset, write, data, writeEnable.Out()[i], mem_data);
+		cachelines[i].Connect(tag, offset, write, data, writeEnable.Out()[i], mMemory.OutLine());
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 	}
@@ -95,6 +97,23 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
 void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
+	indexDecoder.Update();
+	writeEnable.Update();
+	for (auto& line : cachelines)
+	{
+		line.Update();
+	}
+	cacheHitMux.Update();
+	cacheMiss.Update();
+	read.Update();
+	readMiss.Update();
+	outCacheLineMux.Update();
+	outDataMux.Update();
+
+
+	mMemory.Update();
+
+	// TODO: Total hack for now. Make the memory update async in the background and block/signal when ready.
 	indexDecoder.Update();
 	writeEnable.Update();
 	for (auto& line : cachelines)

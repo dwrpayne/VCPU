@@ -10,7 +10,7 @@ public:
 	void Load(const std::vector<unsigned int>& instructions);
 
 private:
-	CPU::InsMemory& insMemory;
+	CPU::InsCache& insMemory;
 	MagicBundle<32> ins_bundle, addr_bundle;
 	unsigned int cur_addr;
 };

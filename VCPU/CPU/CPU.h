@@ -21,10 +21,8 @@ public:
 
 	int cycles;
 
-	typedef Memory<32, 64, 256> InsMemory;
-	typedef Memory<32, 64, 256> MainMemory;
-	typedef Cache<32, 64, 256, InsMemory::BYTES> InsCache;
-	typedef Cache<32, 128, 256, MainMemory::BYTES> MainCache;
+	typedef Cache<32, 64, 256, 512> InsCache;
+	typedef Cache<32, 256, 256, 2048> MainCache;
 	typedef RegisterFile<32, 32> RegFile;
 
 	void Connect();
@@ -42,8 +40,8 @@ private:
 	};
 
 	Register<32> PC();
-	InsMemory& InstructionMem();
-	MainMemory& MainMem();
+	InsCache& InstructionMem();
+	MainCache& MainMem();
 	RegFile& Registers();
 
 private:

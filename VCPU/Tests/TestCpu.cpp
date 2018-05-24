@@ -139,38 +139,35 @@ bool TestCache(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	Memory<32, 512, 256>* pMainMem = new Memory<32, 512, 256>();
-	Cache<32, 512, 256, pMainMem->BYTES>* pCache = new Cache<32, 512, 256, pMainMem->BYTES>();
-	Cache<32, 512, 256, pMainMem->BYTES>& test = *pCache;
+	Cache<32, 512, 256, 2048>* pCache = new Cache<32, 512, 256, 2048>();
+	Cache<32, 512, 256, 2048>& test = *pCache;
 
 	MagicBundle<32> data;
 	Wire write(true);
 	MagicBundle<11> addr;
-
-	pMainMem->Connect(addr, data, write);
+	test.Connect(addr, data, write);
 
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(0 + 4 * a);
 		data.Write(100000000 + 1111111 * a);
-		pMainMem->Update();
+		test.Update();
 	}
 
 	for (int a = 0; a < 8; ++a)
 	{
 		addr.Write(64 + 4*a );
 		data.Write(200000000 + 1111111 * a);
-		pMainMem->Update();
+		test.Update();
 	}
 	write.Set(false);
 	
-	test.Connect(addr, data, write, pMainMem->OutLine());
 	
 	addr.Write(0);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	pMainMem->Update();
+	test.Update();
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(4*a);
@@ -181,7 +178,7 @@ bool TestCache(Verbosity verbosity)
 	addr.Write(88);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	pMainMem->Update();
+	test.Update();
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(64 + 4*a);
@@ -196,18 +193,13 @@ bool TestCache(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 4444, test.Out().Read(), verbosity);
-	pMainMem->Update();
-	success &= TestState(i++, 100000000, pMainMem->OutLine().Range<32>(0).Read(), verbosity);
-	success &= TestState(i++, 4444, pMainMem->OutLine().Range<32>(32).Read(), verbosity);
-	success &= TestState(i++, 102222222, pMainMem->OutLine().Range<32>(64).Read(), verbosity);
+	test.Update();
 
 	data.Write(525252);
 	addr.Write(52);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	pMainMem->Update();
-	success &= TestState(i++, 525252, pMainMem->OutLine().Range<32>(160).Read(), verbosity);
 
 	data.Write(123);
 	write.Set(false);
@@ -215,7 +207,6 @@ bool TestCache(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	pMainMem->Update();
 	test.Update();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);

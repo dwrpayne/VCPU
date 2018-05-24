@@ -60,8 +60,6 @@ void PrintComponentCosts()
 	PRINT_COST(RegisterFile3232);
 	PRINT_COST(CacheLine32813);
 
-	PRINT_COST_NEW(CPU::InsMemory);
-	PRINT_COST_NEW(CPU::MainMemory);
 	PRINT_COST_NEW(CPU::InsCache);
 	PRINT_COST_NEW(CPU::MainCache);
 	PRINT_COST_NEW(CPU::RegFile);

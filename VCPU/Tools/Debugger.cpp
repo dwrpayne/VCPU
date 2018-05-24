@@ -60,7 +60,7 @@ int Debugger::GetRegisterVal(int reg)
 
 int Debugger::GetMemoryVal(int addr)
 {
-	return pCPU->MainMem().registers[addr / CPU::MainMemory::WORD_LEN].Out().Read();
+	return pCPU->MainMem().mMemory.registers[addr / CPU::MainCache::WORD_BYTES / 8].Out().Read();
 }
 
 int Debugger::GetNextPCAddr()
