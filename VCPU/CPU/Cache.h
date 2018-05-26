@@ -1,4 +1,5 @@
 #pragma once
+#include <future>
 
 #include "Component.h"
 #include "Bundle.h"
@@ -110,20 +111,22 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 	outCacheLineMux.Update();
 	outDataMux.Update();
 
-
-	mMemory.Update();
-
 	// TODO: Total hack for now. Make the memory update async in the background and block/signal when ready.
-	indexDecoder.Update();
-	writeEnable.Update();
-	for (auto& line : cachelines)
+	if (cacheMiss.Out().On() || read.in->On())
 	{
-		line.Update();
+		mMemory.Update();
+
+		indexDecoder.Update();
+		writeEnable.Update();
+		for (auto& line : cachelines)
+		{
+			line.Update();
+		}
+		cacheHitMux.Update();
+		cacheMiss.Update();
+		read.Update();
+		readMiss.Update();
+		outCacheLineMux.Update();
+		outDataMux.Update();
 	}
-	cacheHitMux.Update();
-	cacheMiss.Update();
-	read.Update();
-	readMiss.Update();
-	outCacheLineMux.Update();
-	outDataMux.Update();
 }
