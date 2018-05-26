@@ -49,7 +49,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 9;
+	static const int OUT_WIDTH = 10;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -71,7 +71,8 @@ public:
 		const Wire& AluBFromImm() const { return Get(4); }
 		const Wire& RegWrite() const { return Get(5); }
 		const Wire& SltOp() const { return Get(6); }
-		const Bundle<2> BranchSel() const { return Range<2>(7); }
+		const Wire& ShiftOp() const { return Get(7); }
+		const Bundle<2> BranchSel() const { return Range<2>(8); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }
@@ -94,10 +95,12 @@ private:
 	AndGate storeOp;
 	AndGateN<4> branchOp;
 	AndGateN<3> immOp;
+	NorGateN<4> shiftOp;
 	OrGateN<3> aluBImm;
 	OrGateN<3> regWrite;
 
-	NorGateN<6> zeroOpcode;
+	OrGateN<6> nonzeroOpcode;
+	Inverter zeroOpcode;
 	MuxBundle<6, 2> funcOpMux;
 	Inverter func1Inv;
 	Inverter func2Inv;
@@ -121,6 +124,13 @@ private:
 		VCPU opcode table
 	DEC 543210	Func	mn		Name
 	-----------------
+	0	000000	000000	SLL		Shift Left Logical
+	0	000000	000010	SRL		Shift Right Logical
+	0	000000	000011	SRA		Shift Right Arithmetic
+	0	000000	000100	SLLV	Shift Left Logical Var
+	0	000000	000110	SRLV	Shift Right Logical Var
+	0	000000	000111	SRAV	Shift Right Arithmetic Var
+
 	0	000000	001000	JR		Jump Register
 	0	000000	001001	JALR	Jump and Link Register
 

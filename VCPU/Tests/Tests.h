@@ -646,22 +646,53 @@ bool TestALU(Verbosity verbosity)
 		sel.Write(ALU_OPCODE::A_NOR_B);
 		alu.Update();
 		success &= TestState(i++, (~(a | b)), alu.Out().Read(), verbosity);
-
-		if (a > 0)
-		{
-			sel.Write(ALU_OPCODE::A_SHR);
-			alu.Update();
-			success &= TestState(i++, a >> 1, alu.Out().Read(), verbosity);
-
-			sel.Write(ALU_OPCODE::A_SHL);
-			alu.Update();
-			success &= TestState(i++, a << 1, alu.Out().Read(), verbosity);
-		}
-		else
-		{
-			i += 2;
-		}
 	}
+
+	// Test shift
+	a_reg.Write(224U);
+	sel.Write(ALU_OPCODE::A_SHRL);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		b_reg.Write(s);
+		alu.Update();
+		success &= TestState(i++, (unsigned int)(224U / (1 << s)), alu.Out().UnsignedRead(), verbosity);
+	}
+	sel.Write(ALU_OPCODE::A_SHRL);
+	a_reg.Write(107);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		b_reg.Write(s);
+		alu.Update();
+		success &= TestState(i++, (unsigned int)(107U / (1 << s)), alu.Out().UnsignedRead(), verbosity);
+	}
+
+	sel.Write(ALU_OPCODE::A_SHRA);
+	a_reg.Write(-113);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		b_reg.Write(s);
+		alu.Update();
+		success &= TestState(i++, (int)floor(-113.0 / (1 << s)), alu.Out().Read(), verbosity);
+	}
+
+	sel.Write(ALU_OPCODE::A_SHLL);
+	a_reg.Write(5);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		b_reg.Write(s);
+		alu.Update();
+		success &= TestState(i++, (unsigned int)(5 << s) % 256, alu.Out().UnsignedRead(), verbosity);
+	}
+
+	sel.Write(ALU_OPCODE::A_SHLL);
+	a_reg.Write(-3);
+	for (unsigned int s = 0; s < 6U; s++)
+	{
+		b_reg.Write(s);
+		alu.Update();
+		success &= TestState(i++, (int)(-3 << s), alu.Out().Read(), verbosity);
+	}
+
 
 	// Test flags
 	a_reg.Write(125);

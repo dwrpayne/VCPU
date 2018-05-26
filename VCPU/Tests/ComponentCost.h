@@ -45,6 +45,7 @@ void PrintComponentCosts()
 	PRINT_COST(Matcher<32>);
 	PRINT_COST(OverflowDetector);
 	PRINT_COST(Adder<32>);
+	PRINT_COST(Shifter<32>);
 	PRINT_COST(Multiplexer<2>);
 	PRINT_COST(Multiplexer<8>);
 	PRINT_COST(Decoder<32>);

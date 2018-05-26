@@ -3,7 +3,8 @@
 OpcodeDecoder::OpcodeDecoder()
 {
 	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &rFormat.Out(),
-		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
+		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(), 
+		&funcOpMux.Out()[0], &funcOpMux.Out()[1] });
 }
 
 void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
@@ -16,10 +17,12 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	branchOp.Connect({ &opcode[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
 	immOp.Connect({ &opcode[3], &inv.Out()[4], &inv.Out()[5] });
 	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });
-	regWrite.Connect({ &rFormat.Out(), &loadOp.Out(), &immOp.Out()});
+	regWrite.Connect({ &rFormat.Out(), &loadOp.Out(), &immOp.Out() });
 
-	zeroOpcode.Connect(opcode);
+	nonzeroOpcode.Connect(opcode);
+	zeroOpcode.Connect(nonzeroOpcode.Out());
 	funcOpMux.Connect({ opcode, func }, zeroOpcode.Out());
+	shiftOp.Connect({ &nonzeroOpcode.Out(), &func[3], &func[4], &func[5] });
 
 	branchInv.Connect(branchOp.Out());
 	loadstoreInv.Connect(loadstore.Out());
@@ -52,9 +55,10 @@ void OpcodeDecoder::Update()
 	immOp.Update();
 	aluBImm.Update();
 	regWrite.Update();
-
+	nonzeroOpcode.Update();
 	zeroOpcode.Update();
 	funcOpMux.Update();
+	shiftOp.Update();
 	branchInv.Update();
 	loadstoreInv.Update();
 	func1Inv.Update();

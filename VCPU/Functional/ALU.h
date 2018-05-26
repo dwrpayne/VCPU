@@ -10,6 +10,7 @@
 #include "OrGate.h"
 #include "NorGate.h"
 #include "XorGate.h"
+#include "Shifter.h"
 
 enum ALU_OPCODE : uint8_t
 {
@@ -25,10 +26,10 @@ enum ALU_OPCODE : uint8_t
 	A_OR_B,
 	A_XOR_B,
 	A_NOR_B,
-	A_SHR,
-	A_SHL,
+	A_SHLL,
 	UNUSED,
-	UNUSED2,
+	A_SHRL,
+	A_SHRA,
 	MAX
 };
 
@@ -53,10 +54,10 @@ enum ALU_OPCODE : uint8_t
 	   1  0  1  1	A NOR B
 
 	   (C3==1, C2==1: shifts)
-	   1  1  0  0	SHR A
-	   1  1  0  1	SHL A
-	   1  1  1  0	
-	   1  1  1  1	
+	   1  1  0  0	SHLL A by B
+	   1  1  0  1	
+	   1  1  1  0	SHRL A by B
+	   1  1  1  1	SHRA A by B
 
 C[2:0] are passed through to the Adder as those are its opcodes
 
@@ -99,6 +100,8 @@ private:
 	MultiGate<OrGate, N> ors;
 	MultiGate<XorGate, N> xors;
 	InverterN<N> invs;
+	LeftShifter<N> leftShifter;
+	RightShifter<N> rightShifter;
 	MuxBundle<N, 8> logicShiftMux;
 	MuxBundle<N, 2> outMux;
 	NorGateN<N> zeroOut;
@@ -123,13 +126,11 @@ inline void ALU<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle
 	invs.Connect(ors.Out());
 
 	// Shift
-	Bundle<N> shiftL, shiftR;
-	shiftR.Connect(0, a.Range<N-1>(1));
-	shiftR.Connect(N - 1, Wire::OFF);
-	shiftL.Connect(0, Wire::OFF);
-	shiftL.Connect(1, a.Range<N - 1>(0));
+	leftShifter.Connect(a, b.Range<bits(N)>(0));
+	rightShifter.Connect(a, b.Range<bits(N)>(0), control[0]);
 
-	logicShiftMux.Connect({ ands.Out(), ors.Out(), xors.Out(), invs.Out(), shiftR, shiftL, Bundle<N>::OFF, Bundle<N>::OFF }, control.Range<3>(0));
+	logicShiftMux.Connect({ ands.Out(), ors.Out(), xors.Out(), invs.Out(), 
+							leftShifter.Out(), leftShifter.Out(), rightShifter.Out(), rightShifter.Out() }, control.Range<3>(0));
 	outMux.Connect({ adder.Out(), logicShiftMux.Out() }, control[3]);
 
 	zeroOut.Connect(outMux.Out());
@@ -143,6 +144,8 @@ inline void ALU<N>::Update()
 	ors.Update();
 	xors.Update();
 	invs.Update();
+	leftShifter.Update();
+	rightShifter.Update();
 	logicShiftMux.Update();
 	outMux.Update();
 	zeroOut.Update();
