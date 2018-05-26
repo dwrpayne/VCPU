@@ -17,7 +17,7 @@ Debugger::Debugger(const std::string& source_filename)
 	ProgramLoader loader(*pCPU);
 	loader.Load(pAssembler->GetBinary());
 	pCPU->Connect();
-	pCPU->Update();
+	//pCPU->Update();
 }
 
 void Debugger::Start(int cycles)
@@ -37,6 +37,12 @@ void Debugger::Start(int cycles)
 
 void Debugger::Step()
 {
+	mLastInst.push_front(GetNextPCAddr() / 4);
+	if (mLastInst.size() > 5)
+	{
+		mLastInst.pop_back();
+	}
+
 	if (bPrintInstruction)
 	{
 		PrintInstruction();
@@ -45,6 +51,7 @@ void Debugger::Step()
 	auto t1 = std::chrono::high_resolution_clock::now();
 	pCPU->Update();
 	auto t2 = std::chrono::high_resolution_clock::now();
+
 
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
@@ -66,14 +73,18 @@ int Debugger::GetMemoryVal(int addr)
 
 int Debugger::GetNextPCAddr()
 {
-	return pCPU->PC().Out().Read();
+	return pCPU->PC().Out().UnsignedRead();
 }
 
 void Debugger::PrintInstruction()
 {
-	unsigned int addr = pCPU->PC().Out().UnsignedRead() / 4;
-	auto line = pAssembler->GetSourceLine(addr);
-	std::cout << pCPU->cycles << "\t0x" << std::hex << GetNextPCAddr() << std::dec << "\t" << line << std::endl;
+	static const char* stage[5] = { "IF", "ID", "EX", "MEM", "WB" };
+	for (int i = 0; i < mLastInst.size(); ++i)
+	{
+		unsigned int addr = mLastInst[i];
+		auto line = pAssembler->GetSourceLine(addr);
+		std::cout << "\t0x" << std::hex << addr*4 << " " << stage[i] << std::dec << "\t" << line << std::endl;
+	}
 }
 
 void Debugger::PrintRegisters()

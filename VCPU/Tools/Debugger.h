@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <deque>
 #include "CPU/CPU.h"
 
 class Debugger
@@ -23,6 +24,7 @@ private:
 	CPU* pCPU;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
+	std::deque<int> mLastInst;
 
 	std::chrono::microseconds mCpuElapsedTime;
 
