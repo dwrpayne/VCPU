@@ -78,7 +78,7 @@ int Debugger::GetRegisterVal(int reg)
 
 int Debugger::GetMemoryVal(int addr)
 {
-	return pCPU->MainMem().mMemory.registers[addr / CPU::MainCache::WORD_BYTES / 8].Out().Read();
+	return pCPU->MainMem().mMemory.registers[addr / CPU::MainCache::WORD_BYTES].Out().Read();
 }
 
 int Debugger::GetNextPCAddr()
@@ -88,12 +88,13 @@ int Debugger::GetNextPCAddr()
 
 void Debugger::PrintInstruction()
 {
+	std::cout << "--------- CYCLE " << pCPU->cycles << " ---------------" << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
 		unsigned int addr = mLastInstructions[i];
 		auto line = pAssembler->GetSourceLine(addr);
-		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "\t" << line << std::endl;
+		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "  \t" << line << std::endl;
 	}
 }
 

@@ -49,7 +49,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 10;
+	static const int OUT_WIDTH = 11;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -72,7 +72,8 @@ public:
 		const Wire& RegWrite() const { return Get(5); }
 		const Wire& SltOp() const { return Get(6); }
 		const Wire& ShiftOp() const { return Get(7); }
-		const Bundle<2> BranchSel() const { return Range<2>(8); }
+		const Wire& ShiftAmtOp() const { return Get(8); }
+		const Bundle<2> BranchSel() const { return Range<2>(9); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }
@@ -82,10 +83,12 @@ public:
 	const Wire& AluBFromImm() const { return out.AluBFromImm(); }
 	const Wire& RegWrite() const { return out.RegWrite(); }
 	const Wire& SltOp() const { return out.SltOp(); }
+	const Wire& ShiftOp() const { return out.ShiftOp(); }
+	const Wire& ShiftAmtOp() const { return out.ShiftAmtOp(); }
 	const Bundle<2> BranchSel() const { return out.BranchSel(); }
 	const OpcodeDecoderBundle& OutBundle() { return out; }
 
-	const Bundle<4>& AluControl() { return control.Out(); }
+	const Bundle<4>& AluControl() { return controlAll.Out(); }
 
 private:
 	InverterN<6> inv;
@@ -96,6 +99,7 @@ private:
 	AndGateN<4> branchOp;
 	AndGateN<3> immOp;
 	NorGateN<4> shiftOp;
+	NorGateN<5> shiftAmtOp;
 	OrGateN<3> aluBImm;
 	OrGateN<3> regWrite;
 
@@ -114,6 +118,7 @@ private:
 	AndGate addOp;
 	AndGate subOp;
 	MuxBundle<4, 2> control;
+	MuxBundle<4, 2> controlAll;
 
 	OpcodeDecoderBundle out;
 };

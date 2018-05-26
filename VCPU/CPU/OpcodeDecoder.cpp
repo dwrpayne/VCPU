@@ -3,7 +3,7 @@
 OpcodeDecoder::OpcodeDecoder()
 {
 	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &rFormat.Out(),
-		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(), 
+		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
 		&funcOpMux.Out()[0], &funcOpMux.Out()[1] });
 }
 
@@ -16,14 +16,15 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	storeOp.Connect(opcode[3], loadstore.Out());
 	branchOp.Connect({ &opcode[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
 	immOp.Connect({ &opcode[3], &inv.Out()[4], &inv.Out()[5] });
-	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });
 	regWrite.Connect({ &rFormat.Out(), &loadOp.Out(), &immOp.Out() });
 
 	nonzeroOpcode.Connect(opcode);
 	zeroOpcode.Connect(nonzeroOpcode.Out());
 	funcOpMux.Connect({ opcode, func }, zeroOpcode.Out());
 	shiftOp.Connect({ &nonzeroOpcode.Out(), &func[3], &func[4], &func[5] });
-
+	shiftAmtOp.Connect({ &nonzeroOpcode.Out(), &func[2], &func[3], &func[4], &func[5] });
+	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });
+	
 	branchInv.Connect(branchOp.Out());
 	loadstoreInv.Connect(loadstore.Out());
 
@@ -42,6 +43,9 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	Bundle<4> logicControl({ &funcOpMux.Out()[0], &funcOpMux.Out()[1], &Wire::OFF, &Wire::ON });
 
 	control.Connect({ logicControl, mathControl }, mathOp.Out());
+
+	Bundle<4> shiftControl({ &funcOpMux.Out()[0], &funcOpMux.Out()[1], &Wire::ON, &Wire::ON });
+	controlAll.Connect({ control.Out(),shiftControl }, shiftOp.Out());
 }
 
 void OpcodeDecoder::Update()
@@ -53,12 +57,13 @@ void OpcodeDecoder::Update()
 	storeOp.Update();
 	branchOp.Update();
 	immOp.Update();
-	aluBImm.Update();
 	regWrite.Update();
 	nonzeroOpcode.Update();
 	zeroOpcode.Update();
 	funcOpMux.Update();
 	shiftOp.Update();
+	shiftAmtOp.Update();
+	aluBImm.Update();
 	branchInv.Update();
 	loadstoreInv.Update();
 	func1Inv.Update();
@@ -71,4 +76,5 @@ void OpcodeDecoder::Update()
 	addOp.Update();
 	subOp.Update();
 	control.Update();
+	controlAll.Update();
 }

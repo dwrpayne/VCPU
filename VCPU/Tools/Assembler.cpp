@@ -93,9 +93,9 @@ unsigned int Assembler::ParseLine(const std::string& line)
 				}
 				else if (sscanf_s(words[3].c_str(), "%d", &val3))
 				{
-					// $rd, $rt, shamt
+					// $rd, $rs, shamt
 					rd = val1;
-					rt = val2;
+					rs = val2;
 					shamt = val3;
 				}
 				else

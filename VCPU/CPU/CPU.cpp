@@ -32,6 +32,7 @@ public:
 private:
 	OpcodeDecoder opcodeControl;
 	CPU::RegFile regFile;
+	MuxBundle<32, 2> reg2ShiftMux;
 	BufferIDEX bufIDEX;
 
 	friend class CPU;
@@ -106,11 +107,16 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4)
 		stage4.Rwrite.Out(), stage4.RWriteData.Out(),
 		stage4.OpcodeControl().RegWrite());
 
+	Bundle<32> shiftAmtExt(Wire::OFF);
+	shiftAmtExt.Connect(0, stage1.IR.Shamt());
+
+	reg2ShiftMux.Connect({ regFile.Out2(), shiftAmtExt }, opcodeControl.ShiftAmtOp());
+
 	Bundle<32> signExtImm(stage1.IR.Immediate()[15]);
 	signExtImm.Connect(0, stage1.IR.Immediate());
 
 	bufIDEX.Connect(Wire::ON, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
-		signExtImm, regFile.Out1(), regFile.Out2(),
+		signExtImm, regFile.Out1(), reg2ShiftMux.Out(),
 		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
 }
@@ -176,6 +182,7 @@ void CPU::Stage2::Update()
 	// ******** STAGE 2 INSTRUCTION DECODE ************
 	opcodeControl.Update();
 	regFile.Update();
+	reg2ShiftMux.Update();
 }
 void CPU::Stage2::Update2()
 {
