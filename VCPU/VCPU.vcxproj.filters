@@ -221,5 +221,8 @@
     <ClInclude Include="Functional\Matcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Functional\Comparator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

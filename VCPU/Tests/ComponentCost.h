@@ -41,6 +41,8 @@ void PrintComponentCosts()
 	PRINT_COST(Counter<4>);
 	PRINT_COST(FullAdder);
 	PRINT_COST(FullAdderN<32>);
+	PRINT_COST(Comparator<32>);
+	PRINT_COST(Matcher<32>);
 	PRINT_COST(OverflowDetector);
 	PRINT_COST(Adder<32>);
 	PRINT_COST(Multiplexer<2>);

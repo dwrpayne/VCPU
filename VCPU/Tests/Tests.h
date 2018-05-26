@@ -22,6 +22,7 @@
 #include "Adder.h"
 #include "Multiplexer.h"
 #include "Matcher.h"
+#include "Comparator.h"
 #include "MuxBundle.h"
 #include "Decoder.h"
 #include "ALU.h"
@@ -467,14 +468,36 @@ bool TestMultiplexer8(const Wire& a, const Wire& b, const Wire& c)
 	return test.Out().On() != a.On();
 }
 
-bool TestMatcher(const Bundle<6>& in)
+bool TestMatcher(const Bundle<8>& in)
 {
-	Matcher<3> test;
-	Bundle<3> a = in.Range<3>(0);
-	Bundle<3> b = in.Range<3>(3);
+	Matcher<4> test;
+	Bundle<4> a = in.Range<4>(0);
+	Bundle<4> b = in.Range<4>(4);
 	test.Connect(a, b);
 	test.Update();
 	return test.Out().On() == (a.Read() == b.Read());
+}
+
+bool TestComparator(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	Comparator<8> test;
+	MagicBundle<8> num1, num2;
+	test.Connect(num1, num2);
+	for (const auto&[a, b] : std::map<int, int>({ { -12, -12 },{ -13, -12 },{ -11, -12 },{ 0, 0 },{ 62, 63 } }))
+	{
+		num1.Write(a);
+		num2.Write(b);
+		test.Update();
+		success &= TestState(i++, num1.Read() == num2.Read(), test.Equal().On(), verbosity);
+		success &= TestState(i++, num1.Read() < num2.Read(), test.Less().On(), verbosity);
+		success &= TestState(i++, num1.Read() <= num2.Read(), test.LessEqual().On(), verbosity);
+		success &= TestState(i++, num1.Read() > num2.Read(), test.Greater().On(), verbosity);
+		success &= TestState(i++, num1.Read() >= num2.Read(), test.GreaterEqual().On(), verbosity);
+	}
+	return success;
 }
 
 bool TestDecoder4(const Wire& a, const Wire& b)
@@ -830,6 +853,7 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
+	RUN_TEST(TestComparator, VERBOSE);
 	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
