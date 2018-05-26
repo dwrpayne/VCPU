@@ -6,6 +6,7 @@
 #include "MultiGate.h"
 #include "Decoder.h"
 #include "XNorGate.h"
+#include "Matcher.h"
 
 template <unsigned int N, unsigned int Nwords, unsigned int NTag>
 class CacheLine : public Component
@@ -27,8 +28,7 @@ public:
 private:
 	OrGate writeOr;
 	Register<NTag> tag;
-	MultiGate<XNorGate, NTag> tagMatcher;
-	AndGateN<NTag> tagAllMatch; 
+	Matcher<NTag> tagMatcher;
 	DFlipFlop valid;
 	AndGate cacheHit;
 
@@ -58,9 +58,8 @@ void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, Bundle<OFFSET_ADDR>
 	writeOr.Connect(writeword, writeline);
 	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
-	tagAllMatch.Connect(tagMatcher.Out());
 	valid.Connect(writeline, writeline);
-	cacheHit.Connect(tagAllMatch.Out(), valid.Q());
+	cacheHit.Connect(tagMatcher.Out(), valid.Q());
 
 	writeWordAndHit.Connect(writeword, cacheHit.Out());
 	writeAllow.Connect(writeWordAndHit.Out(), writeline);
@@ -80,7 +79,6 @@ inline void CacheLine<N, Nwords, NTag>::Update()
 	writeOr.Update();
 	tag.Update();
 	tagMatcher.Update();
-	tagAllMatch.Update();
 	valid.Update();
 	cacheHit.Update();
 
