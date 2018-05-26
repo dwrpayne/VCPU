@@ -22,11 +22,12 @@ void RunCPU(std::string filename)
 	Debugger debugger(filename);
 	//debugger.SetInstructionPrint(true);
 	//debugger.SetRegisterPrint(true);
+	debugger.SetDataForwardPrint(false);
 	debugger.Start();
 }
 
 int main(int argc, char** argv)
 {
 	Test();
-	//RunCPU("primes.vasm");
+	RunCPU("primes.vasm");
 }

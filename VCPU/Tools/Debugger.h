@@ -17,7 +17,7 @@ public:
 	void SetInstructionPrint(bool state) { bPrintInstruction = state; }
 	void SetRegisterPrint(bool state) { bPrintRegisters = state; }
 	void SetOutputRegPrint(bool state) { bPrintOutputReg = state; }
-	void SetDataForwardPrint(bool state) { bPrintOutputReg = state; }
+	void SetDataForwardPrint(bool state) { bPrintDataForward = state; }
 
 private:
 	void PrintInstruction();
