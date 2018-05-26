@@ -8,7 +8,7 @@ void HazardUnit::Connect(const RegBundle& exmemRd, const Bundle<32>& exmemAluOut
 	ExMemData = exmemAluOut;
 	MemWbData = memwbAluOut;
 	ExMemRdNonZero.Connect(exmemRd);
-	MemWbRdNonZero.Connect(exmemRd);
+	MemWbRdNonZero.Connect(memwbRd);
 
 	ExMemRdRs.Connect(exmemRd, idexRs);
 	ExMemRdRt.Connect(exmemRd, idexRt);

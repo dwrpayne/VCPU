@@ -11,6 +11,7 @@ Debugger::Debugger(const std::string& source_filename)
 	bPrintInstruction = false;
 	bPrintRegisters = false;
 	bPrintOutputReg = true;
+	bPrintDataForward = true;
 
 	pAssembler = new Assembler(source_filename);
 
@@ -63,6 +64,11 @@ void Debugger::Step()
 	{
 		PrintOutputReg();
 	}
+
+	if (bPrintDataForward)
+	{
+		PrintDataForward();
+	}
 }
 
 int Debugger::GetRegisterVal(int reg)
@@ -111,5 +117,25 @@ void Debugger::PrintOutputReg()
 	{
 		last_output_reg = output;
 		std::cout << "OUTPUT REGISTER STORED: " << output << std::endl;
+	}
+}
+
+void Debugger::PrintDataForward()
+{
+	if (pCPU->hazard.AluRsMux()[0].On())
+	{
+		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to RS" << std::endl;
+	}
+	if (pCPU->hazard.AluRsMux()[1].On())
+	{
+		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to RS" << std::endl;
+	}
+	if (pCPU->hazard.AluRtMux()[0].On())
+	{
+		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to RT" << std::endl;
+	}
+	if (pCPU->hazard.AluRtMux()[1].On())
+	{
+		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to RT" << std::endl;
 	}
 }

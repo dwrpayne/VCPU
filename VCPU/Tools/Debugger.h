@@ -17,16 +17,19 @@ public:
 	void SetInstructionPrint(bool state) { bPrintInstruction = state; }
 	void SetRegisterPrint(bool state) { bPrintRegisters = state; }
 	void SetOutputRegPrint(bool state) { bPrintOutputReg = state; }
+	void SetDataForwardPrint(bool state) { bPrintOutputReg = state; }
 
 private:
 	void PrintInstruction();
 	void PrintRegisters();
 	void PrintOutputReg();
+	void PrintDataForward();
 	
 	CPU* pCPU;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
 	bool bPrintOutputReg;
+	bool bPrintDataForward;
 
 	std::deque<int> mLastInstructions;
 

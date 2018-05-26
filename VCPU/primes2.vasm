@@ -1,0 +1,16 @@
+addi 	$1, $0, 3
+addi	$1, $1, 2		; $1 += 2, $1 holds the number we are testing
+addi 	$2, $0, 3		; $2 = 3, $2 holds the current subtractor
+add		$3, $0, $1		; $3 = $1 $3 holds the current remainder
+bgtz	$3, -4			; if $3 > 0, keep subtracting
+sub		$3, $3, $2		; $3 = $3 - $2
+and		$0, $0, $0
+beq		$3, $0, -28		; if $3 == 0, composite. next NUMBER
+and		$0, $0, $0		; 
+and		$0, $0, $0		;
+addi	$2, $2, 2		
+bne 	$1, $2, -32		; we know $3 < 0, next subtractor (unless done)
+add		$3, $1, $0
+and		$0, $0, $0		;
+beq		$0, $0, -56
+add		$28, $1, $0
