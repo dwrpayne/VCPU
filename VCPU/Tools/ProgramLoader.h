@@ -11,7 +11,7 @@ public:
 
 private:
 	CPU::InsCache& insMemory;
-	MagicBundle<32> ins_bundle, addr_bundle;
+	MagicBundle<CPU::WORD_SIZE> ins_bundle, addr_bundle;
 	unsigned int cur_addr;
 };
 

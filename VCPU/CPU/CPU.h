@@ -20,10 +20,19 @@ public:
 	CPU();
 
 	int cycles;
+	static const int WORD_SIZE = 32;
+	static const int CACHE_LINE_BITS = 256;
+	static const int NUM_REGISTERS = 32;
 
-	typedef Cache<32, 64, 256, 512> InsCache;
-	typedef Cache<32, 256, 256, 2048> MainCache;
-	typedef RegisterFile<32, 32> RegFile;
+	static const int INS_CACHE_BYTES = 64;
+	static const int MAIN_CACHE_BYTES = 256;
+
+	static const int INS_MEM_BYTES = 512;
+	static const int MAIN_MEM_BYTES = 2048;
+		
+	typedef Cache<WORD_SIZE, INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
+	typedef Cache<WORD_SIZE, MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
+	typedef RegisterFile<WORD_SIZE, NUM_REGISTERS> RegFile;
 
 	void Connect();
 	void Update();
