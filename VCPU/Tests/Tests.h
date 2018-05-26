@@ -21,6 +21,7 @@
 #include "FullAdder.h"
 #include "Adder.h"
 #include "Multiplexer.h"
+#include "Matcher.h"
 #include "MuxBundle.h"
 #include "Decoder.h"
 #include "ALU.h"
@@ -466,6 +467,16 @@ bool TestMultiplexer8(const Wire& a, const Wire& b, const Wire& c)
 	return test.Out().On() != a.On();
 }
 
+bool TestMatcher(const Bundle<6>& in)
+{
+	Matcher<3> test;
+	Bundle<3> a = in.Range<3>(0);
+	Bundle<3> b = in.Range<3>(3);
+	test.Connect(a, b);
+	test.Update();
+	return test.Out().On() == (a.Read() == b.Read());
+}
+
 bool TestDecoder4(const Wire& a, const Wire& b)
 {
 	Decoder<4> test;
@@ -697,6 +708,7 @@ bool TestRegisterFile(Verbosity verbosity)
 	write.Set(false);
 	test.Update();
 	success &= TestState(i++, 123456, test.Out1().Read(), verbosity);
+	success &= TestState(i++, 0, test.Out2().Read(), verbosity);
 
 	addrw.Write(2U);
 	write.Set(true);
@@ -818,6 +830,7 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
