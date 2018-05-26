@@ -37,6 +37,12 @@ void Debugger::Start(int cycles)
 
 void Debugger::Step()
 {
+	auto t1 = std::chrono::high_resolution_clock::now();
+	pCPU->Update();
+	auto t2 = std::chrono::high_resolution_clock::now();
+	
+	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+
 	mLastInst.push_front(GetNextPCAddr() / 4);
 	if (mLastInst.size() > 5)
 	{
@@ -47,14 +53,7 @@ void Debugger::Step()
 	{
 		PrintInstruction();
 	}
-
-	auto t1 = std::chrono::high_resolution_clock::now();
-	pCPU->Update();
-	auto t2 = std::chrono::high_resolution_clock::now();
-
-
-	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-
+	
 	if (bPrintRegisters)
 	{
 		PrintRegisters();
@@ -78,12 +77,12 @@ int Debugger::GetNextPCAddr()
 
 void Debugger::PrintInstruction()
 {
-	static const char* stage[5] = { "IF", "ID", "EX", "MEM", "WB" };
+	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = 0; i < mLastInst.size(); ++i)
 	{
 		unsigned int addr = mLastInst[i];
 		auto line = pAssembler->GetSourceLine(addr);
-		std::cout << "\t0x" << std::hex << addr*4 << " " << stage[i] << std::dec << "\t" << line << std::endl;
+		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "\t" << line << std::endl;
 	}
 }
 
