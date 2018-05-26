@@ -50,7 +50,7 @@ std::vector<std::string> split(const char *str)
 	return result;
 }
 
-unsigned int Assembler::ParseLine(const std::string line)
+unsigned int Assembler::ParseLine(const std::string& line)
 {
 	// Formats we can take:
 	// opn	$1, $2, $3		
@@ -61,8 +61,9 @@ unsigned int Assembler::ParseLine(const std::string line)
 	// opn	$1, $2
 	// opn  $1
 	// opn	$1, $2, $3
+	std::string myline = line.substr(0, line.find(';'));
 
-	std::vector<std::string> words = split(line.c_str());
+	std::vector<std::string> words = split(myline.c_str());
 	std::string opcode = words[0];
 
 	unsigned char rs = 0;

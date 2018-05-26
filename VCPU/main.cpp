@@ -20,11 +20,13 @@ void Test()
 void RunCPU(std::string filename)
 {
 	Debugger debugger(filename);
+	//debugger.SetInstructionPrint(true);
+	//debugger.SetRegisterPrint(true);
 	debugger.Start();
 }
 
 int main(int argc, char** argv)
 {
-	Test();
-	//RunCPU("testops.vasm");
+	//Test();
+	RunCPU("primes.vasm");
 }

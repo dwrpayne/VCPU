@@ -10,6 +10,7 @@ Debugger::Debugger(const std::string& source_filename)
 	pCPU = new CPU();
 	bPrintInstruction = false;
 	bPrintRegisters = false;
+	bPrintOutputReg = true;
 
 	pAssembler = new Assembler(source_filename);
 
@@ -17,12 +18,11 @@ Debugger::Debugger(const std::string& source_filename)
 	ProgramLoader loader(*pCPU);
 	loader.Load(pAssembler->GetBinary());
 	pCPU->Connect();
-	//pCPU->Update();
 }
 
 void Debugger::Start(int cycles)
 {
-	while (cycles > 0)
+	while (cycles != 0)
 	{
 		Step();
 
@@ -43,10 +43,10 @@ void Debugger::Step()
 	
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
-	mLastInst.push_front(GetNextPCAddr() / 4);
-	if (mLastInst.size() > 5)
+	mLastInstructions.push_front(GetNextPCAddr() / 4);
+	if (mLastInstructions.size() > 5)
 	{
-		mLastInst.pop_back();
+		mLastInstructions.pop_back();
 	}
 
 	if (bPrintInstruction)
@@ -57,6 +57,11 @@ void Debugger::Step()
 	if (bPrintRegisters)
 	{
 		PrintRegisters();
+	}
+
+	if (bPrintOutputReg)
+	{
+		PrintOutputReg();
 	}
 }
 
@@ -78,9 +83,9 @@ int Debugger::GetNextPCAddr()
 void Debugger::PrintInstruction()
 {
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
-	for (int i = 0; i < mLastInst.size(); ++i)
+	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
-		unsigned int addr = mLastInst[i];
+		unsigned int addr = mLastInstructions[i];
 		auto line = pAssembler->GetSourceLine(addr);
 		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "\t" << line << std::endl;
 	}
@@ -96,5 +101,15 @@ void Debugger::PrintRegisters()
 			std::cout << "$" << i + 8*j << " " << GetRegisterVal(i+8*j) << "\t\t";
 		}
 		std::cout << std::endl;
+	}
+}
+
+void Debugger::PrintOutputReg()
+{
+	long long output = GetRegisterVal(28);
+	if (output != last_output_reg)
+	{
+		last_output_reg = output;
+		std::cout << "OUTPUT REGISTER STORED: " << output << std::endl;
 	}
 }

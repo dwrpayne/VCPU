@@ -19,7 +19,7 @@ public:
 	std::vector<unsigned int>& GetBinary() { return mBinary; }
 		
 private:
-	unsigned int ParseLine(const std::string line);
+	unsigned int ParseLine(const std::string& line);
 
 	std::string mSourceFilename;
 

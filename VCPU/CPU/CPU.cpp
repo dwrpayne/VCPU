@@ -45,6 +45,7 @@ public:
 	void Update();
 	void Update2();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
+	const Wire& BranchTaken() const { return branchDetector.Out(); }
 private:
 	MuxBundle<CPU::RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
 
@@ -55,6 +56,7 @@ private:
 
 	ALU<32> alu;
 	FullAdderN<32> pcJumpAdder;
+	BranchDetector branchDetector;
 	BufferEXMEM bufEXMEM;
 
 	friend class CPU;
@@ -68,9 +70,7 @@ public:
 	void Update();
 	void Update2();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
-	const Wire& BranchTaken() const { return branchDetector.Out(); }
 private:
-	BranchDetector branchDetector;
 	CPU::MainCache cache;
 	MuxBundle<32, 4> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
@@ -82,7 +82,7 @@ private:
 void CPU::Stage1::Connect()
 {
 	// Program Counter
-	pcInMux.Connect({ pcIncrementer.Out(), cpu.stage3->Out().pcJumpAddr.Out() }, cpu.stage4->BranchTaken());
+	pcInMux.Connect({ pcIncrementer.Out(), cpu.stage3->Out().pcJumpAddr.Out() }, cpu.stage3->BranchTaken());
 	pc.Connect(pcInMux.Out(), Wire::ON);
 
 	// PC Increment. Instruction width is 4, hardwired.
@@ -136,14 +136,15 @@ void CPU::Stage3::Connect()
 	// PC Jump address calculation (A + B, no carry)
 	pcJumpAdder.Connect(cpu.stage2->Out().PCinc.Out(), cpu.stage2->Out().signExt.Out(), Wire::OFF);
 	
+	branchDetector.Connect(alu.Flags().Zero(), alu.Flags().Negative(),
+		cpu.stage2->Out().OpcodeControl().BranchSel(), cpu.stage2->Out().OpcodeControl().Branch());
+	
 	bufEXMEM.Connect(Wire::ON, regFileWriteAddrMux.Out(), cpu.stage2->Out().reg2.Out(), 
 		alu.Out(), alu.Flags(), pcJumpAdder.Out(), cpu.stage2->Out().OpcodeControl());
 }
 
 void CPU::Stage4::Connect()
 {
-	branchDetector.Connect(cpu.stage3->Out().Flags().Zero(), cpu.stage3->Out().Flags().Negative(), 
-		cpu.stage3->Out().OpcodeControl().BranchSel(), cpu.stage3->Out().OpcodeControl().Branch());
 
 	// Main Memory
 	cache.Connect(cpu.stage3->Out().aluOut.Out().Range<MainCache::ADDR_BITS>(0), cpu.stage3->Out().reg2.Out(), 
@@ -191,6 +192,7 @@ void CPU::Stage3::Update()
 	aluBInputMux.Update();
 	alu.Update();
 	pcJumpAdder.Update();
+	branchDetector.Update();
 }
 void CPU::Stage3::Update2()
 {
@@ -200,7 +202,6 @@ void CPU::Stage3::Update2()
 void CPU::Stage4::Update()
 {
 	// ******** STAGE 4 BEGIN - MEMORY STORE ************
-	branchDetector.Update();
 	cache.Update();
 	regWriteDataMux.Update();
 }

@@ -8,7 +8,7 @@ class Debugger
 public:
 	Debugger(const std::string& source_filename);
 
-	void Start(int cycles = 0);
+	void Start(int cycles = -1);
 	void Step();
 	int GetRegisterVal(int reg);
 	int GetMemoryVal(int addr);
@@ -16,15 +16,21 @@ public:
 
 	void SetInstructionPrint(bool state) { bPrintInstruction = state; }
 	void SetRegisterPrint(bool state) { bPrintRegisters = state; }
+	void SetOutputRegPrint(bool state) { bPrintOutputReg = state; }
 
 private:
 	void PrintInstruction();
 	void PrintRegisters();
+	void PrintOutputReg();
 	
 	CPU* pCPU;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
-	std::deque<int> mLastInst;
+	bool bPrintOutputReg;
+
+	std::deque<int> mLastInstructions;
+
+	long long last_output_reg;
 
 	std::chrono::microseconds mCpuElapsedTime;
 
