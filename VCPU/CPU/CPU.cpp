@@ -7,7 +7,7 @@ class CPU::Stage1 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect();
+	void Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch);
 	void Update();
 	void Update2();
 	const BufferIFID& Out() const { return bufIFID; }
@@ -25,7 +25,7 @@ class CPU::Stage2 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect();
+	void Connect(const BufferIFID& stage1, const BufferMEMWB& stage4);
 	void Update();
 	void Update2();
 	const BufferIDEX& Out() const { return bufIDEX; }
@@ -41,7 +41,7 @@ class CPU::Stage3 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect();
+	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard);
 	void Update();
 	void Update2();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
@@ -66,7 +66,7 @@ class CPU::Stage4 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect();
+	void Connect(const BufferEXMEM& stage3);
 	void Update();
 	void Update2();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
@@ -79,10 +79,10 @@ private:
 };
 
 
-void CPU::Stage1::Connect()
+void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch)
 {
 	// Program Counter
-	pcInMux.Connect({ pcIncrementer.Out(), cpu.stage3->Out().pcJumpAddr.Out() }, cpu.stage3->BranchTaken());
+	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAddr }, takeBranch);
 	pc.Connect(pcInMux.Out(), Wire::ON);
 
 	// PC Increment. Instruction width is 4, hardwired.
@@ -96,67 +96,66 @@ void CPU::Stage1::Connect()
 	bufIFID.Connect(Wire::ON, instructionCache.Out(), pcIncrementer.Out());
 }
 
-void CPU::Stage2::Connect()
+void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4)
 {
 	// Opcode Decoding
-	opcodeControl.Connect(cpu.stage1->Out().IR.Opcode(), cpu.stage1->Out().IR.Function());
+	opcodeControl.Connect(stage1.IR.Opcode(), stage1.IR.Function());
 
 	// Register File
-	regFile.Connect(cpu.stage1->Out().IR.RsAddr(), cpu.stage1->Out().IR.RtAddr(),
-		cpu.stage4->Out().Rwrite.Out(), cpu.stage4->Out().RWriteData.Out(),
-		cpu.stage4->Out().OpcodeControl().RegWrite());
+	regFile.Connect(stage1.IR.RsAddr(), stage1.IR.RtAddr(),
+		stage4.Rwrite.Out(), stage4.RWriteData.Out(),
+		stage4.OpcodeControl().RegWrite());
 
-	Bundle<32> signExtImm(cpu.stage1->Out().IR.Immediate()[15]);
-	signExtImm.Connect(0, cpu.stage1->Out().IR.Immediate());
+	Bundle<32> signExtImm(stage1.IR.Immediate()[15]);
+	signExtImm.Connect(0, stage1.IR.Immediate());
 
-	bufIDEX.Connect(Wire::ON, cpu.stage1->Out().IR.RsAddr(), cpu.stage1->Out().IR.RtAddr(),
-		cpu.stage1->Out().IR.RdAddr(),
+	bufIDEX.Connect(Wire::ON, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
 		signExtImm, regFile.Out1(), regFile.Out2(),
-		cpu.stage1->Out().PCinc.Out(), cpu.stage1->Out().IR.Opcode(),
+		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
 }
 
-void CPU::Stage3::Connect()
+void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard)
 {
-	regFileWriteAddrMux.Connect({ cpu.stage2->Out().RT.Out(), cpu.stage2->Out().RD.Out() }, 
-		cpu.stage2->Out().OpcodeControl().RFormat());
+	regFileWriteAddrMux.Connect({ stage2.RT.Out(), stage2.RD.Out() }, 
+		stage2.OpcodeControl().RFormat());
 
 	// ALU
-	aluAInputMux.Connect({ cpu.stage2->Out().reg1.Out(), cpu.hazard.ForwardExMem(),
-		cpu.hazard.ForwardMemWb(), cpu.hazard.ForwardMemWb() },
-		cpu.hazard.AluRsMux());
+	aluAInputMux.Connect({ stage2.reg1.Out(), hazard.ForwardExMem(),
+		hazard.ForwardMemWb(), hazard.ForwardMemWb() },
+		hazard.AluRsMux());
 
-	aluBImmediateOr.Connect(cpu.hazard.AluRtMux(), Bundle<2>(cpu.stage2->Out().OpcodeControl().AluBFromImm()));
-	aluBInputMux.Connect({ cpu.stage2->Out().reg2.Out(), cpu.hazard.ForwardExMem(), 
-							cpu.hazard.ForwardMemWb(), cpu.stage2->Out().signExt.Out() }, 
+	aluBImmediateOr.Connect(hazard.AluRtMux(), Bundle<2>(stage2.OpcodeControl().AluBFromImm()));
+	aluBInputMux.Connect({ stage2.reg2.Out(), hazard.ForwardExMem(), 
+							hazard.ForwardMemWb(), stage2.signExt.Out() }, 
 		aluBImmediateOr.Out());
 
-	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), cpu.stage2->Out().aluControl.Out());
+	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
 	
 	// PC Jump address calculation (A + B, no carry)
-	pcJumpAdder.Connect(cpu.stage2->Out().PCinc.Out(), cpu.stage2->Out().signExt.Out(), Wire::OFF);
+	pcJumpAdder.Connect(stage2.PCinc.Out(), stage2.signExt.Out(), Wire::OFF);
 	
 	branchDetector.Connect(alu.Flags().Zero(), alu.Flags().Negative(),
-		cpu.stage2->Out().OpcodeControl().BranchSel(), cpu.stage2->Out().OpcodeControl().Branch());
+		stage2.OpcodeControl().BranchSel(), stage2.OpcodeControl().Branch());
 	
-	bufEXMEM.Connect(Wire::ON, regFileWriteAddrMux.Out(), cpu.stage2->Out().reg2.Out(), 
-		alu.Out(), alu.Flags(), pcJumpAdder.Out(), cpu.stage2->Out().OpcodeControl());
+	bufEXMEM.Connect(Wire::ON, regFileWriteAddrMux.Out(), stage2.reg2.Out(), 
+		alu.Out(), alu.Flags(), pcJumpAdder.Out(), stage2.OpcodeControl());
 }
 
-void CPU::Stage4::Connect()
+void CPU::Stage4::Connect(const BufferEXMEM& stage3)
 {
 
 	// Main Memory
-	cache.Connect(cpu.stage3->Out().aluOut.Out().Range<MainCache::ADDR_BITS>(0), cpu.stage3->Out().reg2.Out(), 
-		cpu.stage3->Out().OpcodeControl().StoreOp());
+	cache.Connect(stage3.aluOut.Out().Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), 
+		stage3.OpcodeControl().StoreOp());
 
 	Bundle<32> sltExtended(Wire::OFF);
-	sltExtended.Connect(0, cpu.stage3->Out().Flags().Negative());
+	sltExtended.Connect(0, stage3.Flags().Negative());
 
-	regWriteDataMux.Connect({ cpu.stage3->Out().aluOut.Out(), cache.Out(), sltExtended, sltExtended },
-		{ &cpu.stage3->Out().OpcodeControl().LoadOp(), &cpu.stage3->Out().OpcodeControl().SltOp() });
+	regWriteDataMux.Connect({ stage3.aluOut.Out(), cache.Out(), sltExtended, sltExtended },
+		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
 
-	bufMEMWB.Connect(Wire::ON, cpu.stage3->Out().Rwrite.Out(), regWriteDataMux.Out(), cpu.stage3->Out().OpcodeControl());
+	bufMEMWB.Connect(Wire::ON, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
 }
 
 void CPU::Stage1::Update()
@@ -212,10 +211,10 @@ void CPU::Stage4::Update2()
 
 
 CPU::CPU()
-	: stage1(new Stage1(*this))
-	, stage2(new Stage2(*this))
-	, stage3(new Stage3(*this))
-	, stage4(new Stage4(*this))
+	: stage1(new Stage1())
+	, stage2(new Stage2())
+	, stage3(new Stage3())
+	, stage4(new Stage4())
 {
 	hazard.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
@@ -224,10 +223,10 @@ CPU::CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect();
-	stage2->Connect();
-	stage3->Connect();
-	stage4->Connect();
+	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->BranchTaken());
+	stage2->Connect(stage1->Out(), stage4->Out());
+	stage3->Connect(stage2->Out(), hazard);
+	stage4->Connect(stage3->Out());
 	cycles = 0;
 }
 

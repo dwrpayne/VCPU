@@ -42,11 +42,9 @@ private:
 	class PipelineStage : public Component
 	{
 	public:
-		PipelineStage(CPU& c)
-			: cpu(c)
+		PipelineStage()
 		{}
 	protected:
-		CPU& cpu;
 	};
 
 	Register<32> PC();
