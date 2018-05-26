@@ -368,7 +368,20 @@ bool TestCPUPipeline(Verbosity verbosity)
 	Debugger debugger("testopspipe.vasm");
 	debugger.SetInstructionPrint(true);
 	debugger.SetRegisterPrint(true);
-	debugger.Start();
+	debugger.Start(50);
+
+	return success;
+}
+
+bool TestCPUPipelineHazards(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testhazards.vasm");
+	debugger.SetInstructionPrint(true);
+	debugger.SetRegisterPrint(true);
+	debugger.Start(25);
 
 	return success;
 }
@@ -379,7 +392,8 @@ bool RunCPUTests()
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
 	//RUN_TEST(TestCPU, FAIL_ONLY);
-	RUN_TEST(TestCPUPipeline, FAIL_ONLY);
+	//RUN_TEST(TestCPUPipeline, FAIL_ONLY);
+	RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
 
 	return success;
 }

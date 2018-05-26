@@ -7,7 +7,7 @@ class Debugger
 public:
 	Debugger(const std::string& source_filename);
 
-	void Start();
+	void Start(int cycles = 0);
 	void Step();
 	int GetRegisterVal(int reg);
 	int GetMemoryVal(int addr);

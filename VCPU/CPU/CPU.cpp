@@ -47,7 +47,12 @@ public:
 	const BufferEXMEM& Out() const { return bufEXMEM; }
 private:
 	MuxBundle<CPU::RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
-	MuxBundle<32, 2> aluBInputMux;
+
+	MuxBundle<32, 4> aluAInputMux;
+	
+	MultiGate<OrGate, 2> aluBImmediateOr;
+	MuxBundle<32, 4> aluBInputMux;
+
 	ALU<32> alu;
 	FullAdderN<32> pcJumpAdder;
 	BufferEXMEM bufEXMEM;
@@ -104,7 +109,8 @@ void CPU::Stage2::Connect()
 	Bundle<32> signExtImm(cpu.stage1->Out().IR.Immediate()[15]);
 	signExtImm.Connect(0, cpu.stage1->Out().IR.Immediate());
 
-	bufIDEX.Connect(Wire::ON, cpu.stage1->Out().IR.RtAddr(), cpu.stage1->Out().IR.RdAddr(),
+	bufIDEX.Connect(Wire::ON, cpu.stage1->Out().IR.RsAddr(), cpu.stage1->Out().IR.RtAddr(),
+		cpu.stage1->Out().IR.RdAddr(),
 		signExtImm, regFile.Out1(), regFile.Out2(),
 		cpu.stage1->Out().PCinc.Out(), cpu.stage1->Out().IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
@@ -116,8 +122,16 @@ void CPU::Stage3::Connect()
 		cpu.stage2->Out().OpcodeControl().RFormat());
 
 	// ALU
-	aluBInputMux.Connect({ cpu.stage2->Out().reg2.Out(), cpu.stage2->Out().signExt.Out() }, cpu.stage2->Out().OpcodeControl().AluBFromImm());
-	alu.Connect(cpu.stage2->Out().reg1.Out(), aluBInputMux.Out(), cpu.stage2->Out().aluControl.Out());
+	aluAInputMux.Connect({ cpu.stage2->Out().reg1.Out(), cpu.hazard.ForwardExMem(),
+		cpu.hazard.ForwardMemWb(), cpu.hazard.ForwardMemWb() },
+		cpu.hazard.AluRsMux());
+
+	aluBImmediateOr.Connect(cpu.hazard.AluRtMux(), Bundle<2>(cpu.stage2->Out().OpcodeControl().AluBFromImm()));
+	aluBInputMux.Connect({ cpu.stage2->Out().reg2.Out(), cpu.hazard.ForwardExMem(), 
+							cpu.hazard.ForwardMemWb(), cpu.stage2->Out().signExt.Out() }, 
+		aluBImmediateOr.Out());
+
+	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), cpu.stage2->Out().aluControl.Out());
 	
 	// PC Jump address calculation (A + B, no carry)
 	pcJumpAdder.Connect(cpu.stage2->Out().PCinc.Out(), cpu.stage2->Out().signExt.Out(), Wire::OFF);
@@ -172,6 +186,8 @@ void CPU::Stage3::Update()
 {
 	// ******** STAGE 3 EXECUTION ************
 	regFileWriteAddrMux.Update();
+	aluAInputMux.Update();
+	aluBImmediateOr.Update();
 	aluBInputMux.Update();
 	alu.Update();
 	pcJumpAdder.Update();
@@ -200,6 +216,9 @@ CPU::CPU()
 	, stage3(new Stage3(*this))
 	, stage4(new Stage4(*this))
 {
+	hazard.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
+		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
+		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 }
 
 void CPU::Connect()
@@ -226,6 +245,7 @@ void CPU::Update()
 	stage3->Update2();
 	stage2->Update2();
 	stage1->Update2();
+	hazard.Update();
 	cycles++;
 }
 

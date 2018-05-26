@@ -27,8 +27,9 @@ public:
 class BufferIDEX : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& signExtImm, const Bundle<32>& regR1, const Bundle<32>& regR2, const Bundle<32> pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol)
+	void Connect(const Wire& go, const Bundle<5>& rs, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& signExtImm, const Bundle<32>& regR1, const Bundle<32>& regR2, const Bundle<32> pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol)
 	{
+		RS.Connect(rs, go);
 		RT.Connect(rt, go);
 		RD.Connect(rd, go);
 		signExt.Connect(signExtImm, go);
@@ -41,6 +42,7 @@ public:
 	}
 	void Update()
 	{
+		RS.Update();
 		RT.Update();
 		RD.Update();
 		signExt.Update();
@@ -54,6 +56,7 @@ public:
 
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
+	Register<5> RS;
 	Register<5> RT;
 	Register<5> RD;
 	Register<32> signExt;

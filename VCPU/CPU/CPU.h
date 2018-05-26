@@ -12,6 +12,7 @@
 #include "BranchDetector.h"
 #include "PipelineBuffers.h"
 #include "Cache.h"
+#include "HazardUnit.h"
 
 
 class CPU : public Component
@@ -63,6 +64,8 @@ private:
 	Stage2* stage2;
 	Stage3* stage3;
 	Stage4* stage4;
+
+	HazardUnit hazard;
 
 	friend class ProgramLoader;
 	friend class Debugger;

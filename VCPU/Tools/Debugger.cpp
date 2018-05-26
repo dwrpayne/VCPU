@@ -17,12 +17,12 @@ Debugger::Debugger(const std::string& source_filename)
 	ProgramLoader loader(*pCPU);
 	loader.Load(pAssembler->GetBinary());
 	pCPU->Connect();
-	pCPU->Update();
+	pCPU->PreUpdate();
 }
 
-void Debugger::Start()
+void Debugger::Start(int cycles)
 {
-	while (true)
+	while (cycles > 0)
 	{
 		Step();
 
@@ -31,6 +31,7 @@ void Debugger::Start()
 			long long ms = mCpuElapsedTime.count() / 1000;
 			std::cout << pCPU->cycles << " cycles in " << ms << "ms. Average clock freq of " << (1000.0 * pCPU->cycles) / mCpuElapsedTime.count() << "kHz" << std::endl;
 		}
+		cycles--;
 	}
 }
 
