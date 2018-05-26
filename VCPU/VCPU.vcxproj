@@ -123,9 +123,9 @@
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BranchDetector.cpp" />
     <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
+    <ClCompile Include="CPU\BranchDetector.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
@@ -147,13 +147,13 @@
     <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BranchDetector.h" />
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\BranchDetector.h" />
     <ClInclude Include="CPU\Cache.h" />
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\InsRegister.h" />

@@ -81,7 +81,10 @@
     <ClCompile Include="Gates\XNorGate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BranchDetector.cpp">
+    <ClCompile Include="CPU\HazardUnit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CPU\BranchDetector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -209,7 +212,13 @@
     <ClInclude Include="CPU\Cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BranchDetector.h">
+    <ClInclude Include="CPU\BranchDetector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\HazardUnit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Functional\Matcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
