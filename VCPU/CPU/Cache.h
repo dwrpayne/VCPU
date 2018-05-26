@@ -112,7 +112,7 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 	outDataMux.Update();
 
 	// TODO: Total hack for now. Make the memory update async in the background and block/signal when ready.
-	if (cacheMiss.Out().On() || read.in->On())
+	if (cacheMiss.Out().On() || !read.Out().On())
 	{
 		mMemory.Update();
 
