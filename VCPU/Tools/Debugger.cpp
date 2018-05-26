@@ -11,7 +11,7 @@ Debugger::Debugger(const std::string& source_filename)
 	bPrintInstruction = false;
 	bPrintRegisters = false;
 	bPrintOutputReg = true;
-	bPrintDataForward = false;
+	bPrintDataForward = true;
 
 	pAssembler = new Assembler(source_filename);
 

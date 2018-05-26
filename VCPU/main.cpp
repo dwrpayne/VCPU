@@ -27,6 +27,6 @@ void RunCPU(std::string filename)
 
 int main(int argc, char** argv)
 {
-	//Test();
-	RunCPU("primes.vasm");
+	Test();
+	//RunCPU("primes.vasm");
 }

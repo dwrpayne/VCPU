@@ -25,6 +25,7 @@ public:
 private:
 #ifdef DEBUG
 	std::array<Bundle<N>, Ninput> in_bundles;
+	Bundle<BITS> select;
 #endif
 	std::array<Multiplexer<Ninput>, N> muxes;
 	Bundle<N> out;
@@ -44,6 +45,7 @@ inline void MuxBundle<N, Ninput>::Connect(const std::array<Bundle<N>, Ninput> in
 {
 #ifdef DEBUG
 	in_bundles = in;
+	select = sel;
 #endif
 	for (int i = 0; i < N; i++)
 	{

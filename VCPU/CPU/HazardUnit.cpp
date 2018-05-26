@@ -21,10 +21,10 @@ void HazardUnit::Connect(const RegBundle& exmemRd, const Bundle<32>& exmemAluOut
 	NotForwardExMemRs.Connect(ForwardExMemRs.Out());
 	NotForwardExMemRt.Connect(ForwardExMemRt.Out());
 
-	ForwardMemWbRs.Connect({ &MemWbRdNonZero.Out(), &exmemRegWrite, 
+	ForwardMemWbRs.Connect({ &MemWbRdNonZero.Out(), &memwbRegWrite,
 		&MemWbRdRs.Out(), &NotForwardExMemRs.Out() });
 
-	ForwardMemWbRt.Connect({ &MemWbRdNonZero.Out(), &exmemRegWrite, 
+	ForwardMemWbRt.Connect({ &MemWbRdNonZero.Out(), &memwbRegWrite,
 		&MemWbRdRt.Out(), &NotForwardExMemRt.Out() });
 }
 

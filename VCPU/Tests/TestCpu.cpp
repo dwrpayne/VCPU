@@ -381,7 +381,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	Debugger debugger("testhazards.vasm");
 	debugger.SetInstructionPrint(true);
 	debugger.SetRegisterPrint(true);
-	debugger.Start(30);
+	debugger.Start(100);
 
 	return success;
 }
