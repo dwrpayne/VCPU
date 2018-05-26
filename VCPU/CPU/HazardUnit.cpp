@@ -46,22 +46,3 @@ void HazardUnit::Update()
 	ForwardMemWbRt.Update();
 	
 }
-
-void StallUnit::Connect(const Wire & idexLoadOp, const RegBundle & idexRt, const RegBundle & ifidRs, const RegBundle & ifidRt)
-{
-	IfIdRtRs.Connect(idexRt, ifidRs);
-	IfIdRtRt.Connect(idexRt, ifidRt);
-
-	MatchOr.Connect(IfIdRtRs.Out(), IfIdRtRt.Out());
-	StallAnd.Connect(MatchOr.Out(), idexLoadOp);
-	stallInv.Connect(StallAnd.Out());
-}
-
-void StallUnit::Update()
-{
-	IfIdRtRs.Update();
-	IfIdRtRt.Update();
-	MatchOr.Update();
-	StallAnd.Update();
-	stallInv.Update();
-}

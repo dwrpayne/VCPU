@@ -17,7 +17,7 @@ Debugger::Debugger(const std::string& source_filename)
 	ProgramLoader loader(*pCPU);
 	loader.Load(pAssembler->GetBinary());
 	pCPU->Connect();
-	pCPU->PreUpdate();
+	pCPU->Update();
 }
 
 void Debugger::Start(int cycles)
