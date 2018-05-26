@@ -224,5 +224,8 @@
     <ClInclude Include="Functional\Comparator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Functional\Shifter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -167,6 +167,7 @@
     <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Functional\Matcher.h" />
     <ClInclude Include="Functional\OverflowDetector.h" />
+    <ClInclude Include="Functional\Shifter.h" />
     <ClInclude Include="Gates\AndGate.h" />
     <ClInclude Include="Gates\Inverter.h" />
     <ClInclude Include="Gates\MultiGate.h" />

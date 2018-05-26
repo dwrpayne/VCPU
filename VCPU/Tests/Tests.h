@@ -22,6 +22,7 @@
 #include "Adder.h"
 #include "Multiplexer.h"
 #include "Matcher.h"
+#include "Shifter.h"
 #include "Comparator.h"
 #include "MuxBundle.h"
 #include "Decoder.h"
@@ -500,6 +501,59 @@ bool TestComparator(Verbosity verbosity)
 	return success;
 }
 
+bool TestShifter(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	Shifter<8> test;
+	MagicBundle<8> num;
+	MagicBundle<3> shift;
+	Wire signext(false);
+	Wire right(true);
+	test.Connect(num, shift, right, signext);
+	num.Write(224U);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		shift.Write(s);
+		test.Update();
+		success &= TestState(i++, (unsigned int)(224U / (1<<s)), test.Out().UnsignedRead(), verbosity);
+	}
+	signext.Set(true);
+	num.Write(107);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		shift.Write(s);
+		test.Update();
+		success &= TestState(i++, (unsigned int)(107U / (1 << s)), test.Out().UnsignedRead(), verbosity);
+	}
+
+	num.Write(-113);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		shift.Write(s);
+		test.Update();
+		success &= TestState(i++, (int)floor(-113.0 / (1 << s)), test.Out().Read(), verbosity);
+	}
+
+	right.Set(false);
+	num.Write(5);
+	for (unsigned int s = 0; s < 8U; s++)
+	{
+		shift.Write(s);
+		test.Update();
+		success &= TestState(i++, (unsigned int)(5 << s) % 256, test.Out().UnsignedRead(), verbosity);
+	}
+	num.Write(-3);
+	for (unsigned int s = 0; s < 6U; s++)
+	{
+		shift.Write(s);
+		test.Update();
+		success &= TestState(i++, (int)(-3 << s), test.Out().Read(), verbosity);
+	}
+	return success;
+}
+
 bool TestDecoder4(const Wire& a, const Wire& b)
 {
 	Decoder<4> test;
@@ -853,7 +907,8 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
-	RUN_TEST(TestComparator, VERBOSE);
+	RUN_TEST(TestComparator, FAIL_ONLY);
+	RUN_TEST(TestShifter, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
