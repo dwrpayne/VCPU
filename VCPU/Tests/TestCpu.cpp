@@ -276,6 +276,7 @@ bool TestCPUBranch(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testbranch.vasm", dverb);
 	debugger.Start();
+	success &= TestState(i++, 296, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -313,9 +314,9 @@ bool RunCPUTests()
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::TIMING);
-	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::TIMING);
-	RUN_TEST2(TestCPUBranch, VERBOSE, Debugger::TIMING);
+	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
+	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
+	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);
 
 	return success;
 }

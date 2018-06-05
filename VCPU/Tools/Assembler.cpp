@@ -87,7 +87,7 @@ unsigned int Assembler::ParseLine(const std::string& line)
 		if (sscanf_s(words[1].c_str(), "$%d", &val1))
 		{
 			// Got register 1
-			if (sscanf_s(words[2].c_str(), "$%d", &val2))
+			if (words.size() > 2 && sscanf_s(words[2].c_str(), "$%d", &val2))
 			{
 				// Got register 2
 				if (sscanf_s(words[3].c_str(), "$%d", &val3))
@@ -198,12 +198,12 @@ unsigned int Assembler::ParseLine(const std::string& line)
 const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> Assembler::opcodeInfo(
 	{
 // Opcode Name, Opc, Func
-	{ "sll"   , { 0,  0,  R_TYPE } } ,
-	{ "srl"   , { 0,  2,  R_TYPE } } ,
-	{ "sra"   , { 0,  3,  R_TYPE } } ,
-	{ "sllv"  , { 0,  4,  R_TYPE } } ,
-	{ "srlv"  , { 0,  6,  R_TYPE } } ,
-	{ "srav"  , { 0,  7,  R_TYPE } } ,
+	{ "sll"   , { 0,  0,  R_TYPE } } ,		// TESTED
+	{ "srl"   , { 0,  2,  R_TYPE } } ,		// TESTED
+	{ "sra"   , { 0,  3,  R_TYPE } } ,		// TESTED
+	{ "sllv"  , { 0,  4,  R_TYPE } } ,		// TESTED
+	{ "srlv"  , { 0,  6,  R_TYPE } } ,		// TESTED
+	{ "srav"  , { 0,  7,  R_TYPE } } ,		// TESTED
 	{ "jr"    , { 0,  8,  R_TYPE } } ,
 	{ "jalr"  , { 0,  9,  R_TYPE } } ,
 	{ "mfhi"  , { 0,  16, R_TYPE } } ,
@@ -214,41 +214,41 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "multu" , { 0,  25, R_TYPE } } ,
 	{ "div"   , { 0,  26, R_TYPE } } ,
 	{ "divu"  , { 0,  27, R_TYPE } } ,
-	{ "add"   , { 0,  32, R_TYPE } } ,
+	{ "add"   , { 0,  32, R_TYPE } } ,		// TESTED
 	{ "addu"  , { 0,  33, R_TYPE } } ,
-	{ "sub"   , { 0,  34, R_TYPE } } ,
+	{ "sub"   , { 0,  34, R_TYPE } } ,		// TESTED
 	{ "subu"  , { 0,  35, R_TYPE } } ,
-	{ "and"   , { 0,  36, R_TYPE } } ,
-	{ "or"    , { 0,  37, R_TYPE } } ,
-	{ "xor"   , { 0,  38, R_TYPE } } ,
-	{ "nor"   , { 0,  39, R_TYPE } } ,
-	{ "slt"   , { 0,  42, R_TYPE } } ,
+	{ "and"   , { 0,  36, R_TYPE } } ,		// TESTED
+	{ "or"    , { 0,  37, R_TYPE } } ,		// TESTED
+	{ "xor"   , { 0,  38, R_TYPE } } ,		// TESTED
+	{ "nor"   , { 0,  39, R_TYPE } } ,		// TESTED
+	{ "slt"   , { 0,  42, R_TYPE } } ,		// TESTED
 	{ "sltu"  , { 0,  43, R_TYPE } } ,
-	{ "j"	  , { 2,  0,  J_TYPE } },
+	{ "j"	  , { 2,  0,  J_TYPE } } ,
 	{ "jal"	  , { 3,  0,  J_TYPE } } ,
-	{ "beq"   , { 4,  0,  I_TYPE } } ,
-	{ "bne"   , { 5,  0,  I_TYPE } } ,
-	{ "blez"  , { 6,  0,  I_TYPE } } ,
-	{ "bgtz"  , { 7,  0,  I_TYPE } } ,
-	{ "addi"  , { 8,  0,  I_TYPE } } ,
+	{ "beq"   , { 4,  0,  I_TYPE } } ,		// TESTED
+	{ "bne"   , { 5,  0,  I_TYPE } } ,		// TESTED
+	{ "blez"  , { 6,  0,  I_TYPE } } ,		// TESTED
+	{ "bgtz"  , { 7,  0,  I_TYPE } } ,		// TESTED
+	{ "addi"  , { 8,  0,  I_TYPE } } ,		// TESTED
 	{ "addiu" , { 9,  0,  I_TYPE } } ,
-	{ "slti"  , { 10, 0,  I_TYPE } } ,
+	{ "slti"  , { 10, 0,  I_TYPE } } ,		// TESTED
 	{ "sltiu" , { 11, 0,  I_TYPE } } ,
-	{ "andi"  , { 12, 0,  I_TYPE } } ,
-	{ "ori"   , { 13, 0,  I_TYPE } } ,
-	{ "xori"  , { 14, 0,  I_TYPE } } ,
+	{ "andi"  , { 12, 0,  I_TYPE } } ,		// TESTED
+	{ "ori"   , { 13, 0,  I_TYPE } } ,		// TESTED
+	{ "xori"  , { 14, 0,  I_TYPE } } ,		// TESTED
 	{ "lui"   , { 15, 0,  I_TYPE } } ,
 	{ "lb"    , { 32, 0,  I_TYPE } } ,
 	{ "lh"    , { 33, 0,  I_TYPE } } ,
 	{ "lwl"   , { 34, 0,  I_TYPE } } ,
-	{ "lw"    , { 35, 0,  I_TYPE } } ,
+	{ "lw"    , { 35, 0,  I_TYPE } } ,		// TESTED
 	{ "lbu"   , { 36, 0,  I_TYPE } } ,
 	{ "lhu"   , { 37, 0,  I_TYPE } } ,
 	{ "lwr"   , { 38, 0,  I_TYPE } } ,
 	{ "sb"    , { 40, 0,  I_TYPE } } ,
 	{ "sh"    , { 41, 0,  I_TYPE } } ,
 	{ "swl"   , { 42, 0,  I_TYPE } } ,
-	{ "sw"    , { 43, 0,  I_TYPE } } ,
+	{ "sw"    , { 43, 0,  I_TYPE } } ,		// TESTED
 	{ "swr"   , { 46, 0,  I_TYPE } } ,
-	{ "hlt"   , { 63, 0,  X_TYPE } }
+	{ "hlt"   , { 63, 0,  X_TYPE } }		// TESTED
 	});
