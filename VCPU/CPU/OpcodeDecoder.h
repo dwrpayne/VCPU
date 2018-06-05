@@ -49,7 +49,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 14;
+	static const int OUT_WIDTH = 15;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -76,7 +76,8 @@ public:
 		const Wire& Halt() const { return Get(9); }
 		const Wire& JumpOp() const { return Get(10); }
 		const Wire& JumpLink() const { return Get(11); }
-		const Bundle<2> BranchSel() const { return Range<2>(12); }
+		const Wire& JumpReg() const { return Get(12); }
+		const Bundle<2> BranchSel() const { return Range<2>(13); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }
@@ -95,7 +96,8 @@ public:
 
 private:
 	InverterN<6> inv;
-	AndGateN<6> rFormat;
+	AndGateN<6> zeroOpcode;
+	Inverter nonzeroOpcode;
 	AndGate loadstore;
 	AndGate loadOp;
 	AndGate storeOp;
@@ -103,14 +105,13 @@ private:
 	AndGateN<3> immOp;
 	NorGateN<4> shiftOp;
 	NorGateN<5> shiftAmtOp;
-	AndGateN<5> jumpOp;
-	AndGateN<5> jumpReg;
+	AndGateN<5> jumpImm;
 	AndGate jumpLink;
+	AndGateN<5> jumpReg;
+	OrGate jumpOp;
 	OrGateN<3> aluBImm;
-	OrGateN<3> regWrite;
+	OrGateN<4> regWrite;
 
-	OrGateN<6> nonzeroOpcode;
-	Inverter zeroOpcode;
 	MuxBundle<6, 2> funcOpMux;
 	Inverter func1Inv;
 	Inverter func2Inv;

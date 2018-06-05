@@ -204,8 +204,8 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "sllv"  , { 0,  4,  R_TYPE } } ,		// TESTED
 	{ "srlv"  , { 0,  6,  R_TYPE } } ,		// TESTED
 	{ "srav"  , { 0,  7,  R_TYPE } } ,		// TESTED
-	{ "jr"    , { 0,  8,  R_TYPE } } ,
-	{ "jalr"  , { 0,  9,  R_TYPE } } ,
+	{ "jr"    , { 0,  8,  R_TYPE } } ,		// TESTED
+	{ "jalr"  , { 0,  9,  R_TYPE } } ,		// TESTED
 	{ "mfhi"  , { 0,  16, R_TYPE } } ,
 	{ "mthi"  , { 0,  17, R_TYPE } } ,
 	{ "mflo"  , { 0,  18, R_TYPE } } ,
@@ -225,7 +225,7 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "slt"   , { 0,  42, R_TYPE } } ,		// TESTED
 	{ "sltu"  , { 0,  43, R_TYPE } } ,
 	{ "j"	  , { 2,  0,  J_TYPE } } ,		// TESTED
-	{ "jal"	  , { 3,  0,  J_TYPE } } ,
+	{ "jal"	  , { 3,  0,  J_TYPE } } ,		// TESTED
 	{ "beq"   , { 4,  0,  I_TYPE } } ,		// TESTED
 	{ "bne"   , { 5,  0,  I_TYPE } } ,		// TESTED
 	{ "blez"  , { 6,  0,  I_TYPE } } ,		// TESTED

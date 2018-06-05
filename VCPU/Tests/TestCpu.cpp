@@ -39,16 +39,17 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		opcode.Write(op);
 		func.Write(f);
 		test.Update();
+		const auto& out = test.OutBundle();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
-		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
-		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
-		success &= TestState(i++, true, test.RFormat().On(), verbosity);
-		success &= TestState(i++, false, test.AluBFromImm().On(), verbosity);
-		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, (f == F_SLT || f == F_SLTU), test.SltOp().On(), verbosity);
-		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA || f == F_SLLV || f == F_SRLV || f == F_SRAV), test.ShiftOp().On(), verbosity);
-		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA), test.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, false, out.Branch().On(), verbosity);
+		success &= TestState(i++, false, out.LoadOp().On(), verbosity);
+		success &= TestState(i++, false, out.StoreOp().On(), verbosity);
+		success &= TestState(i++, true, out.RFormat().On(), verbosity);
+		success &= TestState(i++, false, out.AluBFromImm().On(), verbosity);
+		success &= TestState(i++, true, out.RegWrite().On(), verbosity);
+		success &= TestState(i++, (f == F_SLT || f == F_SLTU), out.SltOp().On(), verbosity);
+		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA || f == F_SLLV || f == F_SRLV || f == F_SRAV), out.ShiftOp().On(), verbosity);
+		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA), out.ShiftAmtOp().On(), verbosity);
 	}
 
 	std::cout << "Testing I-ALU Ops" << std::endl;
@@ -65,14 +66,21 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		opcode.Write(op);
 		func.Write(f);
 		test.Update();
+		const auto& out = test.OutBundle();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
-		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
-		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
-		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
-		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, (op == OP_SLTI || op == OP_SLTIU), test.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.Branch().On(), verbosity);
+		success &= TestState(i++, false, out.LoadOp().On(), verbosity);
+		success &= TestState(i++, false, out.StoreOp().On(), verbosity);
+		success &= TestState(i++, false, out.RFormat().On(), verbosity);
+		success &= TestState(i++, true, out.AluBFromImm().On(), verbosity);
+		success &= TestState(i++, true, out.RegWrite().On(), verbosity);
+		success &= TestState(i++, (op == OP_SLTI || op == OP_SLTIU), out.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
+		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
+
 	}
 
 	std::cout << "Testing Branch Ops" << std::endl;
@@ -85,14 +93,45 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		opcode.Write(op);
 		func.Write(f);
 		test.Update();
+		const auto& out = test.OutBundle();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
-		success &= TestState(i++, true, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
-		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
-		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, false, test.AluBFromImm().On(), verbosity);
-		success &= TestState(i++, false, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, false, test.SltOp().On(), verbosity);
+		success &= TestState(i++, true, out.Branch().On(), verbosity);
+		success &= TestState(i++, false, out.LoadOp().On(), verbosity);
+		success &= TestState(i++, false, out.StoreOp().On(), verbosity);
+		success &= TestState(i++, false, out.RFormat().On(), verbosity);
+		success &= TestState(i++, false, out.AluBFromImm().On(), verbosity);
+		success &= TestState(i++, false, out.RegWrite().On(), verbosity);
+		success &= TestState(i++, false, out.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
+		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
+	}
+
+	std::cout << "Testing Jump Ops" << std::endl;
+	for (auto[op, f] : std::vector<std::tuple<Opcode, unsigned int>>({
+		{ OP_J, 0 },
+		{ OP_JAL, 40 },
+		{ OP_JR, F_JR },
+		{ OP_JALR, F_JALR } }))
+	{
+		opcode.Write(op);
+		func.Write(f);
+		test.Update();
+		const auto& out = test.OutBundle();
+		success &= TestState(i++, false, out.Branch().On(), verbosity);
+		success &= TestState(i++, false, out.LoadOp().On(), verbosity);
+		success &= TestState(i++, false, out.StoreOp().On(), verbosity);
+		success &= TestState(i++, (f == F_JR || f == F_JALR), out.RFormat().On(), verbosity);
+		success &= TestState(i++, false, out.AluBFromImm().On(), verbosity);
+		success &= TestState(i++, (op != OP_J), out.RegWrite().On(), verbosity);
+		success &= TestState(i++, false, out.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, true, out.JumpOp().On(), verbosity);
+		success &= TestState(i++, (op == OP_JAL || f == F_JALR), out.JumpLink().On(), verbosity);
+		success &= TestState(i++, (f == F_JR || f == F_JALR), out.JumpReg().On(), verbosity);
 	}
 
 	std::cout << "Testing Load Ops" << std::endl;
@@ -108,14 +147,20 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		opcode.Write(op);
 		func.Write(f);
 		test.Update();
+		const auto& out = test.OutBundle();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
-		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, true, test.LoadOp().On(), verbosity);
-		success &= TestState(i++, false, test.StoreOp().On(), verbosity);
-		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
-		success &= TestState(i++, true, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, false, test.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.Branch().On(), verbosity);
+		success &= TestState(i++, true, out.LoadOp().On(), verbosity);
+		success &= TestState(i++, false, out.StoreOp().On(), verbosity);
+		success &= TestState(i++, false, out.RFormat().On(), verbosity);
+		success &= TestState(i++, true, out.AluBFromImm().On(), verbosity);
+		success &= TestState(i++, true, out.RegWrite().On(), verbosity);
+		success &= TestState(i++, false, out.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
+		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
 	}
 
 	std::cout << "Testing Store Ops" << std::endl;
@@ -129,14 +174,20 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		opcode.Write(op);
 		func.Write(f);
 		test.Update();
+		const auto& out = test.OutBundle();
 		success &= TestState(i++, (unsigned int)alu, test.AluControl().UnsignedRead(), verbosity);
-		success &= TestState(i++, false, test.Branch().On(), verbosity);
-		success &= TestState(i++, false, test.LoadOp().On(), verbosity);
-		success &= TestState(i++, true, test.StoreOp().On(), verbosity);
-		success &= TestState(i++, false, test.RFormat().On(), verbosity);
-		success &= TestState(i++, true, test.AluBFromImm().On(), verbosity);
-		success &= TestState(i++, false, test.RegWrite().On(), verbosity);
-		success &= TestState(i++, false, test.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.Branch().On(), verbosity);
+		success &= TestState(i++, false, out.LoadOp().On(), verbosity);
+		success &= TestState(i++, true, out.StoreOp().On(), verbosity);
+		success &= TestState(i++, false, out.RFormat().On(), verbosity);
+		success &= TestState(i++, true, out.AluBFromImm().On(), verbosity);
+		success &= TestState(i++, false, out.RegWrite().On(), verbosity);
+		success &= TestState(i++, false, out.SltOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftOp().On(), verbosity);
+		success &= TestState(i++, false, out.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
+		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
+		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
 	}
 	return success;
 }
@@ -276,7 +327,12 @@ bool TestCPUBranch(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testbranch.vasm", dverb);
 	debugger.Start();
-	success &= TestState(i++, 296, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 11, debugger.GetRegisterVal(8), verbosity);
+	success &= TestState(i++, 7, debugger.GetRegisterVal(9), verbosity);
+	success &= TestState(i++, 292, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, 360, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, 320, debugger.GetRegisterVal(31), verbosity);
+	success &= TestState(i++, 376, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -316,7 +372,7 @@ bool RunCPUTests()
 	//RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::VERBOSE);
+	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);
 
 	return success;
 }

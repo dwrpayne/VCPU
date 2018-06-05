@@ -48,26 +48,47 @@ add		$0, $0, $0
 add		$0, $0, $0
 add		$0, $0, $0
 add		$0, $0, $0
-jal		240
-add		$0, $0, $0
-add		$0, $0, $0
+addi	$8, $8, 1
+addi	$8, $8, 1
+addi	$8, $8, 1
+addi	$8, $8, 1
+addi	$8, $8, 1
+jal		252
+addi	$8, $8, 1
+addi	$8, $8, 1
 hlt
 hlt
 hlt
 hlt
-hlt
-hlt
-hlt
-addi	$10, $0, 280
+addi	$8, $8, 1
+addi	$8, $8, 1
+addi	$10, $0, 292
+addi	$8, $8, 1
+addi	$8, $8, 1
+addi	$8, $8, 1
+addi	$8, $8, 1
 jr		$10
 add		$0, $0, $0
 add		$0, $0, $0
 hlt
+addi	$9, $9, 1
+addi	$11, $0, 360
+addi	$9, $9, 1
+addi	$9, $9, 1
+addi	$9, $9, 1
+addi	$9, $9, 1
+jalr	$11
+addi	$9, $9, 1
+addi	$9, $9, 1
+addi	$9, $9, 1
 hlt
 hlt
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
+hlt
+hlt
+hlt
+addi	$9, $9, 1
+addi	$9, $9, 1
+addi	$9, $9, 1
+addi	$9, $9, 1
+addi	$9, $9, 1
 hlt

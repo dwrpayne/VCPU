@@ -2,39 +2,39 @@
 
 OpcodeDecoder::OpcodeDecoder()
 {
-	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &rFormat.Out(),
+	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &zeroOpcode.Out(),
 		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
-		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
+		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &jumpReg.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
 }
 
 void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 {
 	inv.Connect(opcode);
 	halt.Connect(opcode);
-	rFormat.Connect(inv.Out());
+	zeroOpcode.Connect(inv.Out());
 	loadstore.Connect(inv.Out()[4], opcode[5]);
+	loadstoreInv.Connect(loadstore.Out());
 	loadOp.Connect(inv.Out()[3], loadstore.Out());
 	storeOp.Connect(opcode[3], loadstore.Out());
 	branchOp.Connect({ &opcode[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
+	branchInv.Connect(branchOp.Out());
 	immOp.Connect({ &opcode[3], &inv.Out()[4], &inv.Out()[5] });
-	jumpOp.Connect({ &opcode[1], &inv.Out()[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
-	jumpLink.Connect(jumpOp.Out(), funcOpMux.Out()[0]);
-	regWrite.Connect({ &rFormat.Out(), &loadOp.Out(), &immOp.Out() });
+	jumpImm.Connect({ &opcode[1], &inv.Out()[2], &inv.Out()[3], &inv.Out()[4], &inv.Out()[5] });
 
-	nonzeroOpcode.Connect(opcode);
-	zeroOpcode.Connect(nonzeroOpcode.Out());
-	funcOpMux.Connect({ opcode, func }, zeroOpcode.Out());
+	nonzeroOpcode.Connect(zeroOpcode.Out());
 	shiftOp.Connect({ &nonzeroOpcode.Out(), &func[3], &func[4], &func[5] });
 	shiftAmtOp.Connect({ &nonzeroOpcode.Out(), &func[2], &func[3], &func[4], &func[5] });
-	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });
-	
-	branchInv.Connect(branchOp.Out());
-	loadstoreInv.Connect(loadstore.Out());
+	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });	
 
+	funcOpMux.Connect({ opcode, func }, zeroOpcode.Out());
 	func1Inv.Connect(funcOpMux.Out()[1]);
 	func2Inv.Connect(funcOpMux.Out()[2]);
 	func4Inv.Connect(funcOpMux.Out()[4]);
-
+	
+	jumpReg.Connect({ &zeroOpcode.Out(), &func1Inv.Out(), &func2Inv.Out(), &funcOpMux.Out()[3], &func4Inv.Out() });
+	jumpOp.Connect(jumpImm.Out(), jumpReg.Out());
+	jumpLink.Connect(jumpOp.Out(), funcOpMux.Out()[0]);
+	regWrite.Connect({ &zeroOpcode.Out(), &loadOp.Out(), &immOp.Out(), &jumpLink.Out() });
 	sltop.Connect({ &funcOpMux.Out()[1], &func2Inv.Out(), &funcOpMux.Out()[3], &func4Inv.Out(), &loadstoreInv.Out() });
 	mathOp.Connect({ &func2Inv.Out(), &branchOp.Out(), &loadstore.Out() });
 	addOr.Connect(loadstore.Out(), func1Inv.Out());
@@ -55,17 +55,14 @@ void OpcodeDecoder::Update()
 {
 	inv.Update();
 	halt.Update();
-	rFormat.Update();
+	zeroOpcode.Update();
 	loadstore.Update();
 	loadOp.Update();
 	storeOp.Update();
 	branchOp.Update();
 	immOp.Update();
-	jumpOp.Update();
-	jumpLink.Update();
-	regWrite.Update();
+	jumpImm.Update();
 	nonzeroOpcode.Update();
-	zeroOpcode.Update();
 	funcOpMux.Update();
 	shiftOp.Update();
 	shiftAmtOp.Update();
@@ -75,6 +72,10 @@ void OpcodeDecoder::Update()
 	func1Inv.Update();
 	func2Inv.Update();
 	func4Inv.Update();
+	jumpReg.Update();
+	jumpOp.Update();
+	jumpLink.Update();
+	regWrite.Update();
 	sltop.Update();
 	mathOp.Update();
 	addOr.Update();

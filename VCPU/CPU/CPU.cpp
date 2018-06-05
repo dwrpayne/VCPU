@@ -34,6 +34,7 @@ private:
 	OpcodeDecoder opcodeControl;
 	CPU::RegFile regFile;
 	MuxBundle<32, 2> reg2ShiftMux;
+	MuxBundle<32, 2> jumpAddrMux;
 	BufferIDEX bufIDEX;
 
 	friend class CPU;
@@ -48,7 +49,7 @@ public:
 	void PostUpdate();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
 private:
-	MuxBundle<CPU::RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
+	MuxBundle<CPU::RegFile::ADDR_BITS, 4> regFileWriteAddrMux;
 
 	MuxBundle<32, 4> aluAInputMux;
 	
@@ -58,6 +59,7 @@ private:
 	ALU<32> alu;
 	FullAdderN<32> pcJumpAdder;
 	BranchDetector branchDetector;
+	MuxBundle<32, 2> aluOutOrPcIncMux;
 	BufferEXMEM bufEXMEM;
 
 	friend class CPU;
@@ -119,17 +121,20 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 
 	Bundle<32> jumpExt(Wire::OFF);
 	jumpExt.Connect(0, stage1.IR.Address());
+	jumpAddrMux.Connect({ jumpExt, regFile.Out1() }, opcodeControl.OutBundle().JumpReg());
 
 	bufIDEX.Connect(proceed, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
-		signExtImm, regFile.Out1(), reg2ShiftMux.Out(), jumpExt,
+		signExtImm, regFile.Out1(), reg2ShiftMux.Out(), jumpAddrMux.Out(),
 		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
 }
 
 void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed)
 {
-	regFileWriteAddrMux.Connect({ stage2.RT.Out(), stage2.RD.Out() }, 
-		stage2.OpcodeControl().RFormat());
+	// Hardcoded Link in R31.
+	Bundle<5> r31(Wire::ON);
+	regFileWriteAddrMux.Connect({ stage2.RT.Out(), stage2.RD.Out(), r31, r31 },
+		{ &stage2.OpcodeControl().RFormat(), &stage2.OpcodeControl().JumpLink() });
 
 	// ALU
 	aluAInputMux.Connect({ stage2.reg1.Out(), hazard.ForwardExMem(),
@@ -137,20 +142,23 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 		hazard.AluRsMux());
 
 	aluBImmediateOr.Connect(hazard.AluRtMux(), Bundle<2>(stage2.OpcodeControl().AluBFromImm()));
-	aluBInputMux.Connect({ stage2.reg2.Out(), hazard.ForwardExMem(), 
-							hazard.ForwardMemWb(), stage2.signExt.Out() }, 
-		aluBImmediateOr.Out());
+	aluBInputMux.Connect({ stage2.reg2.Out(), hazard.ForwardExMem(), hazard.ForwardMemWb(), stage2.signExt.Out() }, 
+							aluBImmediateOr.Out());
 
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
 	
 	// PC Jump address calculation (A + B, no carry)
 	pcJumpAdder.Connect(stage2.PCinc.Out(), stage2.signExt.Out(), Wire::OFF);
 	
+	// Branch Detection
 	branchDetector.Connect(alu.Flags().Zero(), alu.Flags().Negative(),
 		stage2.OpcodeControl().BranchSel(), stage2.OpcodeControl().Branch());
+
+	// Bit of a hack? Drop the PC+4 into the alu out field for Jump Link instructions
+	aluOutOrPcIncMux.Connect({ alu.Out(), stage2.PCinc.Out() }, stage2.OpcodeControl().JumpLink());
 	
 	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), stage2.reg2.Out(),
-		alu.Out(), alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
+		aluOutOrPcIncMux.Out(), alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
 }
 
 void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
@@ -164,7 +172,7 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 
 	regWriteDataMux.Connect({ stage3.aluOut.Out(), cache.Out(), sltExtended, sltExtended },
 		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
-
+	
 	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
 }
 
@@ -190,6 +198,7 @@ void CPU::Stage2::Update()
 	opcodeControl.Update();
 	regFile.Update();
 	reg2ShiftMux.Update();
+	jumpAddrMux.Update();
 }
 void CPU::Stage2::PostUpdate()
 {
@@ -207,6 +216,7 @@ void CPU::Stage3::Update()
 	alu.Update();
 	pcJumpAdder.Update();
 	branchDetector.Update();
+	aluOutOrPcIncMux.Update();
 }
 void CPU::Stage3::PostUpdate()
 {
