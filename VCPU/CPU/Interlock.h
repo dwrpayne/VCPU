@@ -5,6 +5,7 @@
 #include "MuxBundle.h"
 #include "Matcher.h"
 #include "OrGate.h"
+#include "NorGate.h"
 
 class Interlock : public Component
 {
@@ -18,12 +19,17 @@ public:
 
 	const Wire& Bubble() { return bubble.Out(); }
 	const Wire& BubbleInv() { return bubbleInv.Out(); }
+	const Wire& Freeze() { return freeze.Out(); }
+	const Wire& FreezeInv() { return freezeInv.Out(); }
+	const Wire& FreezeOrBubbleInv() { return freezeOrBubbleInv.Out(); }
 
 private:
 	Matcher<ADDR> r1match;
 	Matcher<ADDR> r2match;
 	OrGate regmatch;
-	AndGate stallRAW;
-	OrGateN<3> bubble;
+	AndGate bubble;
 	Inverter bubbleInv;
+	OrGate freeze;
+	Inverter freezeInv;
+	NorGate freezeOrBubbleInv;
 };

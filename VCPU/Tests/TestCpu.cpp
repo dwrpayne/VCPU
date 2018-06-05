@@ -237,7 +237,7 @@ bool TestCPU(Verbosity verbosity)
 	bool success = true;
 
 	Debugger debugger("testops.vasm", Debugger::SILENT);
-	debugger.Start(50);	
+	debugger.Start();	
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 2438, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(3), verbosity);
@@ -286,7 +286,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	bool success = true;
 
 	Debugger debugger("testhazards.vasm", Debugger::VERBOSE);
-	debugger.Start(40);
+	debugger.Start();
 	success &= TestState(i++, 1234, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 1357, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 1603, debugger.GetRegisterVal(3), verbosity);
@@ -302,7 +302,8 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
-	success &= TestState(i++, 123, debugger.GetMemoryVal(22), verbosity);
+	success &= TestState(i++, 1234, debugger.GetMemoryVal(4), verbosity);
+	success &= TestState(i++, 168, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }

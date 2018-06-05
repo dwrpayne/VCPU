@@ -49,7 +49,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 11;
+	static const int OUT_WIDTH = 12;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -73,7 +73,8 @@ public:
 		const Wire& SltOp() const { return Get(6); }
 		const Wire& ShiftOp() const { return Get(7); }
 		const Wire& ShiftAmtOp() const { return Get(8); }
-		const Bundle<2> BranchSel() const { return Range<2>(9); }
+		const Wire& Halt() const { return Get(9); }
+		const Bundle<2> BranchSel() const { return Range<2>(10); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }
@@ -119,6 +120,7 @@ private:
 	AndGate subOp;
 	MuxBundle<4, 2> control;
 	MuxBundle<4, 2> controlAll;
+	AndGateN<6> halt;
 
 	OpcodeDecoderBundle out;
 };

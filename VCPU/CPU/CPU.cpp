@@ -7,7 +7,7 @@ class CPU::Stage1 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& bubble);
+	void Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& proceed);
 	void Update();
 	void PostUpdate();
 	const BufferIFID& Out() const { return bufIFID; }
@@ -25,7 +25,7 @@ class CPU::Stage2 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const Wire& bubbleInv);
+	void Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const Wire& proceed);
 	void Update();
 	void PostUpdate();
 	const BufferIDEX& Out() const { return bufIDEX; }
@@ -42,7 +42,7 @@ class CPU::Stage3 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard);
+	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed);
 	void Update();
 	void PostUpdate();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
@@ -67,7 +67,7 @@ class CPU::Stage4 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const BufferEXMEM& stage3);
+	void Connect(const BufferEXMEM& stage3, const Wire& proceed);
 	void Update();
 	void PostUpdate();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
@@ -80,11 +80,11 @@ private:
 };
 
 
-void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& bubbleInv)
+void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& proceed)
 {
 	// Program Counter
 	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAddr }, takeBranch);
-	pc.Connect(pcInMux.Out(), bubbleInv);
+	pc.Connect(pcInMux.Out(), proceed);
 
 	// PC Increment. Instruction width is 4, hardwired.
 	Bundle<32> insWidth(Wire::OFF);
@@ -94,10 +94,10 @@ void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, 
 	// Instruction memory
 	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF, Wire::ON);
 	
-	bufIFID.Connect(bubbleInv, instructionCache.Out(), pcIncrementer.Out());
+	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
 }
 
-void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const Wire& bubbleInv)
+void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const Wire& proceed)
 {
 	// Opcode Decoding
 	opcodeControl.Connect(stage1.IR.Opcode(), stage1.IR.Function());
@@ -115,13 +115,13 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 	Bundle<32> signExtImm(stage1.IR.Immediate()[15]);
 	signExtImm.Connect(0, stage1.IR.Immediate());
 
-	bufIDEX.Connect(bubbleInv, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
+	bufIDEX.Connect(proceed, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
 		signExtImm, regFile.Out1(), reg2ShiftMux.Out(),
 		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
 }
 
-void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard)
+void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed)
 {
 	regFileWriteAddrMux.Connect({ stage2.RT.Out(), stage2.RD.Out() }, 
 		stage2.OpcodeControl().RFormat());
@@ -144,11 +144,11 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard)
 	branchDetector.Connect(alu.Flags().Zero(), alu.Flags().Negative(),
 		stage2.OpcodeControl().BranchSel(), stage2.OpcodeControl().Branch());
 	
-	bufEXMEM.Connect(Wire::ON, regFileWriteAddrMux.Out(), stage2.reg2.Out(), 
+	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), stage2.reg2.Out(),
 		alu.Out(), alu.Flags(), pcJumpAdder.Out(), stage2.OpcodeControl());
 }
 
-void CPU::Stage4::Connect(const BufferEXMEM& stage3)
+void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 {
 	// Main Memory
 	cache.Connect(stage3.aluOut.Out().Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), 
@@ -160,7 +160,7 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3)
 	regWriteDataMux.Connect({ stage3.aluOut.Out(), cache.Out(), sltExtended, sltExtended },
 		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
 
-	bufMEMWB.Connect(Wire::ON, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
+	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
 }
 
 
@@ -236,10 +236,10 @@ CPU::CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->BranchTaken(), interlock.BubbleInv());
-	stage2->Connect(stage1->Out(), stage4->Out(), interlock.BubbleInv());
-	stage3->Connect(stage2->Out(), hazard);
-	stage4->Connect(stage3->Out());
+	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->BranchTaken(), interlock.FreezeOrBubbleInv());
+	stage2->Connect(stage1->Out(), stage4->Out(), interlock.FreezeOrBubbleInv());
+	stage3->Connect(stage2->Out(), hazard, interlock.FreezeInv());
+	stage4->Connect(stage3->Out(), interlock.FreezeInv());
 	cycles = 0;
 }
 
@@ -281,5 +281,12 @@ CPU::MainCache& CPU::MainMem()
 CPU::RegFile& CPU::Registers()
 {
 	return stage2->regFile;
+}
+
+bool CPU::Halt() 
+{ 
+	// TODO: This should implement a pipeline freeze that can only be 
+	// woken up by an interrupt. We are hijacking this to stop the debugger.
+	return stage2->Out().OpcodeControl().Halt().On();
 }
 

@@ -4,12 +4,13 @@ OpcodeDecoder::OpcodeDecoder()
 {
 	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &rFormat.Out(),
 		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
-		&funcOpMux.Out()[0], &funcOpMux.Out()[1] });
+		&halt.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
 }
 
 void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 {
 	inv.Connect(opcode);
+	halt.Connect(opcode);
 	rFormat.Connect(inv.Out());
 	loadstore.Connect(inv.Out()[4], opcode[5]);
 	loadOp.Connect(inv.Out()[3], loadstore.Out());
@@ -51,6 +52,7 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 void OpcodeDecoder::Update()
 {
 	inv.Update();
+	halt.Update();
 	rFormat.Update();
 	loadstore.Update();
 	loadOp.Update();

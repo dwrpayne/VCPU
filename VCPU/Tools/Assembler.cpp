@@ -183,6 +183,10 @@ unsigned int Assembler::ParseLine(const std::string& line)
 		}		
 		return (op << 26) + addr;
 	}
+	else if (type == X_TYPE)
+	{
+		return (op << 26);
+	}
 	else
 	{
 		std::cout << "ERROR: No type information for line " << line << std::endl;
@@ -245,5 +249,6 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "sh"    , { 41, 0,  I_TYPE } } ,
 	{ "swl"   , { 42, 0,  I_TYPE } } ,
 	{ "sw"    , { 43, 0,  I_TYPE } } ,
-	{ "swr"   , { 46, 0,  I_TYPE } }
+	{ "swr"   , { 46, 0,  I_TYPE } } ,
+	{ "hlt"   , { 63, 0,  X_TYPE } }
 	});

@@ -6,7 +6,8 @@ enum InstType
 {
 	R_TYPE,
 	I_TYPE,
-	J_TYPE
+	J_TYPE,
+	X_TYPE,
 };
 
 class Assembler

@@ -53,6 +53,8 @@ private:
 	RegFile& Registers();
 
 	bool PipelineBubble() { return interlock.Bubble().On(); }
+	bool PipelineFreeze() { return interlock.Freeze().On(); }
+	bool Halt();
 
 private:
 	class Stage1;

@@ -39,7 +39,7 @@ public:
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
-	const Wire& NeedStall() { return needWaitForMemory.Out(); }
+	const Wire& NeedStall() { return readMiss.Out(); }
 	
 private:
 	void UpdateCache();

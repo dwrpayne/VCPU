@@ -27,6 +27,11 @@ void Debugger::Start(int cycles)
 	{
 		Step();
 
+		if (pCPU->Halt())
+		{
+			break;
+		}
+
 		if (pCPU->cycles % 1000 == 0)
 		{
 			long long ms = mCpuElapsedTime.count() / 1000;
@@ -45,11 +50,7 @@ void Debugger::Step()
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
 	int word = GetNextPCAddr() / 4;
-	if (pCPU->PipelineBubble())
-	{
-		word = -word;
-	}
-	mLastInstructions.push_front(word);
+	mLastInstructions.push_front({ word, pCPU->PipelineBubble(), pCPU->PipelineFreeze() });
 	if (mLastInstructions.size() > 5)
 	{
 		mLastInstructions.pop_back();
@@ -58,6 +59,11 @@ void Debugger::Step()
 	if (bPrintInstruction)
 	{
 		PrintInstruction();
+	}
+
+	if (bPrintDataForward)
+	{
+		PrintDataForward();
 	}
 	
 	if (bPrintRegisters)
@@ -68,11 +74,6 @@ void Debugger::Step()
 	if (bPrintOutputReg)
 	{
 		PrintOutputReg();
-	}
-
-	if (bPrintDataForward)
-	{
-		PrintDataForward();
 	}
 }
 
@@ -97,13 +98,17 @@ void Debugger::PrintInstruction()
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
-		int addr = mLastInstructions[i];
-		auto line = pAssembler->GetSourceLine(abs(addr));
-		if (addr < 0)
+		auto [addr, bubble, freeze] = mLastInstructions[i];
+		auto line = pAssembler->GetSourceLine(addr);
+		if (bubble)
 		{
 			line.append(" (Bubble stall)");
 		}
-		std::cout << "\t0x" << std::hex << abs(addr)*4 << " " << STAGE[i] << std::dec << "  \t" << line << std::endl;
+		else if (freeze)
+		{
+			line.append(" (Pipeline freeze)");
+		}
+		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "  \t" << line << std::endl;
 	}
 }
 
