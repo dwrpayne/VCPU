@@ -12,6 +12,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintRegisters = verbosity >= VERBOSE;
 	bPrintOutputReg = verbosity >= MINIMAL;
 	bPrintDataForward = verbosity >= NORMAL;
+	bPrintTiming = verbosity >= TIMING;
 
 	pAssembler = new Assembler(source_filename);
 
@@ -23,7 +24,6 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 
 void Debugger::Start(int cycles)
 {
-	auto start_time = std::chrono::high_resolution_clock::now();
 	while (cycles != 0)
 	{
 		Step();
@@ -32,24 +32,27 @@ void Debugger::Start(int cycles)
 		{
 			break;
 		}
-
-		if (pCPU->cycles % 10000 == 0)
-		{
-			auto now_time = std::chrono::high_resolution_clock::now();
-			long long ms = std::chrono::duration_cast<std::chrono::microseconds>(now_time-start_time).count() / 1000;
-			std::cout << pCPU->cycles << " cycles in " << ms/1000.0 << "sec. Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
-		}
 		cycles--;
 	}
 }
 
 void Debugger::Step()
 {
-	//auto t1 = std::chrono::high_resolution_clock::now();
+	auto t1 = std::chrono::high_resolution_clock::now();
 	pCPU->Update();
-	//auto t2 = std::chrono::high_resolution_clock::now();
+	auto t2 = std::chrono::high_resolution_clock::now();
 	
-	//mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+	mThisCycleTime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+
+	for (int i = 0; i < NUM_BUCKETS; i++)
+	{
+		if (mThisCycleTime.count() < BUCKETS[i])
+		{
+			cycleTimeBuckets[i]++;
+			break;
+		}
+	}
 
 	int word = GetNextPCAddr() / 4;
 	mLastInstructions.push_front({ word, pCPU->PipelineBubble(), pCPU->PipelineFreeze() });
@@ -58,6 +61,11 @@ void Debugger::Step()
 		mLastInstructions.pop_back();
 	}
 
+	PrintCycle();
+}
+
+void Debugger::PrintCycle()
+{
 	if (bPrintInstruction)
 	{
 		PrintInstruction();
@@ -67,7 +75,7 @@ void Debugger::Step()
 	{
 		PrintDataForward();
 	}
-	
+
 	if (bPrintRegisters)
 	{
 		PrintRegisters();
@@ -77,6 +85,8 @@ void Debugger::Step()
 	{
 		PrintOutputReg();
 	}
+	
+	PrintTiming();
 }
 
 int Debugger::GetRegisterVal(int reg)
@@ -154,5 +164,25 @@ void Debugger::PrintDataForward()
 	if (pCPU->hazard.AluRtMux()[1].On())
 	{
 		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to RT" << std::endl;
+	}
+}
+
+void Debugger::PrintTiming()
+{	
+	if (bPrintTiming)
+	{
+		std::cout << "Cycle time: " << mThisCycleTime.count() << "us" << std::endl;
+	}
+	
+	if (pCPU->cycles % 10000 == 0)
+	{
+		long long ms = mCpuElapsedTime.count() / 1000;
+		std::cout << pCPU->cycles << " cycles in " << ms / 1000.0 << "sec.";
+		std::cout << " Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
+		std::cout << "Time(us)  Count" << std::endl;
+		for (int i = 0; i < NUM_BUCKETS; i++)
+		{
+			std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
+		}
 	}
 }

@@ -231,12 +231,12 @@ bool TestCache(Verbosity verbosity)
 	return success;
 }
 
-bool TestCPU(Verbosity verbosity)
+bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testops.vasm", Debugger::SILENT);
+	Debugger debugger("testops.vasm", dverb);
 	debugger.Start();	
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 2438, debugger.GetRegisterVal(2), verbosity);
@@ -269,23 +269,23 @@ bool TestCPU(Verbosity verbosity)
 }
 
 
-bool TestCPUBranch(Verbosity verbosity)
+bool TestCPUBranch(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testbranch.vasm", Debugger::SILENT);
+	Debugger debugger("testbranch.vasm", dverb);
 	debugger.Start();
 
 	return success;
 }
 
-bool TestCPUPipelineHazards(Verbosity verbosity)
+bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testhazards.vasm", Debugger::SILENT);
+	Debugger debugger("testhazards.vasm", dverb);
 	debugger.Start();
 	success &= TestState(i++, 1234, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 1357, debugger.GetRegisterVal(2), verbosity);
@@ -313,9 +313,9 @@ bool RunCPUTests()
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST(TestCPU, FAIL_ONLY);
-	RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
-	RUN_TEST(TestCPUBranch, VERBOSE);
+	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::TIMING);
+	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::TIMING);
+	RUN_TEST2(TestCPUBranch, VERBOSE, Debugger::TIMING);
 
 	return success;
 }
