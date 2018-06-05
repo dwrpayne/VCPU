@@ -19,10 +19,7 @@ void Test()
 
 void RunCPU(std::string filename)
 {
-	Debugger debugger(filename);
-	//debugger.SetInstructionPrint(true);
-	//debugger.SetRegisterPrint(true);
-	debugger.SetDataForwardPrint(false);
+	Debugger debugger(filename, Debugger::MINIMAL);
 	debugger.Start();
 }
 

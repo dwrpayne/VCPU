@@ -274,7 +274,7 @@ bool TestCPUBranch(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testbranch.vasm", Debugger::VERBOSE);
+	Debugger debugger("testbranch.vasm", Debugger::SILENT);
 	debugger.Start();
 
 	return success;

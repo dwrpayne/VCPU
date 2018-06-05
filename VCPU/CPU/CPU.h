@@ -30,7 +30,7 @@ public:
 	static const int MAIN_CACHE_BYTES = 256;
 
 	static const int INS_MEM_BYTES = 512;
-	static const int MAIN_MEM_BYTES = 2048;
+	static const int MAIN_MEM_BYTES = 8192;
 		
 	typedef Cache<WORD_SIZE, INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
 	typedef Cache<WORD_SIZE, MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
