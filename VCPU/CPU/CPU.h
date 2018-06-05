@@ -43,8 +43,20 @@ private:
 	class PipelineStage : public Component
 	{
 	public:
-		PipelineStage()	{}
+		PipelineStage(std::mutex& mutex, std::condition_variable& cv, bool& ready)
+		: mMutex(mutex)
+		, mCV(cv)
+		, mReady(ready)
+		{}
+
+		void ThreadedUpdate();
+		virtual void Update() = 0;
 		virtual void PostUpdate() = 0;
+
+	private:
+		std::condition_variable& mCV;
+		std::mutex& mMutex;
+		bool& mReady;
 	};
 
 	const Bundle<32>& PC();
@@ -66,10 +78,22 @@ private:
 	Stage2* stage2;
 	Stage3* stage3;
 	Stage4* stage4;
+	
+	std::condition_variable mCV;
+	std::mutex mMutex;
+	bool stage1Ready;
+	bool stage2Ready;
+	bool stage3Ready;
+	bool stage4Ready;
+	std::thread stage1Thread;
+	std::thread stage2Thread;
+	std::thread stage3Thread;
+	std::thread stage4Thread;
 
 	HazardUnit hazard;
 	Interlock interlock;
 
 	friend class ProgramLoader;
 	friend class Debugger;
+	friend class PipelineStage;
 };

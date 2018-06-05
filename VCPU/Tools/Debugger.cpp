@@ -23,6 +23,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 
 void Debugger::Start(int cycles)
 {
+	auto start_time = std::chrono::high_resolution_clock::now();
 	while (cycles != 0)
 	{
 		Step();
@@ -32,10 +33,11 @@ void Debugger::Start(int cycles)
 			break;
 		}
 
-		if (pCPU->cycles % 1000 == 0)
+		if (pCPU->cycles % 10000 == 0)
 		{
-			long long ms = mCpuElapsedTime.count() / 1000;
-			std::cout << pCPU->cycles << " cycles in " << ms << "ms. Average clock freq of " << (1000.0 * pCPU->cycles) / mCpuElapsedTime.count() << "kHz" << std::endl;
+			auto now_time = std::chrono::high_resolution_clock::now();
+			long long ms = std::chrono::duration_cast<std::chrono::microseconds>(now_time-start_time).count() / 1000;
+			std::cout << pCPU->cycles << " cycles in " << ms/1000.0 << "sec. Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
 		}
 		cycles--;
 	}
@@ -43,11 +45,11 @@ void Debugger::Start(int cycles)
 
 void Debugger::Step()
 {
-	auto t1 = std::chrono::high_resolution_clock::now();
+	//auto t1 = std::chrono::high_resolution_clock::now();
 	pCPU->Update();
-	auto t2 = std::chrono::high_resolution_clock::now();
+	//auto t2 = std::chrono::high_resolution_clock::now();
 	
-	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+	//mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
 	int word = GetNextPCAddr() / 4;
 	mLastInstructions.push_front({ word, pCPU->PipelineBubble(), pCPU->PipelineFreeze() });

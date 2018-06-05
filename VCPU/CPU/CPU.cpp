@@ -221,10 +221,14 @@ void CPU::Stage4::PostUpdate()
 
 
 CPU::CPU()
-	: stage1(new Stage1())
-	, stage2(new Stage2())
-	, stage3(new Stage3())
-	, stage4(new Stage4())
+	: stage1(new Stage1(mMutex, mCV, stage1Ready))
+	, stage2(new Stage2(mMutex, mCV, stage2Ready))
+	, stage3(new Stage3(mMutex, mCV, stage3Ready))
+	, stage4(new Stage4(mMutex, mCV, stage4Ready))
+	, stage1Thread(&CPU::Stage1::ThreadedUpdate, stage1)
+	, stage2Thread(&CPU::Stage2::ThreadedUpdate, stage2)
+	, stage3Thread(&CPU::Stage3::ThreadedUpdate, stage3)
+	, stage4Thread(&CPU::Stage4::ThreadedUpdate, stage4)
 {
 	hazard.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
@@ -232,6 +236,11 @@ CPU::CPU()
 
 	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(),
 		stage2->Out().RD.Out(), stage2->Out().OpcodeControl().LoadOp());
+
+	stage1Thread.detach();
+	stage2Thread.detach();
+	stage3Thread.detach();
+	stage4Thread.detach();
 }
 
 void CPU::Connect()
@@ -245,14 +254,14 @@ void CPU::Connect()
 
 void CPU::Update()
 {
-	std::vector<std::future<void>> futures;
-	futures.push_back(std::async([this]() {stage1->Update(); }));
-	futures.push_back(std::async([this]() {stage2->Update(); }));
-	futures.push_back(std::async([this]() {stage3->Update(); }));
-	futures.push_back(std::async([this]() {stage4->Update(); }));
-	for (auto& f : futures)
 	{
-		f.get();
+		std::lock_guard<std::mutex> lk(mMutex);
+		stage1Ready = stage2Ready = stage3Ready = stage4Ready = true;
+	}
+	mCV.notify_all();
+	{
+		std::unique_lock<std::mutex> lk(mMutex);
+		mCV.wait(lk, [this] {return !stage1Ready && !stage2Ready && !stage3Ready && !stage4Ready; });
 	}
 	interlock.Update();
 	stage4->PostUpdate();
@@ -289,4 +298,20 @@ bool CPU::Halt()
 	// woken up by an interrupt. We are hijacking this to stop the debugger.
 	return stage2->Out().OpcodeControl().Halt().On();
 }
-
+void CPU::PipelineStage::ThreadedUpdate()
+{
+	while (true)
+	{
+		{
+			std::unique_lock<std::mutex> lk(mMutex);
+			mCV.wait(lk, [this] {return mReady; });
+		}
+		Update();
+		{
+			std::unique_lock<std::mutex> lk(mMutex);
+			mReady = false;
+			lk.unlock();
+			mCV.notify_all();
+		}
+	}
+}
