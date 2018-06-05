@@ -269,7 +269,7 @@ bool TestCPUPipeline(Verbosity verbosity)
 	bool success = true;
 
 	Debugger debugger("testopspipe.vasm", Debugger::SILENT);
-	debugger.Start(50);
+	debugger.Start(80);
 
 	return success;
 }
@@ -279,8 +279,24 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testhazards.vasm", Debugger::SILENT);
-	debugger.Start(100);
+	Debugger debugger("testhazards.vasm", Debugger::VERBOSE);
+	debugger.Start(40);
+	success &= TestState(i++, 1234, debugger.GetRegisterVal(1), verbosity);
+	success &= TestState(i++, 1357, debugger.GetRegisterVal(2), verbosity);
+	success &= TestState(i++, 1603, debugger.GetRegisterVal(3), verbosity);
+	success &= TestState(i++, 2591, debugger.GetRegisterVal(4), verbosity);
+	success &= TestState(i++, 2837, debugger.GetRegisterVal(5), verbosity);
+	success &= TestState(i++, 5428, debugger.GetRegisterVal(6), verbosity);
+	success &= TestState(i++, -2591, debugger.GetRegisterVal(7), verbosity);
+	success &= TestState(i++, -5182, debugger.GetRegisterVal(8), verbosity);
+	success &= TestState(i++, 1234, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, 1238, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, 2468, debugger.GetRegisterVal(12), verbosity);
+	success &= TestState(i++, 2468, debugger.GetRegisterVal(13), verbosity);
+	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
+	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
+	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
+	success &= TestState(i++, 123, debugger.GetMemoryVal(22), verbosity);
 
 	return success;
 }
@@ -291,7 +307,7 @@ bool RunCPUTests()
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST(TestCPU, FAIL_ONLY);
-	RUN_TEST(TestCPUPipeline, FAIL_ONLY);
+	//RUN_TEST(TestCPUPipeline, FAIL_ONLY);
 	RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
 
 	return success;
