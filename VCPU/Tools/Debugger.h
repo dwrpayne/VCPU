@@ -6,7 +6,14 @@
 class Debugger
 {
 public:
-	Debugger(const std::string& source_filename);
+	enum Verbosity
+	{
+		SILENT,
+		MINIMAL,
+		NORMAL,
+		VERBOSE
+	};
+	Debugger(const std::string& source_filename, Verbosity verbosity = NORMAL);
 
 	void Start(int cycles = -1);
 	void Step();

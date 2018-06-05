@@ -5,13 +5,13 @@
 #include "Assembler.h"
 
 
-Debugger::Debugger(const std::string& source_filename)
+Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 {
 	pCPU = new CPU();
-	bPrintInstruction = false;
-	bPrintRegisters = false;
-	bPrintOutputReg = true;
-	bPrintDataForward = true;
+	bPrintInstruction = verbosity >= NORMAL;
+	bPrintRegisters = verbosity >= VERBOSE;
+	bPrintOutputReg = verbosity >= MINIMAL;
+	bPrintDataForward = verbosity >= NORMAL;
 
 	pAssembler = new Assembler(source_filename);
 
