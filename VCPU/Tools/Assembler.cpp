@@ -224,7 +224,7 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "nor"   , { 0,  39, R_TYPE } } ,		// TESTED
 	{ "slt"   , { 0,  42, R_TYPE } } ,		// TESTED
 	{ "sltu"  , { 0,  43, R_TYPE } } ,
-	{ "j"	  , { 2,  0,  J_TYPE } } ,
+	{ "j"	  , { 2,  0,  J_TYPE } } ,		// TESTED
 	{ "jal"	  , { 3,  0,  J_TYPE } } ,
 	{ "beq"   , { 4,  0,  I_TYPE } } ,		// TESTED
 	{ "bne"   , { 5,  0,  I_TYPE } } ,		// TESTED

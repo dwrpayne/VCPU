@@ -47,26 +47,26 @@ add		$0, $0, $0
 add		$0, $0, $0
 add		$0, $0, $0
 add		$0, $0, $0
-addi	$10, $0, 240
+add		$0, $0, $0
+jal		240
+add		$0, $0, $0
+add		$0, $0, $0
+hlt
+hlt
+hlt
+hlt
+hlt
+hlt
+hlt
+addi	$10, $0, 280
 jr		$10
 add		$0, $0, $0
 add		$0, $0, $0
 hlt
 hlt
 hlt
-hlt
-hlt
-add		$0, $0, $0
-jal		280
 add		$0, $0, $0
 add		$0, $0, $0
-hlt
-hlt
-hlt
-hlt
-hlt
-hlt
-hlt
 add		$0, $0, $0
 add		$0, $0, $0
 add		$0, $0, $0

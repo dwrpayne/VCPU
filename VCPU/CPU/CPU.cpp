@@ -7,12 +7,13 @@ class CPU::Stage1 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& proceed);
+	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Bundle<32>& pcJumpAddr, const Wire& takeJump, const Wire& proceed);
 	void Update();
 	void PostUpdate();
 	const BufferIFID& Out() const { return bufIFID; }
 private:
-	MuxBundle<32, 2> pcInMux;
+	MuxBundle<32, 2> pcBranchInMux;
+	MuxBundle<32, 2> pcJumpInMux;
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
 	CPU::InsCache instructionCache;
@@ -79,12 +80,13 @@ private:
 };
 
 
-void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& proceed)
+void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Bundle<32>& pcJumpAddr, const Wire& takeJump, const Wire& proceed)
 {
 	// Program Counter. Select between PC + 4 and the calculated jump addr from the last executed branch
-	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAddr }, takeBranch);
+	pcBranchInMux.Connect({ pcIncrementer.Out(), pcBranchAddr }, takeBranch);
+	pcJumpInMux.Connect({ pcBranchInMux.Out(), pcJumpAddr }, takeJump);
 
-	pc.Connect(pcInMux.Out(), proceed);
+	pc.Connect(pcJumpInMux.Out(), proceed);
 
 	// PC Increment. Instruction width is 4, hardwired.
 	Bundle<32> insWidth(Wire::OFF);
@@ -115,8 +117,11 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 	Bundle<32> signExtImm(stage1.IR.Immediate()[15]);
 	signExtImm.Connect(0, stage1.IR.Immediate());
 
+	Bundle<32> jumpExt(Wire::OFF);
+	jumpExt.Connect(0, stage1.IR.Address());
+
 	bufIDEX.Connect(proceed, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
-		signExtImm, regFile.Out1(), reg2ShiftMux.Out(),
+		signExtImm, regFile.Out1(), reg2ShiftMux.Out(), jumpExt,
 		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
 }
@@ -167,7 +172,8 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 // ******** STAGE 1 INSTRUCTION FETCH ************
 void CPU::Stage1::Update()
 {
-	pcInMux.Update();
+	pcBranchInMux.Update();
+	pcJumpInMux.Update();
 	pc.Update();
 	pcIncrementer.Update();
 	instructionCache.Update();
@@ -245,7 +251,9 @@ CPU::CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->Out().branchTaken.Out(), interlock.FreezeOrBubbleInv());
+	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->Out().branchTaken.Out(), 
+		stage2->Out().pcJumpAddr.Out(), stage2->Out().OpcodeControl().JumpOp(), interlock.FreezeOrBubbleInv());
+
 	stage2->Connect(stage1->Out(), stage4->Out(), interlock.FreezeOrBubbleInv());
 	stage3->Connect(stage2->Out(), hazard, interlock.FreezeInv());
 	stage4->Connect(stage3->Out(), interlock.FreezeInv());
