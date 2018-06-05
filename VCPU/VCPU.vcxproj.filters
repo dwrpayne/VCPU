@@ -87,6 +87,9 @@
     <ClCompile Include="CPU\BranchDetector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CPU\Interlock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -225,6 +228,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Functional\Shifter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\Interlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

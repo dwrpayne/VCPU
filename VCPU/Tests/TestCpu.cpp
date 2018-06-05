@@ -172,9 +172,11 @@ bool TestCache(Verbosity verbosity)
 	
 	addr.Write(0);
 	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	test.Update();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 100000000, test.Out().Read(), verbosity);
-	test.Update();
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(4*a);
@@ -207,6 +209,7 @@ bool TestCache(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	test.Update();
 
 	data.Write(123);
 	write.Set(false);
@@ -230,7 +233,7 @@ bool TestCPU(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testops.vasm", Debugger::SILENT);
+	Debugger debugger("testops.vasm", Debugger::VERBOSE);
 	debugger.Start(40);	
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 2438, debugger.GetRegisterVal(2), verbosity);

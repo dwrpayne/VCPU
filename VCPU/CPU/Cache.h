@@ -1,5 +1,8 @@
 #pragma once
 #include <future>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 #include "Component.h"
 #include "Bundle.h"
@@ -30,13 +33,18 @@ public:
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
 
+	Cache();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
 	void Update();
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
+	const Wire& CacheMiss() { return cacheMiss.Out(); }
 	
 private:
+	void UpdateCache();
+	void UpdateMemory();
+
 	Memory<WORD_SIZE, MAIN_MEMORY_BYTES / WORD_BYTES, CACHE_LINE_BITS> mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
@@ -50,12 +58,22 @@ private:
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
+
+	std::condition_variable mCondVar;
+	std::mutex mMutex;
+	bool mCacheWaitingOnMemory;
 	
 	friend class Debugger;
 };
 
 
-template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
+template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Cache()
+	: mCacheWaitingOnMemory(false)
+{
+}
+
+template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write)
 {
 	mMemory.Connect(addr, data, write);
@@ -95,11 +113,36 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	outDataMux.Connect(dataWordBundles, offset);
 }
 
-template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
+template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
+	static std::thread memUpdateThread(&Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory, this);
+
+	UpdateCache();
+
+	// TODO: Figure out exactly how this signaling should work. Should we let the cache update at its own frequency?
+	if (cacheMiss.Out().On() || !read.Out().On())
+	{
+		{
+			std::lock_guard<std::mutex> lk(mMutex);
+			mCacheWaitingOnMemory = true;
+		}
+		mCondVar.notify_one();
+		{
+			std::unique_lock<std::mutex> lk(mMutex);
+			mCondVar.wait(lk, [this] {return !mCacheWaitingOnMemory; });
+		}
+	}
+}
+
+template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateCache()
+{
+	std::unique_lock<std::mutex> lk(mMutex);
+
 	indexDecoder.Update();
 	writeEnable.Update();
+
 	for (auto& line : cachelines)
 	{
 		line.Update();
@@ -110,23 +153,20 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 	readMiss.Update();
 	outCacheLineMux.Update();
 	outDataMux.Update();
+}
 
-	// TODO: Total hack for now. Make the memory update async in the background and block/signal when ready.
-	if (cacheMiss.Out().On() || !read.Out().On())
+template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory()
+{
+	while (true)
 	{
-		mMemory.Update();
+		std::unique_lock<std::mutex> lk(mMutex);
+		mCondVar.wait(lk, [this] {return mCacheWaitingOnMemory; });
 
-		indexDecoder.Update();
-		writeEnable.Update();
-		for (auto& line : cachelines)
-		{
-			line.Update();
-		}
-		cacheHitMux.Update();
-		cacheMiss.Update();
-		read.Update();
-		readMiss.Update();
-		outCacheLineMux.Update();
-		outDataMux.Update();
+		mMemory.Update();
+		mCacheWaitingOnMemory = false;
+		lk.unlock();
+		mCondVar.notify_one();
+
 	}
 }

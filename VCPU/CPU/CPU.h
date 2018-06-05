@@ -13,6 +13,7 @@
 #include "PipelineBuffers.h"
 #include "Cache.h"
 #include "HazardUnit.h"
+#include "Interlock.h"
 
 
 class CPU : public Component
@@ -63,6 +64,7 @@ private:
 	Stage4* stage4;
 
 	HazardUnit hazard;
+	Interlock interlock;
 
 	friend class ProgramLoader;
 	friend class Debugger;

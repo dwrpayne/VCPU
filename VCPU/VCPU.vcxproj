@@ -128,6 +128,7 @@
     <ClCompile Include="CPU\BranchDetector.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\HazardUnit.cpp" />
+    <ClCompile Include="CPU\Interlock.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\HazardUnit.h" />
     <ClInclude Include="CPU\InsRegister.h" />
+    <ClInclude Include="CPU\Interlock.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="Functional\Adder.h" />
