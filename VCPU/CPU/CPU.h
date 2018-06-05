@@ -46,7 +46,7 @@ private:
 		virtual void PostUpdate() = 0;
 	};
 
-	Register<32> PC();
+	const Bundle<32>& PC();
 	InsCache& InstructionMem();
 	MainCache& MainMem();
 	RegFile& Registers();

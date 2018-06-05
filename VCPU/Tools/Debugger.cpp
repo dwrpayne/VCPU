@@ -83,7 +83,7 @@ int Debugger::GetMemoryVal(int addr)
 
 int Debugger::GetNextPCAddr()
 {
-	return pCPU->PC().Out().UnsignedRead();
+	return pCPU->PC().UnsignedRead();
 }
 
 void Debugger::PrintInstruction()

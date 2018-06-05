@@ -190,6 +190,7 @@ void CPU::Stage2::PostUpdate()
 	bufIDEX.Update();
 }
 
+
 // ******** STAGE 3 EXECUTION ************
 void CPU::Stage3::Update()
 {
@@ -205,6 +206,7 @@ void CPU::Stage3::PostUpdate()
 {
 	bufEXMEM.Update();
 }
+
 
 // ******** STAGE 4 BEGIN - MEMORY STORE ************
 void CPU::Stage4::Update()
@@ -257,9 +259,9 @@ void CPU::Update()
 	cycles++;
 }
 
-Register<32> CPU::PC()
+const Bundle<32>& CPU::PC()
 {
-	return stage1->pc;
+	return stage1->pc.Out();
 }
 
 CPU::InsCache& CPU::InstructionMem()
