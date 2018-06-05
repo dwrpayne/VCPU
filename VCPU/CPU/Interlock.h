@@ -12,7 +12,7 @@ public:
 	static const int ADDR = 5;
 	typedef Bundle<ADDR> RegBundle;
 
-	void Connect(const Wire& cachemiss, const RegBundle& readR1, const RegBundle& readR2, 
+	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const RegBundle& readR1, const RegBundle& readR2, 
 		const RegBundle& loadingReg, const Wire& loadop);
 	void Update();
 
@@ -24,6 +24,6 @@ private:
 	Matcher<ADDR> r2match;
 	OrGate regmatch;
 	AndGate stallRAW;
-	OrGate bubble;
+	OrGateN<3> bubble;
 	Inverter bubbleInv;
 };

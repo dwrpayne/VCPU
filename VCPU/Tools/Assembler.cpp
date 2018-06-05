@@ -29,7 +29,13 @@ const std::string Assembler::GetSourceLine(unsigned int line)  const
 	{
 		return "";
 	}
-	return mSource[line]; 
+	std::string sourceline = mSource[line];
+	size_t start_pos = sourceline.find("\t\t");
+	if (start_pos != std::string::npos)
+	{
+		sourceline.replace(start_pos, 2, "\t");
+	}
+	return sourceline; 
 }
 
 std::vector<std::string> split(const char *str)

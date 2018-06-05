@@ -34,12 +34,12 @@ public:
 	typedef Bundle<TAG_BITS> TagBundle;
 
 	Cache();
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
+	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read);
 	void Update();
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
-	const Wire& CacheMiss() { return cacheMiss.Out(); }
+	const Wire& NeedStall() { return needWaitForMemory.Out(); }
 	
 private:
 	void UpdateCache();
@@ -50,11 +50,10 @@ private:
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;	
 	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
-	MultiGate<OrGate, NUM_CACHE_LINES> writeEnableOr;
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
-	Inverter read;
 	AndGate readMiss;
+	OrGate needWaitForMemory;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
@@ -62,6 +61,7 @@ private:
 	std::condition_variable mCondVar;
 	std::mutex mMutex;
 	bool mCacheWaitingOnMemory;
+	std::thread memUpdateThread;
 	
 	friend class Debugger;
 };
@@ -70,14 +70,15 @@ private:
 template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Cache()
 	: mCacheWaitingOnMemory(false)
+	, memUpdateThread(&Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory, this)
 {
+	memUpdateThread.detach();
 }
 
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write)
+void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read)
 {
 	mMemory.Connect(addr, data, write);
-	read.Connect(write);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
 	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));
@@ -100,7 +101,8 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	}
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
-	readMiss.Connect(read.Out(), cacheMiss.Out());
+	readMiss.Connect(read, cacheMiss.Out());
+	needWaitForMemory.Connect(readMiss.Out(), write);
 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
 
@@ -116,12 +118,10 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
-	static std::thread memUpdateThread(&Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory, this);
-
 	UpdateCache();
 
 	// TODO: Figure out exactly how this signaling should work. Should we let the cache update at its own frequency?
-	if (cacheMiss.Out().On() || !read.Out().On())
+	if (needWaitForMemory.Out().On())
 	{
 		{
 			std::lock_guard<std::mutex> lk(mMutex);
@@ -149,8 +149,8 @@ inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTE
 	}
 	cacheHitMux.Update();
 	cacheMiss.Update();
-	read.Update();
 	readMiss.Update();
+	needWaitForMemory.Update();
 	outCacheLineMux.Update();
 	outDataMux.Update();
 }

@@ -92,7 +92,7 @@ void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, 
 	pcIncrementer.Connect(pc.Out(), insWidth, Wire::OFF);
 
 	// Instruction memory
-	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF);
+	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF, Wire::ON);
 	
 	bufIFID.Connect(bubbleInv, instructionCache.Out(), pcIncrementer.Out());
 }
@@ -152,7 +152,7 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3)
 {
 	// Main Memory
 	cache.Connect(stage3.aluOut.Out().Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), 
-		stage3.OpcodeControl().StoreOp());
+		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp());
 
 	Bundle<32> sltExtended(Wire::OFF);
 	sltExtended.Connect(0, stage3.Flags().Negative());
@@ -230,8 +230,8 @@ CPU::CPU()
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
-	interlock.Connect(MainMem().CacheMiss(), stage2->Out().RS.Out(), stage2->Out().RT.Out(),
-		stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
+	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(),
+		stage2->Out().RD.Out(), stage2->Out().OpcodeControl().LoadOp());
 }
 
 void CPU::Connect()
@@ -254,12 +254,12 @@ void CPU::Update()
 	{
 		f.get();
 	}
+	interlock.Update();
 	stage4->PostUpdate();
 	stage3->PostUpdate();
 	stage2->PostUpdate();
 	stage1->PostUpdate();
 	hazard.Update();
-	interlock.Update();
 	cycles++;
 }
 
@@ -282,3 +282,4 @@ CPU::RegFile& CPU::Registers()
 {
 	return stage2->regFile;
 }
+

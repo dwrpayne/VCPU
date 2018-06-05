@@ -52,6 +52,8 @@ private:
 	MainCache& MainMem();
 	RegFile& Registers();
 
+	bool PipelineBubble() { return interlock.Bubble().On(); }
+
 private:
 	class Stage1;
 	class Stage2;

@@ -151,8 +151,9 @@ bool TestCache(Verbosity verbosity)
 
 	MagicBundle<32> data;
 	Wire write(true);
+	Wire read(false);
 	MagicBundle<11> addr;
-	test.Connect(addr, data, write);
+	test.Connect(addr, data, write, read);
 
 	for (int a = 0; a < 8; a++)
 	{
@@ -168,8 +169,8 @@ bool TestCache(Verbosity verbosity)
 		test.Update();
 	}
 	write.Set(false);
-	
-	
+	read.Set(true);
+		
 	addr.Write(0);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
@@ -199,6 +200,7 @@ bool TestCache(Verbosity verbosity)
 	data.Write(4444);
 	addr.Write(4);
 	write.Set(true);
+	read.Set(false);
 	test.Update();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 4444, test.Out().Read(), verbosity);
@@ -213,6 +215,7 @@ bool TestCache(Verbosity verbosity)
 
 	data.Write(123);
 	write.Set(false);
+	read.Set(true);
 	addr.Write(32);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
@@ -233,8 +236,8 @@ bool TestCPU(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testops.vasm", Debugger::VERBOSE);
-	debugger.Start(40);	
+	Debugger debugger("testops.vasm", Debugger::SILENT);
+	debugger.Start(50);	
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 2438, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(3), verbosity);
