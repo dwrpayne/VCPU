@@ -300,7 +300,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(12), verbosity);
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(13), verbosity);
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
-	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
+	success &= TestState(i++, 366, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 1234, debugger.GetMemoryVal(4), verbosity);
 	success &= TestState(i++, 156, debugger.GetNextPCAddr(), verbosity);
@@ -313,8 +313,8 @@ bool RunCPUTests()
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	//RUN_TEST(TestCPU, FAIL_ONLY);
-	//RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
+	RUN_TEST(TestCPU, FAIL_ONLY);
+	RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
 	RUN_TEST(TestCPUBranch, VERBOSE);
 
 	return success;
