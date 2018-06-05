@@ -9,7 +9,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch);
 	void Update();
-	void Update2();
+	void PostUpdate();
 	const BufferIFID& Out() const { return bufIFID; }
 private:
 	MuxBundle<32, 2> pcInMux;
@@ -27,7 +27,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect(const BufferIFID& stage1, const BufferMEMWB& stage4);
 	void Update();
-	void Update2();
+	void PostUpdate();
 	const BufferIDEX& Out() const { return bufIDEX; }
 private:
 	OpcodeDecoder opcodeControl;
@@ -44,7 +44,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard);
 	void Update();
-	void Update2();
+	void PostUpdate();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
 	const Wire& BranchTaken() const { return branchDetector.Out(); }
 private:
@@ -69,7 +69,7 @@ public:
 	using PipelineStage::PipelineStage;
 	void Connect(const BufferEXMEM& stage3);
 	void Update();
-	void Update2();
+	void PostUpdate();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 private:
 	CPU::MainCache cache;
@@ -150,7 +150,6 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard)
 
 void CPU::Stage4::Connect(const BufferEXMEM& stage3)
 {
-
 	// Main Memory
 	cache.Connect(stage3.aluOut.Out().Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), 
 		stage3.OpcodeControl().StoreOp());
@@ -164,34 +163,36 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3)
 	bufMEMWB.Connect(Wire::ON, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
 }
 
+
+// ******** STAGE 1 INSTRUCTION FETCH ************
 void CPU::Stage1::Update()
 {
-	// ******** STAGE 1 INSTRUCTION FETCH ************
 	pcInMux.Update();
 	pc.Update();
 	pcIncrementer.Update();
 	instructionCache.Update();
 }
-void CPU::Stage1::Update2()
+void CPU::Stage1::PostUpdate()
 {
 	bufIFID.Update();
 }
 
+
+// ******** STAGE 2 INSTRUCTION DECODE ************
 void CPU::Stage2::Update()
 {
-	// ******** STAGE 2 INSTRUCTION DECODE ************
 	opcodeControl.Update();
 	regFile.Update();
 	reg2ShiftMux.Update();
 }
-void CPU::Stage2::Update2()
+void CPU::Stage2::PostUpdate()
 {
 	bufIDEX.Update();
 }
 
+// ******** STAGE 3 EXECUTION ************
 void CPU::Stage3::Update()
 {
-	// ******** STAGE 3 EXECUTION ************
 	regFileWriteAddrMux.Update();
 	aluAInputMux.Update();
 	aluBImmediateOr.Update();
@@ -200,18 +201,18 @@ void CPU::Stage3::Update()
 	pcJumpAdder.Update();
 	branchDetector.Update();
 }
-void CPU::Stage3::Update2()
+void CPU::Stage3::PostUpdate()
 {
 	bufEXMEM.Update();
 }
 
+// ******** STAGE 4 BEGIN - MEMORY STORE ************
 void CPU::Stage4::Update()
 {
-	// ******** STAGE 4 BEGIN - MEMORY STORE ************
 	cache.Update();
 	regWriteDataMux.Update();
 }
-void CPU::Stage4::Update2()
+void CPU::Stage4::PostUpdate()
 {
 	bufMEMWB.Update();
 }
@@ -248,10 +249,10 @@ void CPU::Update()
 	{
 		f.get();
 	}
-	stage4->Update2();
-	stage3->Update2();
-	stage2->Update2();
-	stage1->Update2();
+	stage4->PostUpdate();
+	stage3->PostUpdate();
+	stage2->PostUpdate();
+	stage1->PostUpdate();
 	hazard.Update();
 	cycles++;
 }

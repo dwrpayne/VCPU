@@ -42,9 +42,8 @@ private:
 	class PipelineStage : public Component
 	{
 	public:
-		PipelineStage()
-		{}
-	protected:
+		PipelineStage()	{}
+		virtual void PostUpdate() = 0;
 	};
 
 	Register<32> PC();
