@@ -46,7 +46,6 @@ public:
 	void Update();
 	void PostUpdate();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
-	const Wire& BranchTaken() const { return branchDetector.Out(); }
 private:
 	MuxBundle<CPU::RegFile::ADDR_BITS, 2> regFileWriteAddrMux;
 
@@ -82,8 +81,9 @@ private:
 
 void CPU::Stage1::Connect(const Bundle<32>& pcJumpAddr, const Wire& takeBranch, const Wire& proceed)
 {
-	// Program Counter
+	// Program Counter. Select between PC + 4 and the calculated jump addr from the last executed branch
 	pcInMux.Connect({ pcIncrementer.Out(), pcJumpAddr }, takeBranch);
+
 	pc.Connect(pcInMux.Out(), proceed);
 
 	// PC Increment. Instruction width is 4, hardwired.
@@ -145,7 +145,7 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 		stage2.OpcodeControl().BranchSel(), stage2.OpcodeControl().Branch());
 	
 	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), stage2.reg2.Out(),
-		alu.Out(), alu.Flags(), pcJumpAdder.Out(), stage2.OpcodeControl());
+		alu.Out(), alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
 }
 
 void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
@@ -236,7 +236,7 @@ CPU::CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->BranchTaken(), interlock.FreezeOrBubbleInv());
+	stage1->Connect(stage3->Out().pcJumpAddr.Out(), stage3->Out().branchTaken.Out(), interlock.FreezeOrBubbleInv());
 	stage2->Connect(stage1->Out(), stage4->Out(), interlock.FreezeOrBubbleInv());
 	stage3->Connect(stage2->Out(), hazard, interlock.FreezeInv());
 	stage4->Connect(stage3->Out(), interlock.FreezeInv());

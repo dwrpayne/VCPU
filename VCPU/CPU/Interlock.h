@@ -18,7 +18,6 @@ public:
 	void Update();
 
 	const Wire& Bubble() { return bubble.Out(); }
-	const Wire& BubbleInv() { return bubbleInv.Out(); }
 	const Wire& Freeze() { return freeze.Out(); }
 	const Wire& FreezeInv() { return freezeInv.Out(); }
 	const Wire& FreezeOrBubbleInv() { return freezeOrBubbleInv.Out(); }

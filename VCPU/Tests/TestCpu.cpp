@@ -269,13 +269,13 @@ bool TestCPU(Verbosity verbosity)
 }
 
 
-bool TestCPUPipeline(Verbosity verbosity)
+bool TestCPUBranch(Verbosity verbosity)
 {
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testopspipe.vasm", Debugger::SILENT);
-	debugger.Start(80);
+	Debugger debugger("testbranch.vasm", Debugger::VERBOSE);
+	debugger.Start();
 
 	return success;
 }
@@ -285,7 +285,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testhazards.vasm", Debugger::VERBOSE);
+	Debugger debugger("testhazards.vasm", Debugger::SILENT);
 	debugger.Start();
 	success &= TestState(i++, 1234, debugger.GetRegisterVal(1), verbosity);
 	success &= TestState(i++, 1357, debugger.GetRegisterVal(2), verbosity);
@@ -303,7 +303,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity)
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 1234, debugger.GetMemoryVal(4), verbosity);
-	success &= TestState(i++, 168, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 156, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -312,10 +312,10 @@ bool RunCPUTests()
 {
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
-	RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST(TestCPU, FAIL_ONLY);
-	//RUN_TEST(TestCPUPipeline, FAIL_ONLY);
-	RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
+	//RUN_TEST(TestCache, FAIL_ONLY);
+	//RUN_TEST(TestCPU, FAIL_ONLY);
+	//RUN_TEST(TestCPUPipelineHazards, FAIL_ONLY);
+	RUN_TEST(TestCPUBranch, VERBOSE);
 
 	return success;
 }
