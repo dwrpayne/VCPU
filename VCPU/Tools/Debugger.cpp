@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include "Debugger.h"
 #include "ProgramLoader.h" 
 #include "Assembler.h"
@@ -9,14 +11,13 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 {
 	pCPU = new CPU();
 	bPrintInstruction = verbosity >= NORMAL;
-	bPrintRegisters = verbosity >= VERBOSE;
+	bPrintRegisters = verbosity >= NORMAL;
 	bPrintOutputReg = verbosity >= MINIMAL;
-	bPrintDataForward = verbosity >= NORMAL;
+	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
 
 	pAssembler = new Assembler(source_filename);
-
-
+	
 	ProgramLoader loader(*pCPU);
 	loader.Load(pAssembler->GetBinary());
 	pCPU->Connect();
@@ -45,12 +46,15 @@ void Debugger::Step()
 	mThisCycleTime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
-	for (int i = 0; i < NUM_BUCKETS; i++)
+	if (bPrintTiming)
 	{
-		if (mThisCycleTime.count() < BUCKETS[i])
+		for (int i = 0; i < NUM_BUCKETS; i++)
 		{
-			cycleTimeBuckets[i]++;
-			break;
+			if (mThisCycleTime.count() < BUCKETS[i])
+			{
+				cycleTimeBuckets[i]++;
+				break;
+			}
 		}
 	}
 
@@ -80,10 +84,6 @@ void Debugger::PrintCycle()
 	if (bPrintInstruction)
 	{
 		PrintInstruction();
-		if (pCPU->PipelineFreeze())
-		{
-			std::cout << "PIPELINE FREEZE THIS CYCLE" << std::endl;
-		}
 	}
 
 	if (bPrintDataForward)
@@ -121,24 +121,36 @@ int Debugger::GetNextPCAddr()
 
 void Debugger::PrintInstruction()
 {
-	std::cout << "--------- CYCLE " << pCPU->cycles << " ---------------" << std::endl;
+	std::cout << "--------------------- CYCLE " << pCPU->cycles << " -----";
+	std::cout << (pCPU->PipelineFreeze() ? " PIPELINE FREEZE" : "---------------") << "---------" << std::endl;
+	std::cout << "Address  Stage   Assembled Instruction      Source Instruction" << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
 		int addr = mLastInstructions[i];
-		auto line = addr > 0 ? pAssembler->GetSourceLine(addr) : "inserted bubble";
-		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "  \t" << line << std::endl;
+		auto ass_line = addr >= 0 ? pAssembler->GetAssembledLine(addr) : "inserted bubble";
+		auto src_line = addr >= 0 ? pAssembler->GetSourceLine(addr) : "";
+
+		std::stringstream ss;
+		ss << "0x" << std::hex << std::setfill('0') << std::setw(6) << addr * 4;
+		ss << std::setfill(' ') << std::left << " " << std::setw(5) << STAGE[i] << "|  ";
+		ss << std::setw(25) << ass_line << "| " << src_line << std::endl;
+		std::cout << ss.str();
 	}
 }
 
 void Debugger::PrintRegisters()
 {
-	std::cout << "-------------REGISTER DUMP-------------" << std::endl;
+	std::cout << std::endl;
 	for (int i = 0; i < 8; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			std::cout << "$" << i + 8*j << " " << GetRegisterVal(i+8*j) << "\t\t";
+			int num = i + 8 * j;
+			std::stringstream ss;
+			ss << "$" << pAssembler->GetRegName(num) << "(" << num << ") ";
+			std::cout << std::left << std::setw(8) << ss.str();
+			std::cout << std::setw(12) << GetRegisterVal(i + 8 * j);
 		}
 		std::cout << std::endl;
 	}
@@ -150,7 +162,7 @@ void Debugger::PrintOutputReg()
 	if (output != last_output_reg)
 	{
 		last_output_reg = output;
-		std::cout << "OUTPUT REGISTER STORED: " << output << std::endl;
+		std::cout << "OUTPUT: " << output << " at cycle " << pCPU->cycles << std::endl;
 	}
 }
 
@@ -187,9 +199,13 @@ void Debugger::PrintTiming()
 		std::cout << pCPU->cycles << " cycles in " << ms / 1000.0 << "sec.";
 		std::cout << " Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
 		std::cout << "Time(us)  Count" << std::endl;
-		for (int i = 0; i < NUM_BUCKETS; i++)
+
+		if (bPrintTiming)
 		{
-			std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
+			for (int i = 0; i < NUM_BUCKETS; i++)
+			{
+				std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
+			}
 		}
 	}
 }

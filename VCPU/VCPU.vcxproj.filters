@@ -51,9 +51,6 @@
     <ClCompile Include="Functional\FullAdder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Control\Component.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Control\Wire.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

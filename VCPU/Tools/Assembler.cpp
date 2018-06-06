@@ -2,6 +2,7 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -16,39 +17,59 @@ Assembler::Assembler(const std::string& filename)
 
 void Assembler::ParseSource()
 {
+	unsigned int source_line_num = 0;
+	mSource.push_back("Line 0");
+	mComments.push_back("Line 0");
 	std::ifstream file(mSourceFilename);
 	std::string line;
-	unsigned int source_line_num = 0;
 	while (std::getline(file, line))
 	{
-		mSource.push_back(line);
-		for (auto& line : ParseLine(line))
+		source_line_num++;
+		std::string code_line = line.substr(0, line.find(';'));
+		code_line.erase(code_line.find_last_not_of(" \t\r\n") + 1);
+		mSource.push_back(code_line);
+
+		auto comment_pos = line.find(';');
+		mComments.push_back(comment_pos == std::string::npos ? "" : line.substr(comment_pos));
+
+		if (code_line.size() < 2)
+		{
+			continue;
+		}
+
+		for (auto& line : ParseLine(code_line))
 		{
 			mAssembled.push_back(line);
 			mBinary.push_back(GetMachineLanguage(line));
 			mSourceLine.push_back(source_line_num);
 		}
-		source_line_num++;
 	}
 }
 
-const std::string Assembler::GetSourceLine(unsigned int line)  const
-{ 
-	if (line >= mSource.size())
+const std::string Assembler::GetAssembledLine(unsigned int line)  const
+{
+	if (line >= mAssembled.size())
 	{
 		return "";
 	}
-	std::string sourceline = mAssembled[line];
-	size_t start_pos = sourceline.find("\t\t");
-	if (start_pos != std::string::npos)
+	return mAssembled[line];
+}
+
+const std::string Assembler::GetSourceLine(unsigned int line) const
+{
+	if (line >= mSourceLine.size())
 	{
-		sourceline.replace(start_pos, 2, "\t");
+		return "";
 	}
-	sourceline.append("\t| ");
-	sourceline.append(std::to_string(mSourceLine[line]+1));
-	sourceline.append(" ");
-	sourceline.append(mSource[mSourceLine[line]]);
-	return sourceline; 
+	int source_line = mSourceLine[line];
+	std::stringstream ss;
+	ss << std::left << std::setw(3) << source_line << std::setw(25) << mSource[source_line] << mComments[source_line];
+	return ss.str();
+}
+
+const std::string Assembler::GetRegName(unsigned int reg) const
+{
+	return reg_names[reg];
 }
 
 std::vector<std::string> split(const char *str)
@@ -71,7 +92,7 @@ std::vector<std::string> split(const char *str)
 
 std::vector<std::string> Assembler::ParseLine(const std::string& l)
 {
-	std::string line = l.substr(0, l.find(';'));
+	std::string line = l;
 
 	// TODO: hex number replace
 	
@@ -79,12 +100,12 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	
 	// Pseudo-Instructions
 	// Logic and Data
-	line = std::regex_replace(line, std::regex("nop"),								"sll	$$zero, $$zero, 0");
-	line = std::regex_replace(line, std::regex("not\\s+(\\$.+), (\\$.+)"),			"nor	$1, $2, $$zero");
-	line = std::regex_replace(line, std::regex("move\\s+(\\$.+), (\\$.+)"),			"addiu	$1, $2, 0");
-	line = std::regex_replace(line, std::regex("clr\\s+(\\$.+)"),					"addu	$1, $$zero, $$zero");
-	line = std::regex_replace(line, std::regex("push\\s+(\\$.+)"),					"addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
-	line = std::regex_replace(line, std::regex("pop\\s+(\\$.+)"),					"lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
+	line = std::regex_replace(line, std::regex("nop\\b"),								"sll	$$zero, $$zero, 0");
+	line = std::regex_replace(line, std::regex("not\\s+(\\$.+), (\\$.+)\\b"),			"nor	$1, $2, $$zero");
+	line = std::regex_replace(line, std::regex("move\\s+(\\$.+), (\\$.+)\\b"),			"addiu	$1, $2, 0");
+	line = std::regex_replace(line, std::regex("clr\\s+(\\$.+)\\b"),					"addu	$1, $$zero, $$zero");
+	line = std::regex_replace(line, std::regex("push\\s+(\\$.+)\\b"),					"addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
+	line = std::regex_replace(line, std::regex("pop\\s+(\\$.+)\\b"),					"lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
 
 	// Load Immediate, needs to check size of immediate op.
 	std::regex li_regex("li\\s+(\\$.+), (\\d+)");
@@ -97,14 +118,17 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 		if (val > 65535)
 		{
 			ss << "lui	$at, " << (val >> 16) << std::endl;
+			ss << "ori	" << reg << ", $at, " << (val & 0xffff);
 		}
-		ss << "ori	" << reg << ", $at, " << (val & 0xffff);
+		else
+		{
+			ss << "ori	" << reg << ", $zero, " << val;
+		}
 		line = ss.str();
-	}
-	
+	}	
 	
 	// Branch
-	line = std::regex_replace(line, std::regex("b\\s+(\\d+)"),						"b		$$zero, $$zero, $1");
+	line = std::regex_replace(line, std::regex("b\\s+(-?\\d+)"),						"beq	$$zero, $$zero, $1");
 	line = std::regex_replace(line, std::regex("bgt\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $2, $1\nbne	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("blt\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $1, $2\nbne	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("bge\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
@@ -113,23 +137,20 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("beq\\s+(\\$.+), (\\d+), (\\d+)"),	"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 	line = std::regex_replace(line, std::regex("bne\\s+(\\$.+), (\\d+), (\\d+)"),	"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 
+	// Register Names
 
-
-
-	// Register Mnemonics
-	static const std::array<std::string, 32> reg_names = { 
-		"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
-		"t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
-		"s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
-		"t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra" 
-	};
-
+	// Special case 0 because it has two names, $r0 and $zero
+	line = std::regex_replace(line, std::regex("\\$zero"), "$$0");
 	for (int i = 0; i < 32; i++)
 	{
 		std::string rep = "$$" + std::to_string(i);
 		line = std::regex_replace(line, std::regex("\\$"+reg_names[i]), rep);
 	}
 
+	// Replace all tabs with spaces for better readability in the debugger
+	std::replace(line.begin(), line.end(), '\t', ' ');
+
+	// Split up the ops if we have more than one.
 	std::vector<std::string> lines;
 	std::stringstream ss(line);
 	std::string buf;
@@ -308,15 +329,15 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "div"   , { 0,  26, R_TYPE } } ,
 	{ "divu"  , { 0,  27, R_TYPE } } ,
 	{ "add"   , { 0,  32, R_TYPE } } ,		// TESTED
-	{ "addu"  , { 0,  33, R_TYPE } } ,
+	{ "addu"  , { 0,  33, R_TYPE } } ,		// TESTED
 	{ "sub"   , { 0,  34, R_TYPE } } ,		// TESTED
-	{ "subu"  , { 0,  35, R_TYPE } } ,
+	{ "subu"  , { 0,  35, R_TYPE } } ,		// TESTED
 	{ "and"   , { 0,  36, R_TYPE } } ,		// TESTED
 	{ "or"    , { 0,  37, R_TYPE } } ,		// TESTED
 	{ "xor"   , { 0,  38, R_TYPE } } ,		// TESTED
 	{ "nor"   , { 0,  39, R_TYPE } } ,		// TESTED
 	{ "slt"   , { 0,  42, R_TYPE } } ,		// TESTED
-	{ "sltu"  , { 0,  43, R_TYPE } } ,
+	{ "sltu"  , { 0,  43, R_TYPE } } ,		// TESTED
 	{ "j"	  , { 2,  0,  J_TYPE } } ,		// TESTED
 	{ "jal"	  , { 3,  0,  J_TYPE } } ,		// TESTED
 	{ "beq"   , { 4,  0,  I_TYPE } } ,		// TESTED
@@ -324,9 +345,9 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "blez"  , { 6,  0,  I_TYPE } } ,		// TESTED
 	{ "bgtz"  , { 7,  0,  I_TYPE } } ,		// TESTED
 	{ "addi"  , { 8,  0,  I_TYPE } } ,		// TESTED
-	{ "addiu" , { 9,  0,  I_TYPE } } ,
+	{ "addiu" , { 9,  0,  I_TYPE } } ,		// TESTED
 	{ "slti"  , { 10, 0,  I_TYPE } } ,		// TESTED
-	{ "sltiu" , { 11, 0,  I_TYPE } } ,
+	{ "sltiu" , { 11, 0,  I_TYPE } } ,		// TESTED
 	{ "andi"  , { 12, 0,  I_TYPE } } ,		// TESTED
 	{ "ori"   , { 13, 0,  I_TYPE } } ,		// TESTED
 	{ "xori"  , { 14, 0,  I_TYPE } } ,		// TESTED
@@ -345,3 +366,12 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "swr"   , { 46, 0,  I_TYPE } } ,
 	{ "hlt"   , { 63, 0,  X_TYPE } }		// TESTED
 	});
+
+
+
+const std::array<std::string, 32> Assembler::reg_names({
+	"r0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
+	"t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
+	"s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+	"t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"
+});

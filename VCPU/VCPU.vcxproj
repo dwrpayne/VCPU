@@ -124,7 +124,6 @@
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Control\Component.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchDetector.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />

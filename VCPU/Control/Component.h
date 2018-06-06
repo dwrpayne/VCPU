@@ -1,14 +1,13 @@
 #pragma once
 #include <array>
 #include <iostream>
-
 // Base class for all VCPU components
 
 class Component
 {
 public:
-	Component();
-	~Component();
+	Component() {}
+	~Component() {}
 
 	virtual void Update() = 0;
 };
