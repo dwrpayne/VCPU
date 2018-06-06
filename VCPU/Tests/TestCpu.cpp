@@ -50,6 +50,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, (f == F_SLT || f == F_SLTU), out.SltOp().On(), verbosity);
 		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA || f == F_SLLV || f == F_SRLV || f == F_SRAV), out.ShiftOp().On(), verbosity);
 		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA), out.ShiftAmtOp().On(), verbosity);
+		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
 	}
 
 	std::cout << "Testing I-ALU Ops" << std::endl;
@@ -61,7 +62,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		{ A_AND_B, OP_ANDI, 45 },
 		{ A_OR_B, OP_ORI, 45 },
 		{ A_XOR_B, OP_XORI, 45 },
-		/*{ A_NOR_B, OP_LUI, 45 }*/ }))
+		{ A_OR_B, OP_LUI, 45 } }))
 	{
 		opcode.Write(op);
 		func.Write(f);
@@ -80,6 +81,8 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
+		success &= TestState(i++, (op == OP_LUI), out.LoadUpperImm().On(), verbosity);
+		success &= TestState(i++, (op == OP_ADDI || op == OP_ADDIU || op == OP_SLTI || op == OP_SLTIU || op == OP_LUI), out.MathOp().On(), verbosity);
 
 	}
 
@@ -107,6 +110,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
+		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
 	}
 
 	std::cout << "Testing Jump Ops" << std::endl;
@@ -132,6 +136,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, true, out.JumpOp().On(), verbosity);
 		success &= TestState(i++, (op == OP_JAL || f == F_JALR), out.JumpLink().On(), verbosity);
 		success &= TestState(i++, (f == F_JR || f == F_JALR), out.JumpReg().On(), verbosity);
+		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
 	}
 
 	std::cout << "Testing Load Ops" << std::endl;
@@ -161,6 +166,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
+		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
 	}
 
 	std::cout << "Testing Store Ops" << std::endl;
@@ -188,6 +194,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpOp().On(), verbosity);
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
+		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
 	}
 	return success;
 }
@@ -289,7 +296,7 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testops.vasm", dverb);
 	debugger.Start();	
-	success &= TestState(i++, 1887, debugger.GetRegisterVal(1), verbosity);
+	success &= TestState(i++, 1887, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 2438, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(3), verbosity);
 	success &= TestState(i++, -551, debugger.GetRegisterVal(4), verbosity);
@@ -375,7 +382,7 @@ bool RunCPUTests()
 	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);
+	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::VERBOSE);
 
 	return success;
 }

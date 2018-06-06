@@ -95,6 +95,9 @@ public:
 
 
 private:
+#ifdef DEBUG
+	Bundle<4> inControl;
+#endif
 	Adder<N> adder;
 	MultiGate<AndGate, N> ands;
 	MultiGate<OrGate, N> ors;
@@ -117,6 +120,10 @@ inline ALU<N>::ALU()
 template<unsigned int N>
 inline void ALU<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<4>& control)
 {
+#if DEBUG
+	inControl = control;
+#endif
+
 	adder.Connect(a, b, control.Range<3>(0));
 	
 	// Logic

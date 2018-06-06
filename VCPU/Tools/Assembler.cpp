@@ -45,7 +45,7 @@ const std::string Assembler::GetSourceLine(unsigned int line)  const
 		sourceline.replace(start_pos, 2, "\t");
 	}
 	sourceline.append("\t| ");
-	sourceline.append(std::to_string(mSourceLine[line]));
+	sourceline.append(std::to_string(mSourceLine[line]+1));
 	sourceline.append(" ");
 	sourceline.append(mSource[mSourceLine[line]]);
 	return sourceline; 
@@ -96,9 +96,9 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 		std::stringstream ss;
 		if (val > 65535)
 		{
-			ss << "lui	" << reg << ", " << (val >> 16) << std::endl;
+			ss << "lui	$at, " << (val >> 16) << std::endl;
 		}
-		ss << "ori	" << reg << ", " << reg << ", " << (val & 0xffff);
+		ss << "ori	" << reg << ", $at, " << (val & 0xffff);
 		line = ss.str();
 	}
 	
@@ -242,9 +242,19 @@ unsigned int Assembler::GetMachineLanguage(const std::string& line)
 				}
 				else if (got_vals == 1)
 				{
-					// $rs, imm
-					rs = val1;
-					imm = val2;
+					// Special case here. LUI wants the reg in RT, BLEZ needs it in RS.
+					if (opcode == "lui")
+					{
+						// $rt, imm
+						rt = val1;
+						imm = val2;
+					}
+					else
+					{
+						// $rs, imm
+						rs = val1;
+						imm = val2;
+					}
 				}
 				else
 				{
@@ -320,7 +330,7 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "andi"  , { 12, 0,  I_TYPE } } ,		// TESTED
 	{ "ori"   , { 13, 0,  I_TYPE } } ,		// TESTED
 	{ "xori"  , { 14, 0,  I_TYPE } } ,		// TESTED
-	{ "lui"   , { 15, 0,  I_TYPE } } ,
+	{ "lui"   , { 15, 0,  I_TYPE } } ,		// TESTED
 	{ "lb"    , { 32, 0,  I_TYPE } } ,
 	{ "lh"    , { 33, 0,  I_TYPE } } ,
 	{ "lwl"   , { 34, 0,  I_TYPE } } ,

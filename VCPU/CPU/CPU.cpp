@@ -35,6 +35,8 @@ private:
 	CPU::RegFile regFile;
 	MuxBundle<32, 2> reg2ShiftMux;
 	MuxBundle<32, 2> jumpAddrMux;
+	Multiplexer<2> zeroOrSignExtendMux;
+	MuxBundle<32, 2> immShiftMux;
 	BufferIDEX bufIDEX;
 
 	friend class CPU;
@@ -115,16 +117,21 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 	shiftAmtExt.Connect(0, stage1.IR.Shamt());
 
 	reg2ShiftMux.Connect({ regFile.Out2(), shiftAmtExt }, opcodeControl.ShiftAmtOp());
+	
+	zeroOrSignExtendMux.Connect({ &Wire::OFF, &stage1.IR.Immediate()[15] }, opcodeControl.OutBundle().MathOp());
 
-	Bundle<32> signExtImm(stage1.IR.Immediate()[15]);
-	signExtImm.Connect(0, stage1.IR.Immediate());
+	Bundle<32> extImm(zeroOrSignExtendMux.Out());
+	extImm.Connect(0, stage1.IR.Immediate());
+	Bundle<32> immShiftUpper(Wire::OFF);
+	immShiftUpper.Connect(16, stage1.IR.Immediate());
+	immShiftMux.Connect({ extImm, immShiftUpper }, opcodeControl.OutBundle().LoadUpperImm());
 
 	Bundle<32> jumpExt(Wire::OFF);
 	jumpExt.Connect(0, stage1.IR.Address());
 	jumpAddrMux.Connect({ jumpExt, regFile.Out1() }, opcodeControl.OutBundle().JumpReg());
 
 	bufIDEX.Connect(proceed, stage1.IR.RsAddr(), stage1.IR.RtAddr(), stage1.IR.RdAddr(),
-		signExtImm, regFile.Out1(), reg2ShiftMux.Out(), jumpAddrMux.Out(),
+		immShiftMux.Out(), regFile.Out1(), reg2ShiftMux.Out(), jumpAddrMux.Out(),
 		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl());
 }
@@ -198,6 +205,8 @@ void CPU::Stage2::Update()
 	opcodeControl.Update();
 	regFile.Update();
 	reg2ShiftMux.Update();
+	zeroOrSignExtendMux.Update();
+	immShiftMux.Update();
 	jumpAddrMux.Update();
 }
 void CPU::Stage2::PostUpdate()
