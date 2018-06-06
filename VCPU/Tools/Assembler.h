@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <map>
+#include <regex>
 
 enum InstType
 {
@@ -20,13 +21,17 @@ public:
 	std::vector<unsigned int>& GetBinary() { return mBinary; }
 		
 private:
-	unsigned int ParseLine(const std::string& line);
+	std::vector<std::string> ParseLine(const std::string& line);
+	unsigned int GetMachineLanguage(const std::string & line);
 
 	std::string mSourceFilename;
 
 	std::vector<std::string> mSource;
+	std::vector<unsigned int> mSourceLine;
+	std::vector<std::string> mAssembled;
 	std::vector<unsigned int> mBinary;
 
+	static const std::vector<std::pair<std::regex, std::string>> instructionMnemonics;
 	static const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> opcodeInfo;
 };
 

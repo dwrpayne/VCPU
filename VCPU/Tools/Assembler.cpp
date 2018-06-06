@@ -1,9 +1,11 @@
 #include "Assembler.h"
 #include <string>
+#include <array>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <regex>
 
 
 Assembler::Assembler(const std::string& filename)
@@ -16,10 +18,17 @@ void Assembler::ParseSource()
 {
 	std::ifstream file(mSourceFilename);
 	std::string line;
+	unsigned int source_line_num = 0;
 	while (std::getline(file, line))
 	{
 		mSource.push_back(line);
-		mBinary.push_back(ParseLine(line));
+		for (auto& line : ParseLine(line))
+		{
+			mAssembled.push_back(line);
+			mBinary.push_back(GetMachineLanguage(line));
+			mSourceLine.push_back(source_line_num);
+		}
+		source_line_num++;
 	}
 }
 
@@ -56,7 +65,78 @@ std::vector<std::string> split(const char *str)
 	return result;
 }
 
-unsigned int Assembler::ParseLine(const std::string& line)
+std::vector<std::string> Assembler::ParseLine(const std::string& l)
+{
+	std::string line = l.substr(0, l.find(';'));
+
+	// TODO: hex number replace
+	
+	// TODO: label searching (after pseudo-expansion)
+	
+	// Pseudo-Instructions
+	// Logic and Data
+	line = std::regex_replace(line, std::regex("nop"),								"sll	$$zero, $$zero, 0");
+	line = std::regex_replace(line, std::regex("not\\s+(\\$.+), (\\$.+)"),			"nor	$1, $2, $$zero");
+	line = std::regex_replace(line, std::regex("move\\s+(\\$.+), (\\$.+)"),			"addiu	$1, $2, 0");
+	line = std::regex_replace(line, std::regex("clr\\s+(\\$.+)"),					"addu	$1, $$zero, $$zero");
+	line = std::regex_replace(line, std::regex("push\\s+(\\$.+)"),					"addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
+	line = std::regex_replace(line, std::regex("pop\\s+(\\$.+)"),					"lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
+
+	// Load Immediate, needs to check size of immediate op.
+	std::regex li_regex("li\\s+(\\$.+), (\\d+)");
+	std::smatch li_match;
+	if (std::regex_search(line, li_match, li_regex))
+	{
+		std::string reg = li_match[0];
+		unsigned int val = std::stoul(li_match[1]);
+		std::stringstream ss;
+		if (val > 65535)
+		{
+			ss << "lui\t" << reg << ", " << (val >> 16) << std::endl;
+		}
+		ss << "ori\t" << reg << ", $$zero, " << (val & 0xffff);
+		line = ss.str();
+	}
+	
+	
+	// Branch
+	line = std::regex_replace(line, std::regex("b\\s+(\\d+)"),						"b		$$zero, $$zero, $1");
+	line = std::regex_replace(line, std::regex("bgt\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $2, $1\nbne	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("blt\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $1, $2\nbne	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("bge\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("ble\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("beqz\\s+(\\$.+), (\\d+)"),			"beq	$1, $$zero, $2");
+	line = std::regex_replace(line, std::regex("beq\\s+(\\$.+), (\\d+), (\\d+)"),	"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+	line = std::regex_replace(line, std::regex("bne\\s+(\\$.+), (\\d+), (\\d+)"),	"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+
+
+
+
+	// Register Mnemonics
+	static const std::array<std::string, 32> reg_names = { 
+		"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
+		"t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
+		"s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+		"t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra" 
+	};
+
+	for (int i = 0; i < 32; i++)
+	{
+		std::string rep = "$$" + std::to_string(i);
+		line = std::regex_replace(line, std::regex("\\$"+reg_names[i]), rep);
+	}
+
+	std::vector<std::string> lines;
+	std::stringstream ss(line);
+	std::string buf;
+	while (std::getline(ss, buf))
+	{ 
+		lines.push_back(buf);
+	}
+	return lines;
+}
+
+unsigned int Assembler::GetMachineLanguage(const std::string& line)
 {
 	// Formats we can take:
 	// opn	$1, $2, $3		
@@ -67,9 +147,8 @@ unsigned int Assembler::ParseLine(const std::string& line)
 	// opn	$1, $2
 	// opn  $1
 	// opn	$1, $2, $3
-	std::string myline = line.substr(0, line.find(';'));
 
-	std::vector<std::string> words = split(myline.c_str());
+	std::vector<std::string> words = split(line.c_str());
 	std::string opcode = words[0];
 
 	unsigned char rs = 0;
@@ -78,7 +157,7 @@ unsigned int Assembler::ParseLine(const std::string& line)
 	unsigned char shamt = 0;
 	int imm = 0;
 	int addr = 0;
-	
+
 	auto[op, func, type] = opcodeInfo.find(opcode)->second;
 	if (type == R_TYPE)
 	{
@@ -180,7 +259,7 @@ unsigned int Assembler::ParseLine(const std::string& line)
 		if (!sscanf_s(words[1].c_str(), "%d", &addr))
 		{
 			std::cout << "ERROR: Couldn't parse line " << line << std::endl;
-		}		
+		}
 		return (op << 26) + addr;
 	}
 	else if (type == X_TYPE)

@@ -299,7 +299,9 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, -4064, debugger.GetRegisterVal(8), verbosity);
 	success &= TestState(i++, 1, debugger.GetRegisterVal(9), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, -2439, debugger.GetRegisterVal(12), verbosity);
 	success &= TestState(i++, 5559, debugger.GetRegisterVal(13), verbosity);
+	success &= TestState(i++, -2439, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 2, debugger.GetRegisterVal(15), verbosity);
 	success &= TestState(i++, 4063, debugger.GetRegisterVal(16), verbosity);
 	success &= TestState(i++, 2571, debugger.GetRegisterVal(17), verbosity);
@@ -369,7 +371,7 @@ bool RunCPUTests()
 {
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
-	//RUN_TEST(TestCache, FAIL_ONLY);
+	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);

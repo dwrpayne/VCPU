@@ -1,20 +1,20 @@
-addi	$10, $0, 0
-addi 	$1, $0, 3
-addi	$1, $1, 2		; $1 holds the number we are testing
-addi 	$2, $0, 3		; $2 holds the current subtractor
-add		$3, $0, $1		; $3 holds the current remainder
-sub		$3, $3, $2		; $3 = $3 - $2
-bgtz	$3, -8			; if $3 > 0, keep subtracting
-and		$0, $0, $0
-and		$0, $0, $0
-beq		$3, $0, -32		; if $3 == 0, composite. next NUMBER
-and		$0, $0, $0		; 
-and		$0, $0, $0		;
-addi	$2, $2, 2		; we know $3 < 0, next subtractor (unless done)
-bne 	$1, $2, -40			
-and		$0, $0, $0
-and		$0, $0, $0	
-sw		$1, 0($10)
-addi	$10, $10, 4
-beq		$0, $0, -60
-add		$28, $1, $0
+addi	$t8, $zero, 0
+addi 	$t1, $zero, 3
+addi	$t1, $t1, 2			; $t1 holds the number we are testing
+addi 	$t2, $zero, 3		; $t2 holds the current subtractor
+add		$t3, $zero, $t1		; $t3 holds the current remainder
+sub		$t3, $t3, $t2			; $t3 = $t3 - $t2
+bgtz	$t3, -8				; if $t3 > 0, keep subtracting
+nop
+nop
+beq		$t3, $zero, -32		; if $t3 == 0, composite. next NUMBER
+nop
+nop
+addi	$t2, $t2, 2			; we know $t3 < 0, next subtractor (unless done)
+bne 	$t1, $t2, -40			
+nop
+nop
+sw		$t1, 0($t8)
+addi	$t8, $t8, 4
+beq		$zero, $zero, -60
+add		$gp, $t1, $zero
