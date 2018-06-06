@@ -43,7 +43,7 @@ private:
 	bool bPrintDataForward;
 	bool bPrintTiming;
 
-	std::deque<std::tuple<int, bool, bool>> mLastInstructions;
+	std::deque<int> mLastInstructions;
 
 	long long last_output_reg;
 

@@ -38,12 +38,16 @@ const std::string Assembler::GetSourceLine(unsigned int line)  const
 	{
 		return "";
 	}
-	std::string sourceline = mSource[line];
+	std::string sourceline = mAssembled[line];
 	size_t start_pos = sourceline.find("\t\t");
 	if (start_pos != std::string::npos)
 	{
 		sourceline.replace(start_pos, 2, "\t");
 	}
+	sourceline.append("\t| ");
+	sourceline.append(std::to_string(mSourceLine[line]));
+	sourceline.append(" ");
+	sourceline.append(mSource[mSourceLine[line]]);
 	return sourceline; 
 }
 
@@ -87,14 +91,14 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	std::smatch li_match;
 	if (std::regex_search(line, li_match, li_regex))
 	{
-		std::string reg = li_match[0];
-		unsigned int val = std::stoul(li_match[1]);
+		std::string reg = li_match[1];
+		unsigned int val = std::stoul(li_match[2]);
 		std::stringstream ss;
 		if (val > 65535)
 		{
-			ss << "lui\t" << reg << ", " << (val >> 16) << std::endl;
+			ss << "lui	" << reg << ", " << (val >> 16) << std::endl;
 		}
-		ss << "ori\t" << reg << ", $$zero, " << (val & 0xffff);
+		ss << "ori	" << reg << ", " << reg << ", " << (val & 0xffff);
 		line = ss.str();
 	}
 	

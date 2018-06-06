@@ -55,10 +55,21 @@ void Debugger::Step()
 	}
 
 	int word = GetNextPCAddr() / 4;
-	mLastInstructions.push_front({ word, pCPU->PipelineBubble(), pCPU->PipelineFreeze() });
-	if (mLastInstructions.size() > 5)
+	if (!pCPU->PipelineFreeze())
 	{
-		mLastInstructions.pop_back();
+		if (pCPU->PipelineBubble())
+		{
+			mLastInstructions.insert(mLastInstructions.begin() + 2, -1);
+		}
+		else
+		{
+			mLastInstructions.push_front({ word });
+		}
+
+		if (mLastInstructions.size() > 5)
+		{
+			mLastInstructions.pop_back();
+		}
 	}
 
 	PrintCycle();
@@ -69,6 +80,10 @@ void Debugger::PrintCycle()
 	if (bPrintInstruction)
 	{
 		PrintInstruction();
+		if (pCPU->PipelineFreeze())
+		{
+			std::cout << "PIPELINE FREEZE THIS CYCLE" << std::endl;
+		}
 	}
 
 	if (bPrintDataForward)
@@ -110,16 +125,8 @@ void Debugger::PrintInstruction()
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
-		auto [addr, bubble, freeze] = mLastInstructions[i];
-		auto line = pAssembler->GetSourceLine(addr);
-		if (bubble)
-		{
-			line.append(" (Bubble stall)");
-		}
-		else if (freeze)
-		{
-			line.append(" (Pipeline freeze)");
-		}
+		int addr = mLastInstructions[i];
+		auto line = addr > 0 ? pAssembler->GetSourceLine(addr) : "inserted bubble";
 		std::cout << "\t0x" << std::hex << addr*4 << " " << STAGE[i] << std::dec << "  \t" << line << std::endl;
 	}
 }
