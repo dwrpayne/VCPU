@@ -1,26 +1,26 @@
 li	 	$t1, 3				; $t1 holds the number we are testing
 addiu	$t1, $t1, 2			; increment number
+move	$a0, $t1			; move number into args register
+jal		68					; call sqrt, now $v0 holds the sqrt
 move	$t3, $t1			; $t3 holds the current remainder, starting at $t1
 li 		$t2, 3				; $t2 holds the current subtractor
 bgtz	$t3, -4				; while $t3 > 0, keep subtracting
 subu	$t3, $t3, $t2		; $t3 = $t3 - $t2
-beq		$t3, $zero, -24		; if $t3 == 0, composite. next NUMBER
+beqz	$t3, -32			; if $t3 == 0, composite. next NUMBER
+slt		$at, $v0, $t2		; $at = (sqrt(num) < $t2)) - aka we are done and are prime
 addiu	$t2, $t2, 2			; we know $t3 < 0, next subtractor (if done, stomps $t2 after branch)
-nop
-bne 	$t1, $t2, -24		; while subtractor is less than number, next subtractor
-move	$t3, $t1			; copied from line 3
-sw		$t1, 0($t8)
-b		-48
+beqz 	$at, -24			; while $t2 < sqrt(num), try again
+subu	$t3, $t1, $t2		; copied from line 3
+subu	$t3, $t3, $t2
+b		-56
 addiu	$t8, $t8, 4
 move	$gp, $t1
-nop
-nop
-nop
-nop
+;sqrt
 li		$s0, 1
 bgtz	$a0, -4
 sub		$a0, $a0, $s0
 addiu	$s0, $s0, 2
 srl		$v0, $s0, 1
 jr		$ra
+nop
 nop

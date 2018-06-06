@@ -129,13 +129,13 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	
 	// Branch
 	line = std::regex_replace(line, std::regex("b\\s+(-?\\d+)"),						"beq	$$zero, $$zero, $1");
-	line = std::regex_replace(line, std::regex("bgt\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $2, $1\nbne	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("blt\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $1, $2\nbne	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("bge\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("ble\\s+(\\$.+), (\\$.+), (\\d+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("beqz\\s+(\\$.+), (\\d+)"),			"beq	$1, $$zero, $2");
-	line = std::regex_replace(line, std::regex("beq\\s+(\\$.+), (\\d+), (\\d+)"),	"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
-	line = std::regex_replace(line, std::regex("bne\\s+(\\$.+), (\\d+), (\\d+)"),	"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+	line = std::regex_replace(line, std::regex("bgt\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $2, $1\nbne	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("blt\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $1, $2\nbne	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("bge\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("ble\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("beqz\\s+(\\$.+), (-?\\d+)"),			"beq	$1, $$zero, $2");
+	line = std::regex_replace(line, std::regex("beq\\s+(\\$.+), (\\d+), (-?\\d+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+	line = std::regex_replace(line, std::regex("bne\\s+(\\$.+), (\\d+), (-?\\d+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 
 	// Register Names
 

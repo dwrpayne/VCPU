@@ -25,6 +25,13 @@ void RunCPU(std::string filename)
 
 int main(int argc, char** argv)
 {
-	//Test();
-	RunCPU("primes.vasm");
+	if (argc == 1)
+	{
+		//Test();
+		RunCPU("primes.vasm");
+	}
+	else
+	{
+		RunCPU(argv[1]);
+	}
 }
