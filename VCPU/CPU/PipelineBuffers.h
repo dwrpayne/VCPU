@@ -5,6 +5,7 @@
 
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"
+#include "ALU.h"
 
 class BufferIFID : public Component
 {

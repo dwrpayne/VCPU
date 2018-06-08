@@ -191,7 +191,7 @@ void Debugger::PrintMemory()
 		std::cout << "Memory: " << std::hex << std::setfill('0');
 		for (unsigned short val : mLastCycleMemory)
 		{
-			std::cout << std::setw(2) << val;
+			std::cout << std::setw(2) << std::right << val;
 		}
 		std::cout << std::dec << std::setfill(' ') << std::endl;
 	}

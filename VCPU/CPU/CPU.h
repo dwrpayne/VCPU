@@ -1,11 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "Register.h"
 #include "RegisterFile.h"
-#include "Memory.h"
-#include "ALU.h"
-#include "MuxBundle.h"
 
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"

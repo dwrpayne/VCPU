@@ -1,4 +1,9 @@
 #include "CPU.h"
+#include "Register.h"
+#include "Memory.h"
+#include "ALU.h"
+#include "MuxBundle.h"
+#include "SubWordSelector.h"
 #include <vector>
 #include <future>
 
@@ -76,10 +81,8 @@ public:
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 private:
 	CPU::MainCache cache;
-	MuxBundle<8, 4> memByteMux;
-	Multiplexer<2> memByteZeroOrSignExtendMux;
-	MuxBundle<16, 2> memHalfMux;
-	Multiplexer<2> memHalfZeroOrSignExtendMux;
+	SubWordSelector<32> byteSelect;
+	SubWordSelector<32, 16> halfWordSelect;
 	MuxBundle<32, 4> memOutWordMux;
 	MuxBundle<32, 4> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
@@ -181,18 +184,11 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp(),
 		stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
-	memByteMux.Connect({ cache.Out().Range<8>(0),cache.Out().Range<8>(8),cache.Out().Range<8>(16),cache.Out().Range<8>(24) },
-		memAddr.Range<2>(0));
-	memByteZeroOrSignExtendMux.Connect({ &memByteMux.Out()[7], &Wire::OFF }, stage3.OpcodeControl().LoadUnsigned());
-	Bundle<32> memByteExt(memByteZeroOrSignExtendMux.Out());
-	memByteExt.Connect(0, memByteMux.Out());
+	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadUnsigned());
+	halfWordSelect.Connect(cache.Out(), Bundle<1>(memAddr[1]), stage3.OpcodeControl().LoadUnsigned());
 
-	memHalfMux.Connect({ cache.Out().Range<16>(0),cache.Out().Range<16>(16)}, memAddr[1]);
-	memHalfZeroOrSignExtendMux.Connect({ &memHalfMux.Out()[15], &Wire::OFF }, stage3.OpcodeControl().LoadUnsigned());
-	Bundle<32> memHalfExt(memHalfZeroOrSignExtendMux.Out());
-	memHalfExt.Connect(0, memHalfMux.Out());
-
-	memOutWordMux.Connect({ cache.Out(), memByteExt, memHalfExt, cache.Out() }, { &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
+	memOutWordMux.Connect({ cache.Out(), byteSelect.Out(), halfWordSelect.Out(), cache.Out() }, 
+		{ &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
 
 	Bundle<32> sltExtended(Wire::OFF);
 	sltExtended.Connect(0, stage3.Flags().Negative());
@@ -257,10 +253,8 @@ void CPU::Stage3::PostUpdate()
 void CPU::Stage4::Update()
 {
 	cache.Update();
-	memByteMux.Update();
-	memByteZeroOrSignExtendMux.Update();
-	memHalfMux.Update();
-	memHalfZeroOrSignExtendMux.Update();
+	byteSelect.Update();
+	halfWordSelect.Update();
 	memOutWordMux.Update();
 	regWriteDataMux.Update();
 }

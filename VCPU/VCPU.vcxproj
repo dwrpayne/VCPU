@@ -167,6 +167,7 @@
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
+    <ClInclude Include="Functional\SubWordSelector.h" />
     <ClInclude Include="Functional\Comparator.h" />
     <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Functional\Matcher.h" />
