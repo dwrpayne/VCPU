@@ -8,7 +8,10 @@ class Inverter : public Component
 {
 public:
 	void Connect(const Wire& a);
-	void Update();
+	inline void Update()
+	{
+		out.Set(!in->On());
+	}
 
 	const Wire& Out() const { return out; }
 	

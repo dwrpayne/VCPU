@@ -6,7 +6,7 @@ class Wire
 public:
 	Wire(bool initial_state = false);
 
-	void Set(bool new_state) { state = new_state; }
+	inline void Set(bool new_state) { state = new_state; }
 	
 	bool On() const { return state; }
 

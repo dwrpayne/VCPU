@@ -107,7 +107,7 @@ void Debugger::PrintCycle()
 		PrintMemory();
 	}
 
-	if (bPrintTiming)
+	//if (bPrintTiming)
 	{
 		PrintTiming();
 	}

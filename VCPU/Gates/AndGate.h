@@ -10,7 +10,10 @@ class AndGate : public Component
 {
 public:
 	void Connect(const Wire& a, const Wire& b);
-	void Update();
+	inline void Update()
+	{
+		out.Set(in1->On() && in2->On());
+	}
 
 	const Wire& Out() const { return out; }
 
