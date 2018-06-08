@@ -21,10 +21,12 @@
 #include "FullAdder.h"
 #include "Adder.h"
 #include "Multiplexer.h"
+#include "Encoder.h"
 #include "Matcher.h"
 #include "Shifter.h"
 #include "Comparator.h"
 #include "MuxBundle.h"
+#include "SelectBundle.h"
 #include "Decoder.h"
 #include "ALU.h"
 #include "RegisterFile.h"
@@ -95,7 +97,7 @@ bool TestOrGate4(const Bundle<4>& b)
 	return test.Out().On() == (b[0].On() || b[1].On() || b[2].On() || b[3].On());
 }
 
-bool TestXorGateN(Verbosity verbosity)
+bool TestMultiGate(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
@@ -109,6 +111,53 @@ bool TestXorGateN(Verbosity verbosity)
 		b_reg.Write(b);
 		test.Update();
 		success &= TestState(i++, a ^ b, test.Out().Read(), verbosity);
+	}
+
+	return success;
+}
+
+bool TestMultiGateN(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+	MultiGateN<AndGateN<4>, 4, 4> test;
+	MagicBundle<4> r1, r2, r3, r4;
+	test.Connect({ r1, r2, r3, r4 });
+	for (const auto&[a, b, c, d] : std::vector<std::tuple<unsigned int, unsigned int, unsigned int, unsigned int>>({ { 15U, 2U, 0, 15U },
+		{ 0, 0, 0, 0 },
+		{ 15U, 15U, 15U, 15U},
+		}))
+	{
+		r1.Write(a);
+		r2.Write(b);
+		r3.Write(c);
+		r4.Write(d);
+		test.Update();
+		unsigned int val = ((a == 15) << 3) + ((b == 15) << 2) + ((c == 15) << 1) + (d == 15);
+		success &= TestState(i++, val, test.Out().UnsignedRead(), verbosity);
+	}
+
+	return success;
+}
+
+bool TestMultiGateNBitwise(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+	MultiGateNBitwise<OrGateN<4>,32,4> test;
+	MagicBundle<32> r1, r2, r3, r4;
+	test.Connect({ r1, r2, r3, r4 });
+	for (const auto&[a, b, c, d] : std::vector<std::tuple<int, int, int, int>>({ { -123545, 97869,4524975, 9237456 },
+																				{ 123456789, 1048576,4524975, 1123123 },
+																				{ 0, 0,0, 1 },
+		}))
+	{
+		r1.Write(a);
+		r2.Write(b);
+		r3.Write(c);
+		r4.Write(d);
+		test.Update();
+		success &= TestState(i++, (unsigned int)(a | b | c | d), test.Out().UnsignedRead(), verbosity);
 	}
 
 	return success;
@@ -451,6 +500,44 @@ bool TestMuxBundle(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, 9876, test.Out().Read(), verbosity);
 	return success;
+}
+
+bool TestSelectBundle(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	SelectBundle<32, 4> test;
+	MagicBundle<4> sel;
+
+	test.Connect({ MagicBundle<32>(12345), MagicBundle<32>(9876), MagicBundle<32>(3333333), MagicBundle<32>(4444444) }, sel);
+	sel.Write(1);
+	test.Update();
+	success &= TestState(i++, 12345, test.Out().Read(), verbosity);
+
+	sel.Write(2);
+	test.Update();
+	success &= TestState(i++, 9876, test.Out().Read(), verbosity);
+	
+	sel.Write(4);
+	test.Update();
+	success &= TestState(i++, 3333333, test.Out().Read(), verbosity);
+	
+	sel.Write(8U);
+	test.Update();
+	success &= TestState(i++, 4444444, test.Out().Read(), verbosity);
+	return success;
+}
+
+bool TestEncoder(const Wire& a, const Wire& b, const Wire& c)
+{
+	Decoder<8> dec;
+	dec.Connect({ &a, &b, &c });
+	Encoder<8> test;
+	test.Connect(dec.Out());
+	dec.Update();
+	test.Update();
+	return dec.Out().UnsignedRead() == 1 << test.Out().UnsignedRead();
 }
 
 bool TestMultiplexer4(const Wire& a, const Wire& b)
@@ -926,7 +1013,9 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestXNorGate, FAIL_ONLY);
-	RUN_TEST(TestXorGateN, FAIL_ONLY);
+	RUN_TEST(TestMultiGate, FAIL_ONLY);
+	RUN_TEST(TestMultiGateN, FAIL_ONLY);
+	RUN_TEST(TestMultiGateNBitwise, FAIL_ONLY);
 	RUN_TEST(TestSRLatch, FAIL_ONLY);
 	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
@@ -937,6 +1026,8 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
+	RUN_TEST(TestSelectBundle, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
 	RUN_TEST(TestComparator, FAIL_ONLY);
 	RUN_TEST(TestShifter, FAIL_ONLY);

@@ -230,5 +230,11 @@
     <ClInclude Include="CPU\Interlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Control\Encoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\SelectBundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
