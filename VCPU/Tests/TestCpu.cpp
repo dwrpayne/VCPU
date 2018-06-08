@@ -408,11 +408,15 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 4, debugger.GetRegisterVal(17), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(18), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(19), verbosity);
+	success &= TestState(i++, 12345, debugger.GetRegisterVal(20), verbosity);
+	success &= TestState(i++, 98765, debugger.GetRegisterVal(21), verbosity);
+	success &= TestState(i++, 98765, debugger.GetRegisterVal(25), verbosity);
 
 	success &= TestState(i++, (int)0xaaaadd33, debugger.GetMemoryWord(12), verbosity);
 	success &= TestState(i++, 0x33333333, debugger.GetMemoryWord(16), verbosity);
 	success &= TestState(i++, 0x0033dd33, debugger.GetMemoryWord(20), verbosity);
 	success &= TestState(i++, 0x11aadddd, debugger.GetMemoryWord(24), verbosity);
+	success &= TestState(i++, 98765, debugger.GetMemoryWord(32), verbosity);
 	return success;
 }
 

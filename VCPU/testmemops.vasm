@@ -32,4 +32,12 @@ sw	$2, 24($0)
 sb	$4, 24($0)
 nop
 nop
+li $20, 12345 
+sw $20, 32($0)	; write to mem
+lw $25, 32($0)	; populate cache
+li $21, 98765
+sw $21, 32($0)	; write new data
+lw $25, 32($0)	; should get new data
+nop
+nop
 hlt
