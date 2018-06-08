@@ -529,7 +529,19 @@ bool TestSelectBundle(Verbosity verbosity)
 	return success;
 }
 
-bool TestEncoder(const Wire& a, const Wire& b, const Wire& c)
+bool TestEncoder4(const Wire& a, const Wire& b)
+{
+	Decoder<4> dec;
+	dec.Connect({ &a, &b });
+	Encoder<4> test;
+	test.Connect(dec.Out());
+	dec.Update();
+	test.Update();
+	return dec.Out().UnsignedRead() == 1 << test.Out().UnsignedRead();
+}
+
+
+bool TestEncoder8(const Wire& a, const Wire& b, const Wire& c)
 {
 	Decoder<8> dec;
 	dec.Connect({ &a, &b, &c });
@@ -1026,8 +1038,9 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestEncoder4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder8, FAIL_ONLY);
 	RUN_TEST(TestSelectBundle, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
 	RUN_TEST(TestComparator, FAIL_ONLY);
 	RUN_TEST(TestShifter, FAIL_ONLY);

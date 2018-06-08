@@ -52,32 +52,20 @@ class Encoder<4> : public Component
 {
 public:
 	static const unsigned int N = 4;
-	static const unsigned int BITS = bits(N);
+	static const unsigned int BITS = 2;
 
 	void Connect(const Bundle<4>& in);
 	void Update();
 
-	const Bundle<BITS>& Out() const { return ors.Out(); }
+	const Bundle<2>& Out() const { return ors.Out(); }
 
 private:
-	MultiGate<OrGate, BITS> ors;
+	MultiGate<OrGate, 2> ors;
 };
 
 inline void Encoder<4>::Connect(const Bundle<4>& in)
 {
-	std::array<Bundle<N / 2>, BITS> orIns;
-	for (int i = 0; i < BITS; i++)
-	{
-		int wire = 0;
-		for (int bit = 0; bit < N; bit++)
-		{
-			if (bit & (1 << i))
-			{
-				orIns[i].Connect(wire++, in[bit]);
-			}
-		}
-	}
-	ors.Connect(orIns[0], orIns[1]);
+	ors.Connect({ &in[1], &in[2] }, { &in[3], &in[3] });
 }
 
 inline void Encoder<4>::Update()
