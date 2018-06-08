@@ -10,9 +10,10 @@ public:
 	{
 		SILENT,
 		MINIMAL,
+		MEMORY,
 		TIMING,
 		NORMAL,
-		VERBOSE
+		VERBOSE,
 	};
 	Debugger(const std::string& source_filename, Verbosity verbosity = NORMAL);
 
@@ -22,16 +23,11 @@ public:
 	int GetRegisterVal(int reg);
 	int GetMemoryVal(int addr);
 	int GetNextPCAddr();
-
-	void SetInstructionPrint(bool state) { bPrintInstruction = state; }
-	void SetRegisterPrint(bool state) { bPrintRegisters = state; }
-	void SetOutputRegPrint(bool state) { bPrintOutputReg = state; }
-	void SetDataForwardPrint(bool state) { bPrintDataForward = state; }
-	void SetTimingPrint(bool state) { bPrintTiming = state; }
-
+	
 private:
 	void PrintInstruction();
 	void PrintRegisters();
+	void PrintMemory();
 	void PrintOutputReg();
 	void PrintDataForward();
 	void PrintTiming();
@@ -39,11 +35,13 @@ private:
 	CPU* pCPU;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
+	bool bPrintMemory;
 	bool bPrintOutputReg;
 	bool bPrintDataForward;
 	bool bPrintTiming;
 
 	std::deque<int> mLastInstructions;
+	std::array<int, 50> mLastCycleMemory;
 
 	long long last_output_reg;
 

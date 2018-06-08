@@ -12,6 +12,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	pCPU = new CPU();
 	bPrintInstruction = verbosity >= NORMAL;
 	bPrintRegisters = verbosity >= NORMAL;
+	bPrintMemory = verbosity >= MEMORY;
 	bPrintOutputReg = verbosity >= MINIMAL;
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
@@ -100,8 +101,16 @@ void Debugger::PrintCycle()
 	{
 		PrintOutputReg();
 	}
-	
-	PrintTiming();
+
+	if (bPrintMemory)
+	{
+		PrintMemory();
+	}
+
+	if (bPrintTiming)
+	{
+		PrintTiming();
+	}
 }
 
 int Debugger::GetRegisterVal(int reg)
@@ -153,6 +162,28 @@ void Debugger::PrintRegisters()
 			std::cout << std::setw(12) << GetRegisterVal(i + 8 * j);
 		}
 		std::cout << std::endl;
+	}
+}
+
+void Debugger::PrintMemory()
+{
+	bool diff = false;
+	for (unsigned int i = 0; i < mLastCycleMemory.size(); i++)
+	{
+		if (mLastCycleMemory[i] != GetMemoryVal(i*4))
+		{
+			diff = true;
+		}
+		mLastCycleMemory[i] = GetMemoryVal(i*4);
+	}
+	if (diff)
+	{
+		std::cout << "Memory: " << std::hex << std::setfill('0');
+		for (int val : mLastCycleMemory)
+		{
+			std::cout << std::setw(2) << val;
+		}
+		std::cout << std::dec << std::setfill(' ') << std::endl;
 	}
 }
 
