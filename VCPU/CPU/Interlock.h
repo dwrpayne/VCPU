@@ -25,8 +25,9 @@ public:
 private:
 	Matcher<ADDR> r1match;
 	Matcher<ADDR> r2match;
+	AndGateN<ADDR> regNonZero;
 	OrGate regmatch;
-	AndGate bubble;
+	AndGateN<3> bubble;
 	Inverter bubbleInv;
 	OrGate freeze;
 	Inverter freezeInv;

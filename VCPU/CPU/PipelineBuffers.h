@@ -76,7 +76,8 @@ public:
 class BufferEXMEM : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, const Bundle<32>& pcjumpAdd, const Wire& branchtaken, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, 
+		const Bundle<32>& pcjumpAdd, const Wire& branchtaken, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
 		Rwrite.Connect(rwrite, go);
 		reg2.Connect(regR2, go);

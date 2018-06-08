@@ -352,13 +352,13 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "ori"   , { 13, 0,  I_TYPE } } ,		// TESTED
 	{ "xori"  , { 14, 0,  I_TYPE } } ,		// TESTED
 	{ "lui"   , { 15, 0,  I_TYPE } } ,		// TESTED
-	{ "lb"    , { 32, 0,  I_TYPE } } ,
-	{ "lh"    , { 33, 0,  I_TYPE } } ,
-	{ "lwl"   , { 34, 0,  I_TYPE } } ,
+	{ "lb"    , { 32, 0,  I_TYPE } } ,		// TESTED
+	{ "lh"    , { 33, 0,  I_TYPE } } ,		// TESTED
+	//{ "lwl"   , { 34, 0,  I_TYPE } } ,			// WON'T IMPLEMENT
 	{ "lw"    , { 35, 0,  I_TYPE } } ,		// TESTED
-	{ "lbu"   , { 36, 0,  I_TYPE } } ,
-	{ "lhu"   , { 37, 0,  I_TYPE } } ,
-	{ "lwr"   , { 38, 0,  I_TYPE } } ,
+	{ "lbu"   , { 36, 0,  I_TYPE } } ,		// TESTED
+	{ "lhu"   , { 37, 0,  I_TYPE } } ,		// TESTED
+	//{ "lwr"   , { 38, 0,  I_TYPE } } ,			// WON'T IMPLEMENT
 	{ "sb"    , { 40, 0,  I_TYPE } } ,
 	{ "sh"    , { 41, 0,  I_TYPE } } ,
 	{ "swl"   , { 42, 0,  I_TYPE } } ,

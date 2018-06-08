@@ -5,12 +5,15 @@ OpcodeDecoder::OpcodeDecoder()
 	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &zeroOpcode.Out(),
 		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
 		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &jumpReg.Out(),
-		&luiOp.Out(), &mathOp.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1] });
+		&luiOp.Out(), &mathOp.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1],
+		&opcodeIn.Out()[0], &opcodeIn.Out()[1], &opcodeIn.Out()[2]
+		});
 }
 
 void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 {
 	inv.Connect(opcode);
+	opcodeIn.Connect(inv.Out()); // This is stupid but a simple way to store the actual opcode.
 	halt.Connect(opcode);
 	zeroOpcode.Connect(inv.Out());
 	loadstore.Connect(inv.Out()[4], opcode[5]);
@@ -58,6 +61,7 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 void OpcodeDecoder::Update()
 {
 	inv.Update();
+	opcodeIn.Update();
 	halt.Update();
 	zeroOpcode.Update();
 	loadstore.Update();

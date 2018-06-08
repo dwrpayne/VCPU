@@ -41,7 +41,7 @@ private:
 	bool bPrintTiming;
 
 	std::deque<int> mLastInstructions;
-	std::array<int, 50> mLastCycleMemory;
+	std::array<int, 16> mLastCycleMemory;
 
 	long long last_output_reg;
 

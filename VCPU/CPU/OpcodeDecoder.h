@@ -49,7 +49,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 17;
+	static const int OUT_WIDTH = 20;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -80,6 +80,8 @@ public:
 		const Wire& LoadUpperImm() const { return Get(13); }
 		const Wire& MathOp() const { return Get(14); }
 		const Bundle<2> BranchSel() const { return Range<2>(15); }
+		const Bundle<2> LoadByteHalfWordSel() const { return Range<2>(17); }
+		const Wire& LoadUnsigned() const { return Get(19); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }
@@ -98,6 +100,7 @@ public:
 
 private:
 	InverterN<6> inv;
+	InverterN<6> opcodeIn;
 	AndGateN<6> zeroOpcode;
 	Inverter nonzeroOpcode;
 	AndGate loadstore;

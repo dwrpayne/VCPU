@@ -375,14 +375,44 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	return success;
 }
 
+bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testmemops.vasm", dverb);
+	debugger.Start();
+	success &= TestState(i++, 0x11aadd33, debugger.GetMemoryVal(4), verbosity);
+	success &= TestState(i++, 0x11aadd33, debugger.GetRegisterVal(2), verbosity);
+	success &= TestState(i++, 0x33, debugger.GetRegisterVal(3), verbosity);
+	success &= TestState(i++, 0xdd, debugger.GetRegisterVal(4), verbosity);
+	success &= TestState(i++, 0xaa, debugger.GetRegisterVal(5), verbosity);
+	success &= TestState(i++, 0x11, debugger.GetRegisterVal(6), verbosity);
+	success &= TestState(i++, 0xdd33, debugger.GetRegisterVal(7), verbosity);
+	success &= TestState(i++, 0x11aa, debugger.GetRegisterVal(8), verbosity);
+	success &= TestState(i++, 0x11aadd33, debugger.GetRegisterVal(9), verbosity);
+	success &= TestState(i++, 0x33, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, -35, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, -86, debugger.GetRegisterVal(12), verbosity);
+	success &= TestState(i++, 0x11, debugger.GetRegisterVal(13), verbosity);
+	success &= TestState(i++, -8909, debugger.GetRegisterVal(14), verbosity);
+	success &= TestState(i++, 0x11aa, debugger.GetRegisterVal(15), verbosity);
+	success &= TestState(i++, 4, debugger.GetRegisterVal(16), verbosity);
+	success &= TestState(i++, 4, debugger.GetRegisterVal(17), verbosity);
+	success &= TestState(i++, 4, debugger.GetRegisterVal(18), verbosity);
+	success &= TestState(i++, 4, debugger.GetRegisterVal(19), verbosity);
+	return success;
+}
+
 bool RunCPUTests()
 {
 	bool success = true;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
-	RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
-	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);
+	//RUN_TEST(TestCache, FAIL_ONLY);
+	//RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
+	//RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
+	//RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);
+	RUN_TEST2(TestCPUMemory, FAIL_ONLY, Debugger::VERBOSE);
 
 	return success;
 }

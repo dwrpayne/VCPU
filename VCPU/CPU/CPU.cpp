@@ -54,9 +54,8 @@ private:
 	MuxBundle<CPU::RegFile::ADDR_BITS, 4> regFileWriteAddrMux;
 
 	MuxBundle<32, 4> aluAInputMux;
-	
-	MultiGate<OrGate, 2> aluBImmediateOr;
-	MuxBundle<32, 4> aluBInputMux;
+	MuxBundle<32, 4> aluBForwardMux;
+	MuxBundle<32, 2> aluBInputMux;
 
 	ALU<32> alu;
 	FullAdderN<32> pcJumpAdder;
@@ -77,6 +76,11 @@ public:
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 private:
 	CPU::MainCache cache;
+	MuxBundle<8, 4> memByteMux;
+	Multiplexer<2> memByteZeroOrSignExtendMux;
+	MuxBundle<16, 2> memHalfMux;
+	Multiplexer<2> memHalfZeroOrSignExtendMux;
+	MuxBundle<32, 4> memOutWordMux;
 	MuxBundle<32, 4> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
 
@@ -148,9 +152,10 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 		hazard.ForwardMemWb(), hazard.ForwardMemWb() },
 		hazard.AluRsMux());
 
-	aluBImmediateOr.Connect(hazard.AluRtMux(), Bundle<2>(stage2.OpcodeControl().AluBFromImm()));
-	aluBInputMux.Connect({ stage2.reg2.Out(), hazard.ForwardExMem(), hazard.ForwardMemWb(), stage2.signExt.Out() }, 
-							aluBImmediateOr.Out());
+	aluBForwardMux.Connect({ stage2.reg2.Out(), hazard.ForwardExMem(), hazard.ForwardMemWb(), Bundle<32>(Wire::ON) },
+		hazard.AluRtMux());
+
+	aluBInputMux.Connect({ aluBForwardMux.Out(), stage2.signExt.Out() }, stage2.OpcodeControl().AluBFromImm());
 
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
 	
@@ -164,8 +169,8 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 	// Bit of a hack? Drop the PC+4 into the alu out field for Jump Link instructions
 	aluOutOrPcIncMux.Connect({ alu.Out(), stage2.PCinc.Out() }, stage2.OpcodeControl().JumpLink());
 	
-	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), stage2.reg2.Out(),
-		aluOutOrPcIncMux.Out(), alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
+	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutOrPcIncMux.Out(),
+		alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
 }
 
 void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
@@ -174,10 +179,23 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 	cache.Connect(stage3.aluOut.Out().Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), 
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp());
 
+	memByteMux.Connect({ cache.Out().Range<8>(0),cache.Out().Range<8>(8),cache.Out().Range<8>(16),cache.Out().Range<8>(24) },
+		stage3.aluOut.Out().Range<2>(0));
+	memByteZeroOrSignExtendMux.Connect({ &memByteMux.Out()[7], &Wire::OFF }, stage3.OpcodeControl().LoadUnsigned());
+	Bundle<32> memByteExt(memByteZeroOrSignExtendMux.Out());
+	memByteExt.Connect(0, memByteMux.Out());
+
+	memHalfMux.Connect({ cache.Out().Range<16>(0),cache.Out().Range<16>(16)}, stage3.aluOut.Out()[1]);
+	memHalfZeroOrSignExtendMux.Connect({ &memHalfMux.Out()[15], &Wire::OFF }, stage3.OpcodeControl().LoadUnsigned());
+	Bundle<32> memHalfExt(memHalfZeroOrSignExtendMux.Out());
+	memHalfExt.Connect(0, memHalfMux.Out());
+
+	memOutWordMux.Connect({ memByteExt, memHalfExt, cache.Out(), cache.Out() }, stage3.OpcodeControl().LoadByteHalfWordSel());
+
 	Bundle<32> sltExtended(Wire::OFF);
 	sltExtended.Connect(0, stage3.Flags().Negative());
 
-	regWriteDataMux.Connect({ stage3.aluOut.Out(), cache.Out(), sltExtended, sltExtended },
+	regWriteDataMux.Connect({ stage3.aluOut.Out(), memOutWordMux.Out(), sltExtended, sltExtended },
 		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
 	
 	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
@@ -220,7 +238,7 @@ void CPU::Stage3::Update()
 {
 	regFileWriteAddrMux.Update();
 	aluAInputMux.Update();
-	aluBImmediateOr.Update();
+	aluBForwardMux.Update();
 	aluBInputMux.Update();
 	alu.Update();
 	pcJumpAdder.Update();
@@ -237,6 +255,11 @@ void CPU::Stage3::PostUpdate()
 void CPU::Stage4::Update()
 {
 	cache.Update();
+	memByteMux.Update();
+	memByteZeroOrSignExtendMux.Update();
+	memHalfMux.Update();
+	memHalfZeroOrSignExtendMux.Update();
+	memOutWordMux.Update();
 	regWriteDataMux.Update();
 }
 void CPU::Stage4::PostUpdate()
