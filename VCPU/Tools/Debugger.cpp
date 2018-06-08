@@ -118,9 +118,19 @@ int Debugger::GetRegisterVal(int reg)
 	return pCPU->Registers().registers[reg].Out().Read();
 }
 
-int Debugger::GetMemoryVal(int addr)
+unsigned char Debugger::GetMemoryByte(int addr)
 {
-	return pCPU->MainMem().mMemory.registers[addr / CPU::MainCache::WORD_BYTES].Out().Read();
+	return pCPU->MainMem().mMemory.registers[addr].Out().Read();
+}
+
+int Debugger::GetMemoryWord(int addr)
+{
+	int word = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		word |= (GetMemoryByte(addr + i) << (i * 8));
+	}
+	return word;
 }
 
 int Debugger::GetNextPCAddr()
@@ -170,18 +180,18 @@ void Debugger::PrintMemory()
 	bool diff = false;
 	for (unsigned int i = 0; i < mLastCycleMemory.size(); i++)
 	{
-		if (mLastCycleMemory[i] != GetMemoryVal(i*4))
+		if (mLastCycleMemory[i] != GetMemoryByte(i))
 		{
 			diff = true;
 		}
-		mLastCycleMemory[i] = GetMemoryVal(i*4);
+		mLastCycleMemory[i] = GetMemoryByte(i);
 	}
 	if (diff)
 	{
 		std::cout << "Memory: " << std::hex << std::setfill('0');
-		for (int val : mLastCycleMemory)
+		for (unsigned short val : mLastCycleMemory)
 		{
-			std::cout << std::setw(8) << val;
+			std::cout << std::setw(2) << val;
 		}
 		std::cout << std::dec << std::setfill(' ') << std::endl;
 	}
@@ -201,19 +211,19 @@ void Debugger::PrintDataForward()
 {
 	if (pCPU->hazard.AluRsMux()[0].On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to RS" << std::endl;
+		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to EX stage RS (alu input A)" << std::endl;
 	}
 	if (pCPU->hazard.AluRsMux()[1].On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to RS" << std::endl;
+		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to EX stage RS (alu input A)" << std::endl;
 	}
 	if (pCPU->hazard.AluRtMux()[0].On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to RT" << std::endl;
+		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to EX stage RT (alu input B)" << std::endl;
 	}
 	if (pCPU->hazard.AluRtMux()[1].On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to RT" << std::endl;
+		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to EX stage RT (alu input B)" << std::endl;
 	}
 }
 

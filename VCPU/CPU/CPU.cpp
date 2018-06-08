@@ -102,7 +102,7 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 	pcIncrementer.Connect(pc.Out(), insWidth, Wire::OFF);
 
 	// Instruction memory
-	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF, Wire::ON);
+	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF, Wire::ON, Wire::OFF, Wire::OFF);
 	
 	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
 }
@@ -176,26 +176,28 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 {
 	// Main Memory
-	cache.Connect(stage3.aluOut.Out().Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), 
-		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp());
+	const auto& memAddr = stage3.aluOut.Out();
+	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(),
+		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp(),
+		stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
 	memByteMux.Connect({ cache.Out().Range<8>(0),cache.Out().Range<8>(8),cache.Out().Range<8>(16),cache.Out().Range<8>(24) },
-		stage3.aluOut.Out().Range<2>(0));
+		memAddr.Range<2>(0));
 	memByteZeroOrSignExtendMux.Connect({ &memByteMux.Out()[7], &Wire::OFF }, stage3.OpcodeControl().LoadUnsigned());
 	Bundle<32> memByteExt(memByteZeroOrSignExtendMux.Out());
 	memByteExt.Connect(0, memByteMux.Out());
 
-	memHalfMux.Connect({ cache.Out().Range<16>(0),cache.Out().Range<16>(16)}, stage3.aluOut.Out()[1]);
+	memHalfMux.Connect({ cache.Out().Range<16>(0),cache.Out().Range<16>(16)}, memAddr[1]);
 	memHalfZeroOrSignExtendMux.Connect({ &memHalfMux.Out()[15], &Wire::OFF }, stage3.OpcodeControl().LoadUnsigned());
 	Bundle<32> memHalfExt(memHalfZeroOrSignExtendMux.Out());
 	memHalfExt.Connect(0, memHalfMux.Out());
 
-	memOutWordMux.Connect({ memByteExt, memHalfExt, cache.Out(), cache.Out() }, stage3.OpcodeControl().LoadByteHalfWordSel());
+	memOutWordMux.Connect({ cache.Out(), memByteExt, memHalfExt, cache.Out() }, { &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
 
 	Bundle<32> sltExtended(Wire::OFF);
 	sltExtended.Connect(0, stage3.Flags().Negative());
 
-	regWriteDataMux.Connect({ stage3.aluOut.Out(), memOutWordMux.Out(), sltExtended, sltExtended },
+	regWriteDataMux.Connect({ memAddr, memOutWordMux.Out(), sltExtended, sltExtended },
 		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
 	
 	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());

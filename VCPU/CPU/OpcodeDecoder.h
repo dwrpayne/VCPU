@@ -5,6 +5,7 @@
 #include "NandGate.h"
 #include "NorGate.h"
 #include "Bundle.h"
+#include "Decoder.h"
 #include "MuxBundle.h"
 
 
@@ -80,7 +81,8 @@ public:
 		const Wire& LoadUpperImm() const { return Get(13); }
 		const Wire& MathOp() const { return Get(14); }
 		const Bundle<2> BranchSel() const { return Range<2>(15); }
-		const Bundle<2> LoadByteHalfWordSel() const { return Range<2>(17); }
+		const Wire& MemOpByte() const { return Get(17); }
+		const Wire& MemOpHalfWord() const { return Get(18); }
 		const Wire& LoadUnsigned() const { return Get(19); }
 	};
 
@@ -118,6 +120,8 @@ private:
 	OrGateN<4> regWrite;
 	AndGateN<6> luiOp;
 	Inverter luiOpInv;
+	AndGateN<3> memOpByte;
+	AndGateN<3> memOpHalf;
 
 	MuxBundle<6, 2> funcOpMux;
 	Inverter func1Inv;

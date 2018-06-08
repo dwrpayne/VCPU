@@ -143,11 +143,11 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, unsigned int>>({
 		{ A_PLUS_B, OP_LB, 45 },
 		{ A_PLUS_B, OP_LH, 45 },
-		{ A_PLUS_B, OP_LWL, 45 },
+		//{ A_PLUS_B, OP_LWL, 45 },
 		{ A_PLUS_B, OP_LW, 45 },
 		{ A_PLUS_B, OP_LBU, 45 },
 		{ A_PLUS_B, OP_LHU, 45 },
-		{ A_PLUS_B, OP_LWR, 45 } }))
+		/*{ A_PLUS_B, OP_LWR, 45 }*/ }))
 	{
 		opcode.Write(op);
 		func.Write(f);
@@ -167,15 +167,18 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
 		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
+		success &= TestState(i++, (op == OP_LBU || op == OP_LHU), out.LoadUnsigned().On(), verbosity);
+		success &= TestState(i++, (op == OP_LB || op == OP_LBU), out.MemOpByte().On(), verbosity);
+		success &= TestState(i++, (op == OP_LH || op == OP_LHU), out.MemOpHalfWord().On(), verbosity);
 	}
 
 	std::cout << "Testing Store Ops" << std::endl;
 	for (auto[alu, op, f] : std::vector<std::tuple<ALU_OPCODE, Opcode, unsigned int>>({
 		{ A_PLUS_B, OP_SB, 45 },
 		{ A_PLUS_B, OP_SH, 45 },
-		{ A_PLUS_B, OP_SWL, 45 },
+		//{ A_PLUS_B, OP_SWL, 45 },
 		{ A_PLUS_B, OP_SW, 45 },
-		{ A_PLUS_B, OP_SWR, 45 } }))
+		/*{ A_PLUS_B, OP_SWR, 45 }*/ }))
 	{
 		opcode.Write(op);
 		func.Write(f);
@@ -195,6 +198,9 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
 		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
+		success &= TestState(i++, (op == OP_SB), out.MemOpByte().On(), verbosity);
+		success &= TestState(i++, (op == OP_SH), out.MemOpHalfWord().On(), verbosity);
+
 	}
 	return success;
 }
@@ -211,7 +217,7 @@ bool TestCache(Verbosity verbosity)
 	Wire write(true);
 	Wire read(false);
 	MagicBundle<11> addr;
-	test.Connect(addr, data, write, read);
+	test.Connect(addr, data, write, read, Wire::OFF, Wire::OFF);
 
 	for (int a = 0; a < 8; a++)
 	{
@@ -315,7 +321,7 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 123456789, debugger.GetRegisterVal(18), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(19), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
-	success &= TestState(i++, 1887, debugger.GetMemoryVal(16), verbosity);
+	success &= TestState(i++, 1887, debugger.GetMemoryWord(16), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 22691, debugger.GetRegisterVal(23), verbosity);
@@ -369,7 +375,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 366, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
-	success &= TestState(i++, 1234, debugger.GetMemoryVal(4), verbosity);
+	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
 	success &= TestState(i++, 156, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
@@ -382,7 +388,7 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testmemops.vasm", dverb);
 	debugger.Start();
-	success &= TestState(i++, 0x11aadd33, debugger.GetMemoryVal(4), verbosity);
+	success &= TestState(i++, 0x11aadd33, debugger.GetMemoryWord(4), verbosity);
 	success &= TestState(i++, 0x11aadd33, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 0x33, debugger.GetRegisterVal(3), verbosity);
 	success &= TestState(i++, 0xdd, debugger.GetRegisterVal(4), verbosity);
@@ -397,21 +403,29 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 0x11, debugger.GetRegisterVal(13), verbosity);
 	success &= TestState(i++, -8909, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 0x11aa, debugger.GetRegisterVal(15), verbosity);
+	success &= TestState(i++, 4, debugger.GetMemoryWord(8), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(16), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(17), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(18), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(19), verbosity);
+
+	success &= TestState(i++, (int)0xaaaadd33, debugger.GetMemoryWord(12), verbosity);
+	success &= TestState(i++, 0x33333333, debugger.GetMemoryWord(16), verbosity);
+	success &= TestState(i++, 0x0033dd33, debugger.GetMemoryWord(20), verbosity);
+	success &= TestState(i++, 0x11aadddd, debugger.GetMemoryWord(24), verbosity);
 	return success;
 }
 
 bool RunCPUTests()
 {
 	bool success = true;
+	auto default_verb = Debugger::MINIMAL;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	//RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::MINIMAL);
-	//RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::MINIMAL);
-	//RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::MINIMAL);
+	//RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
+	//RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
+	//RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
+
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, Debugger::VERBOSE);
 
 	return success;

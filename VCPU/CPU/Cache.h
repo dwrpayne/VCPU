@@ -34,7 +34,7 @@ public:
 	typedef Bundle<TAG_BITS> TagBundle;
 
 	Cache();
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read);
+	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite);
 	void Update();
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
@@ -45,7 +45,7 @@ private:
 	void UpdateCache();
 	void UpdateMemory();
 
-	Memory<WORD_SIZE, MAIN_MEMORY_BYTES / WORD_BYTES, CACHE_LINE_BITS> mMemory;
+	Memory<WORD_SIZE, MAIN_MEMORY_BYTES, CACHE_LINE_BITS> mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;	
@@ -76,9 +76,11 @@ Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Cache()
 }
 
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read)
+void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, 
+																					const Wire& write, const Wire& read,
+																					const Wire& bytewrite, const Wire& halfwrite)
 {
-	mMemory.Connect(addr, data, write);
+	mMemory.Connect(addr, data, write, bytewrite, halfwrite);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
 	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));

@@ -6,36 +6,52 @@
 #include "Decoder.h"
 #include "MultiGate.h"
 #include "Counter.h"
+#include "AndGate.h"
 #include "Decoder.h"
 #include "MuxBundle.h"
+#include "Shifter.h"
+#include "SelectBundle.h"
 
-// Memory is stored in words (32 bit registers)
-// But addressed by byte, so addresses take 2 bits more than the # of 32-bit registers
+// Memory is always read in words, but stored and addressed by byte.
+// For byte-writes we have to keep an std::array of Register<8>, not Register<N>
 
-template <unsigned int N, unsigned int NReg, unsigned int NCacheLine=N*2>
+template <unsigned int N, unsigned int BYTES, unsigned int NCacheLine=N*2>
 class Memory : public Component
 {
 public:
 	static const unsigned int WORD_LEN = N / 8;
-	static const unsigned int BYTES = NReg * WORD_LEN;
-	static const unsigned int ADDR_BITS = bits(NReg) + bits(WORD_LEN);
+	static const unsigned int ADDR_BITS = bits(BYTES);
+	static const unsigned int ADDR_BYTE_LEN = bits(WORD_LEN);
+	static const unsigned int NUM_WORDS = BYTES / WORD_LEN;
+	static const unsigned int ADDR_WORD_LEN = bits(NUM_WORDS);
 	static const unsigned int CACHE_WORDS = NCacheLine / N;
 	static const unsigned int OFFSET_BITS = bits(CACHE_WORDS);
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
 
 	Memory();
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write);
+	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& bytewrite, const Wire& halfwrite);
 	void Update();
 
 	const DataBundle& Out() const { return outMux.Out(); }
 	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:
-	Decoder<NReg> addrDecoder;
-	MultiGate<AndGate, NReg> writeEnable;
-	std::array<Register<N>, NReg> registers;
-	MuxBundle<N, NReg> outMux;
+#if DEBUG
+	DataBundle DEBUG_inData;
+	AddrBundle DEBUG_inAddr;
+	Bundle<3> DEBUG_writeFlags;
+#endif
+	Decoder<NUM_WORDS> addrDecoder;
+	Decoder<WORD_LEN> byteDecoder;
+	Decoder<2> halfDecoder;
+	MuxBundle<WORD_LEN, 4> masker;
+	MultiGate<AndGate, WORD_LEN> writeEnabledMask;
+	LeftShifter<N> dataByteShifter;
+	
+	std::array<AndGate, BYTES> writeEnable;
+	std::array<Register<8>, BYTES> registers;
+	MuxBundle<N, NUM_WORDS> outMux;
 
 	Counter<OFFSET_BITS> burstCounter;
 	Decoder<CACHE_WORDS> counterDecoder;
@@ -45,8 +61,8 @@ private:
 	friend class Debugger;
 };
 
-template<unsigned int N, unsigned int NReg, unsigned int NCacheLine>
-inline Memory<N, NReg, NCacheLine>::Memory()
+template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine>
+inline Memory<N, BYTES, NCacheLine>::Memory()
 {
 	for (int i = 0; i < CACHE_WORDS; ++i)
 	{
@@ -54,20 +70,39 @@ inline Memory<N, NReg, NCacheLine>::Memory()
 	}
 }
 
-template<unsigned int N, unsigned int NReg, unsigned int NCacheLine = N>
-inline void Memory<N, NReg, NCacheLine>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write)
+template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
+inline void Memory<N, BYTES, NCacheLine>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write,
+												  const Wire& bytewrite, const Wire& halfwrite)
 {
-	auto byteAddr = addr.Range<bits(WORD_LEN)>(0);
-	auto wordAddr = addr.Range<bits(NReg)>(bits(WORD_LEN));
-
+#if DEBUG
+	DEBUG_inData.Connect(0, data);
+	DEBUG_inAddr.Connect(0, addr);
+	DEBUG_writeFlags = { &bytewrite, &halfwrite, &write };
+#endif
+	auto byteAddr = addr.Range<ADDR_BYTE_LEN>(0);
+	auto wordAddr = addr.Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
 	addrDecoder.Connect(wordAddr);
-	writeEnable.Connect(addrDecoder.Out(), Bundle<NReg>(write));
 
-	std::array<DataBundle, NReg> regOuts;
-	for (int i = 0; i < NReg; ++i)
+	byteDecoder.Connect(byteAddr);
+	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
+	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
+	Bundle<4> wordMaskBundle({ &Wire::ON, &Wire::ON, &Wire::ON, &Wire::ON });
+	masker.Connect({ wordMaskBundle, byteDecoder.Out(), halfMaskBundle, Bundle<4>(Wire::OFF) }, { &bytewrite, &halfwrite });
+	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(write));
+
+	for (int i = 0; i < BYTES; ++i)
 	{
-		registers[i].Connect(data, writeEnable.Out()[i]);
-		regOuts[i] = registers[i].Out();
+		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnabledMask.Out()[i % 4]);
+	}
+
+	dataByteShifter.Connect(data, { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
+
+	std::array<DataBundle, NUM_WORDS> regOuts;
+	for (int i = 0; i < BYTES; ++i)
+	{
+		unsigned int bit = (i % 4) * 8;
+		registers[i].Connect(dataByteShifter.Out().Range<8>(bit), writeEnable[i].Out());
+		regOuts[i/4].Connect(bit, registers[i].Out());
 	}
 	burstCounter.Connect(Wire::OFF, Wire::ON);
 	counterDecoder.Connect(burstCounter.Out());
@@ -84,11 +119,19 @@ inline void Memory<N, NReg, NCacheLine>::Connect(const AddrBundle & addr, const 
 	}
 }
 
-template<unsigned int N, unsigned int NReg, unsigned int NCacheLine = N>
-inline void Memory<N, NReg, NCacheLine>::Update()
+template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
+inline void Memory<N, BYTES, NCacheLine>::Update()
 {
 	addrDecoder.Update();
-	writeEnable.Update();
+	byteDecoder.Update();
+	halfDecoder.Update();
+	masker.Update();
+	writeEnabledMask.Update();
+	dataByteShifter.Update();
+	for (auto& i : writeEnable)
+	{
+		i.Update();
+	}
 	for (auto& reg : registers)
 	{
 		reg.Update();

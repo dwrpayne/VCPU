@@ -6,7 +6,7 @@ OpcodeDecoder::OpcodeDecoder()
 		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
 		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &jumpReg.Out(),
 		&luiOp.Out(), &mathOp.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1],
-		&opcodeIn.Out()[0], &opcodeIn.Out()[1], &opcodeIn.Out()[2]
+		&memOpByte.Out(), &memOpHalf.Out(), &opcodeIn.Out()[2]
 		});
 }
 
@@ -31,6 +31,9 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	shiftOp.Connect({ &nonzeroOpcode.Out(), &func[3], &func[4], &func[5] });
 	shiftAmtOp.Connect({ &nonzeroOpcode.Out(), &func[2], &func[3], &func[4], &func[5] });
 	aluBImm.Connect({ &loadOp.Out(), &storeOp.Out(), &immOp.Out() });	
+
+	memOpByte.Connect({ &inv.Out()[0], &inv.Out()[1], &loadstore.Out() });
+	memOpHalf.Connect({ &opcode[0], &inv.Out()[1], &loadstore.Out() });
 
 	funcOpMux.Connect({ opcode, func }, zeroOpcode.Out());
 	func1Inv.Connect(funcOpMux.Out()[1]);
@@ -79,6 +82,8 @@ void OpcodeDecoder::Update()
 	aluBImm.Update();
 	branchInv.Update();
 	loadstoreInv.Update();
+	memOpByte.Update();
+	memOpHalf.Update();
 	func1Inv.Update();
 	func2Inv.Update();
 	func4Inv.Update();
