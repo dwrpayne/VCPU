@@ -45,17 +45,11 @@ public:
 	void Write(int n)
 	{
 		value = n;
-
-		bool negative = n < 0;
-		n = abs(n) - (int)negative;
-
-		assert(n <= pow(2, N));
-		for (int i = 0; i < N - 1; i++)
+		Bundle<N> b(n);
+		for (int i = 0; i < N; ++i)
 		{
-			magicwires[i].Set(negative ^ (bool)(n % 2));
-			n /= 2;
+			magicwires[i].Set(b[i].On());
 		}
-		magicwires[N-1].Set(negative);
 	}
 
 	void Write(unsigned int n)

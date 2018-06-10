@@ -1,5 +1,6 @@
 #pragma once
-#include <vector>
+#include <array>
+#include <assert.h>
 #include "Wire.h"
 
 /***************
@@ -15,6 +16,7 @@ public:
 	static const int WIDTH = N;
 	static const Bundle<N> OFF;
 	static const Bundle<N> ON;
+	static const Bundle<N> ERROR;
 
 	Bundle() {}
 	Bundle(std::initializer_list<const Wire*> list)
@@ -27,16 +29,43 @@ public:
 	{
 		for (int i = 0; i < N; ++i)
 		{
-			wires[i] = &wire;
+			Connect(i, wire);
 		}
 	}
-	
+
+	// Creates a const Bundle (of Wire::OFF and Wire::ON) representing a number
+	explicit Bundle(int n)
+	{
+		InitNumber(n);
+	}
+
+	explicit Bundle(unsigned int n)
+	{
+		int val = n < pow2(N) / 2 ? n : n - pow2(N);
+		InitNumber(val);
+	}
+
+	void InitNumber(int n)
+	{
+		bool negative = n < 0;
+		n = abs(n) - (int)negative;
+
+		assert(n <= pow(2, N));
+		for (int i = 0; i < N - 1; i++)
+		{
+			bool on = negative ^ (bool)(n % 2);
+			Connect(i, on ? Wire::ON : Wire::OFF);
+			n /= 2;
+		}
+		Connect(N - 1, negative ? Wire::ON : Wire::OFF);
+	}
+
 	void Connect(std::initializer_list<const Wire*> list)
 	{
 		int i = 0;
 		for (const auto& wire : list)
 		{
-			wires[i++] = wire;
+			Connect(i++, *wire);
 		}
 	}
 	
@@ -55,14 +84,41 @@ public:
 	}
 
 	template <unsigned int WIDTH>
-	const Bundle<WIDTH> Range(unsigned int start) const
+	const Bundle<WIDTH> Range(unsigned int start=0) const
 	{
-		Bundle<WIDTH> out;
-		for (int i = 0; i < WIDTH; i++)
-		{
-			out.Connect(i, Get(i+start));
-		}
-		return out;
+		int shiftby = -(int)start;
+		return Bundle<WIDTH>(*this, shiftby);
+	}
+
+	// Sign-extends a Bundle to a wider one, current wires in the low bits.
+	template <unsigned int WIDTH>
+	const Bundle<WIDTH> ZeroExtend() const
+	{
+		return Bundle<WIDTH>(*this);
+	}
+
+	// Sign-extends a Bundle to a wider one, current wires in the low bits.
+	template <unsigned int WIDTH>
+	const Bundle<WIDTH> SignExtend() const
+	{
+		return Bundle<WIDTH>(*this, 0, Get(N-1));
+	}
+
+	// Zero-extends a bundle, shifting the current wires over by `shiftby`.
+	// Asserts if there isn't enough room in the extended bundle size.
+	template <unsigned int WIDTH>
+	const Bundle<WIDTH> ShiftZeroExtend(unsigned int shiftby) const
+	{
+		assert(N + shiftby <= WIDTH);
+		return Bundle<WIDTH>(*this, shiftby);
+	}
+
+	// Zero-extends a bundle, shifting the current wires over by `shiftby`.
+	// May lose wires if you shift by more than you have output space for.
+	template <unsigned int WIDTH>
+	const Bundle<WIDTH> ShiftZeroExtendCanLose(unsigned int shiftby) const
+	{	
+		return Bundle<WIDTH>(*this, shiftby);
 	}
 
 	const Wire& Get(unsigned int n) const 
@@ -105,6 +161,29 @@ public:
 
 protected:
 	std::array<const Wire*, N> wires;
+
+private:
+	// Creates a Bundle from another one, optionally shifting the original. 
+	// Optional fill wire for wires not contained in the shifted original.
+	// Private because it's not very readable. Clients should use the helper functions.	
+	template <unsigned int M>
+	Bundle(const Bundle<M>& other, int shiftby = 0, const Wire& fill = Wire::OFF)
+	{
+		for (int i = 0; i < N; ++i)
+		{
+			int otherbit = i - shiftby;
+			if (0 <= otherbit && otherbit < M)
+			{
+				Connect(i, other[otherbit]);
+			}
+			else
+			{
+				Connect(i, fill);
+			}
+		}
+	}
+
+	template <unsigned int M> friend class Bundle;
 };
 
 template<unsigned int N>
@@ -119,3 +198,8 @@ std::ostream& operator<<(std::ostream& os, const Bundle<N>& b)
 
 template<unsigned int N> const Bundle<N> Bundle<N>::OFF(Wire::OFF);
 template<unsigned int N> const Bundle<N> Bundle<N>::ON(Wire::ON);
+
+template<> const Bundle<8> Bundle<8>::ERROR(0xaaU);
+template<> const Bundle<16> Bundle<16>::ERROR(0xdeadU);
+template<> const Bundle<32> Bundle<32>::ERROR(0xdeadbeefU);
+

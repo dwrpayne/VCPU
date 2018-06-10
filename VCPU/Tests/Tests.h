@@ -394,6 +394,36 @@ bool TestBundle(Verbosity verbosity)
 
 	Bundle<4> test4({ &Wire::ON, &Wire::ON, &Wire::OFF, &Wire::ON });
 	success &= TestState(i++, -5, test4.Read(), verbosity);
+	
+	success &= TestState(i++, 0, Bundle<8>::OFF.Read(), verbosity);
+	success &= TestState(i++, 255U, Bundle<8>::ON.UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xaaU, Bundle<8>::ERROR.UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xdeadU, Bundle<16>::ERROR.UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xdeadbeefU, Bundle<32>::ERROR.UnsignedRead(), verbosity);
+	
+	Bundle<8> test(121);
+	Bundle<16> testExt = test.ZeroExtend<16>();
+	success &= TestState(i++, 121, testExt.Read(), verbosity);
+	success &= TestState(i++, 121, testExt.Range<8>().Read(), verbosity);
+	success &= TestState(i++, 60, testExt.Range<8>(1).Read(), verbosity);
+	success &= TestState(i++, 242, test.ShiftZeroExtend<16>(1).Read(), verbosity);
+	success &= TestState(i++, 242U, test.ShiftZeroExtendCanLose<8>(1).UnsignedRead(), verbosity);
+	success &= TestState(i++, 228U, test.ShiftZeroExtendCanLose<8>(2).UnsignedRead(), verbosity);
+	success &= TestState(i++, 60, testExt.Range<8>(1).Read(), verbosity);
+
+	Bundle<8> testneg(-121);
+	Bundle<16> testnegExt = testneg.SignExtend<16>();
+	success &= TestState(i++, -121, testneg.SignExtend<16>().Read(), verbosity);
+	success &= TestState(i++, 256-121, testneg.ZeroExtend<16>().Read(), verbosity);
+	
+	success &= TestState(i++, 14, Bundle<8>(14).Read(), verbosity);
+	success &= TestState(i++, -111, Bundle<8>(-111).Read(), verbosity);
+
+
+
+
+
+
 
 	return success;
 }
