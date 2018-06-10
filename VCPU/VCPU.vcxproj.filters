@@ -236,7 +236,10 @@
     <ClInclude Include="Control\SelectBundle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Functional\SubWordSelector.h">
+    <ClInclude Include="Control\Extender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\SubWordSelector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

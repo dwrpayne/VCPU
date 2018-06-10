@@ -153,6 +153,7 @@
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
     <ClInclude Include="Control\Encoder.h" />
+    <ClInclude Include="Control\Extender.h" />
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\SelectBundle.h" />
