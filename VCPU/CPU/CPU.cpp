@@ -183,9 +183,9 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp(),
 		stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
-	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadUnsigned());
-	halfWordSelect.Connect(cache.Out(), Bundle<1>(memAddr[1]), stage3.OpcodeControl().LoadUnsigned());
-
+	// Byte/Half/Word Selection
+	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned());
+	halfWordSelect.Connect(cache.Out(), Bundle<1>(memAddr[1]), stage3.OpcodeControl().LoadSigned());
 	memOutWordMux.Connect({ cache.Out(), byteSelect.Out(), halfWordSelect.Out(), cache.Out() }, 
 		{ &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
 

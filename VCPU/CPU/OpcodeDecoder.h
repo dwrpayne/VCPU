@@ -83,7 +83,7 @@ public:
 		const Bundle<2> BranchSel() const { return Range<2>(15); }
 		const Wire& MemOpByte() const { return Get(17); }
 		const Wire& MemOpHalfWord() const { return Get(18); }
-		const Wire& LoadUnsigned() const { return Get(19); }
+		const Wire& LoadSigned() const { return Get(19); }
 	};
 
 	const Wire& Branch() const { return out.Branch(); }
@@ -102,7 +102,6 @@ public:
 
 private:
 	InverterN<6> inv;
-	InverterN<6> opcodeIn;
 	AndGateN<6> zeroOpcode;
 	Inverter nonzeroOpcode;
 	AndGate loadstore;

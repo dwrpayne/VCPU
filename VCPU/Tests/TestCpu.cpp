@@ -167,7 +167,7 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, false, out.JumpLink().On(), verbosity);
 		success &= TestState(i++, false, out.JumpReg().On(), verbosity);
 		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
-		success &= TestState(i++, (op == OP_LBU || op == OP_LHU), out.LoadUnsigned().On(), verbosity);
+		success &= TestState(i++, (op != OP_LBU && op != OP_LHU), out.LoadSigned().On(), verbosity);
 		success &= TestState(i++, (op == OP_LB || op == OP_LBU), out.MemOpByte().On(), verbosity);
 		success &= TestState(i++, (op == OP_LH || op == OP_LHU), out.MemOpHalfWord().On(), verbosity);
 	}
@@ -429,8 +429,7 @@ bool RunCPUTests()
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
-
-	RUN_TEST2(TestCPUMemory, FAIL_ONLY, Debugger::MINIMAL);
+	RUN_TEST2(TestCPUMemory, FAIL_ONLY, Debugger::VERBOSE);
 
 	return success;
 }
