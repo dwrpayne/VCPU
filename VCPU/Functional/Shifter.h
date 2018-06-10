@@ -103,19 +103,12 @@ inline void RightShifter<N>::Update()
 template<unsigned int N>
 inline void LeftShifter<N>::Connect(const Bundle<N>& in, const Bundle<BITS>& shift)
 {
-	// This just simplifies the wiring math so I don't have to worry about indexing off the end of the input.
-	Bundle<N> in_shift = in.ShiftZeroExtendCanLose<N>(1);
-	muxes[0].Connect({ in, in_shift }, shift[0]);
-	for (int bit = 1; bit < BITS; bit++)
+	for (int bit = 0; bit < BITS; bit++)
 	{
 		unsigned int shift_by = 1 << bit;
-		in_shift = in.ShiftZeroExtend<N + 2>(2).Range<N>();
-		in_shift = Bundle<N>(Wire::OFF);
-		for (unsigned int i = shift_by; i < N; i++)
-		{
-			in_shift.Connect(i, muxes[bit - 1].Out()[i-shift_by]);
-		}
-		muxes[bit].Connect({ muxes[bit - 1].Out(), in_shift }, shift[bit]);
+		const Bundle<N>& bundle = bit == 0 ? in : muxes[bit - 1].Out();
+		Bundle<N> shifted = bundle.ShiftZeroExtendCanLose<N>(shift_by);
+		muxes[bit].Connect({ bundle, shifted }, shift[bit]);
 	}
 }
 
