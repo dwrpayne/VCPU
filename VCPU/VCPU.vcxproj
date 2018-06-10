@@ -156,6 +156,7 @@
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\SelectBundle.h" />
+    <ClInclude Include="Control\SubWordSelector.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\BranchDetector.h" />
     <ClInclude Include="CPU\Cache.h" />
@@ -167,7 +168,6 @@
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
-    <ClInclude Include="Functional\SubWordSelector.h" />
     <ClInclude Include="Functional\Comparator.h" />
     <ClInclude Include="Functional\FullAdder.h" />
     <ClInclude Include="Functional\Matcher.h" />
