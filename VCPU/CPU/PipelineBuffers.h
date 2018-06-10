@@ -28,14 +28,14 @@ public:
 class BufferIDEX : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rs, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& signExtImm, const Bundle<32>& regR1, const Bundle<32>& regR2, 
+	void Connect(const Wire& go, const Bundle<5>& rs, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& immext, const Bundle<32>& regR1, const Bundle<32>& regR2, 
 		const Bundle<32>& jumpaddr, const Bundle<32>& pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol)
 	{
 		RS.Connect(rs, go);
 		RT.Connect(rt, go);
 		RD.Connect(rd, go);
 		pcJumpAddr.Connect(jumpaddr, go);
-		signExt.Connect(signExtImm, go);
+		immExt.Connect(immext, go);
 		reg1.Connect(regR1, go);
 		reg2.Connect(regR2, go);
 		PCinc.Connect(pcInc, go);
@@ -49,7 +49,7 @@ public:
 		RT.Update();
 		RD.Update();
 		pcJumpAddr.Update();
-		signExt.Update();
+		immExt.Update();
 		reg1.Update();
 		reg2.Update();
 		PCinc.Update();
@@ -64,7 +64,7 @@ public:
 	Register<5> RT;
 	Register<5> RD;
 	Register<32> pcJumpAddr;
-	Register<32> signExt;
+	Register<32> immExt;
 	Register<32> reg1;
 	Register<32> reg2;
 	Register<32> PCinc;
