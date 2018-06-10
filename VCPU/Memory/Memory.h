@@ -87,7 +87,7 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(const AddrBundle & addr, const
 	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
 	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
 	Bundle<4> wordMaskBundle({ &Wire::ON, &Wire::ON, &Wire::ON, &Wire::ON });
-	masker.Connect({ wordMaskBundle, byteDecoder.Out(), halfMaskBundle, Bundle<4>(Wire::OFF) }, { &bytewrite, &halfwrite });
+	masker.Connect({ wordMaskBundle, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &bytewrite, &halfwrite });
 	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(write));
 
 	for (int i = 0; i < BYTES; ++i)

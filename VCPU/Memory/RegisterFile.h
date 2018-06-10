@@ -40,7 +40,7 @@ inline void RegisterFile<N, NReg>::Connect(const AddrBundle & addr1, const AddrB
 	writeEnable.Connect(addrwDecoder.Out(), Bundle<NReg>(write));
 
 	std::array<DataBundle, NReg> regOuts;
-	registers[0].Connect(DataBundle(Wire::OFF), Wire::OFF);
+	registers[0].Connect(DataBundle::OFF, Wire::OFF);
 	regOuts[0] = registers[0].Out();
 	for (int i = 1; i < NReg; ++i)
 	{
