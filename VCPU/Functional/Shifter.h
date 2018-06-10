@@ -72,20 +72,12 @@ template<unsigned int N>
 inline void RightShifter<N>::Connect(const Bundle<N>& in, const Bundle<BITS>& shift, const Wire& signextend)
 {
 	shiftinhi.Connect(signextend, in[N - 1]);
-	
-	// This just simplifies the wiring math so I don't have to worry about indexing off the end of the input.
-	Bundle<N> in_shift(shiftinhi.Out());
-	in_shift.Connect(0, in.Range<N - 1>(1));
-	muxes[0].Connect({ in, in_shift }, shift[0]);
-	for (int bit = 1; bit < BITS; bit++)
+	for (int bit = 0; bit < BITS; bit++)
 	{
 		unsigned int shift_by = 1 << bit;
-		in_shift = Bundle<N>(shiftinhi.Out());
-		for (unsigned int i = 0; i < N - shift_by; i++)
-		{
-			in_shift.Connect(i, muxes[bit - 1].Out()[shift_by + i]);
-		}
-		muxes[bit].Connect({ muxes[bit - 1].Out(), in_shift }, shift[bit]);
+		const Bundle<N>& bundle = bit == 0 ? in : muxes[bit - 1].Out();
+		Bundle<N> shifted = bundle.ShiftRightWireExtend<N>(shift_by, shiftinhi.Out());
+		muxes[bit].Connect({ bundle, shifted }, shift[bit]);
 	}
 }
 

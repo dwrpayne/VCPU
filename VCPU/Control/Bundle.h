@@ -128,7 +128,16 @@ public:
 	template <unsigned int TO>
 	const Bundle<TO> ShiftRightSignExtend(int shiftby) const
 	{
-		return Bundle<TO>(*this, -shiftby, Get(N-1));
+		return ShiftRightWireExtend<TO>(shiftby, Get(N-1));
+	}
+
+	// Right-shifts, extending a bundle, shifting the current wires over by `shiftby`.
+	// Provide a fill wire.
+	// Loses the low bits
+	template <unsigned int TO>
+	const Bundle<TO> ShiftRightWireExtend(int shiftby, const Wire& fill) const
+	{
+		return Bundle<TO>(*this, -shiftby, fill);
 	}
 
 	const Wire& Get(unsigned int n) const 

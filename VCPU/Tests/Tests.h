@@ -423,12 +423,6 @@ bool TestBundle(Verbosity verbosity)
 	success &= TestState(i++, -111, Bundle<8>(-111).Read(), verbosity);
 
 
-
-
-
-
-
-
 	return success;
 }
 
