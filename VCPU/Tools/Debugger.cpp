@@ -82,14 +82,14 @@ void Debugger::Step()
 
 void Debugger::PrintCycle()
 {
-	if (bPrintInstruction)
-	{
-		PrintInstruction();
-	}
-
 	if (bPrintDataForward)
 	{
 		PrintDataForward();
+	}
+
+	if (bPrintInstruction)
+	{
+		PrintInstruction();
 	}
 
 	if (bPrintRegisters)
