@@ -415,9 +415,13 @@ bool TestBundle(Verbosity verbosity)
 	Bundle<16> testnegExt = testneg.SignExtend<16>();
 	success &= TestState(i++, -121, testneg.SignExtend<16>().Read(), verbosity);
 	success &= TestState(i++, 256-121, testneg.ZeroExtend<16>().Read(), verbosity);
+	success &= TestState(i++, -61, testneg.ShiftRightSignExtend<8>(1).Read(), verbosity);
+	success &= TestState(i++, -16, testneg.ShiftRightSignExtend<8>(3).Read(), verbosity);
+	success &= TestState(i++, -16, testneg.ShiftRightSignExtend<16>(3).Read(), verbosity);
 	
 	success &= TestState(i++, 14, Bundle<8>(14).Read(), verbosity);
 	success &= TestState(i++, -111, Bundle<8>(-111).Read(), verbosity);
+
 
 
 

@@ -43,9 +43,9 @@ template <typename BundleType>
 bool TestBundleComponent(bool(*test_func)(const BundleType&), Verbosity verbosity)
 {
 	bool success = true;
-	for (unsigned int i = 0; i < pow2(BundleType::WIDTH); i++)
+	for (unsigned int i = 0; i < pow2(BundleType::N); i++)
 	{
-		success &= Test(verbosity, test_func, MagicBundle<BundleType::WIDTH>(i));
+		success &= Test(verbosity, test_func, MagicBundle<BundleType::N>(i));
 	}
 	return success;
 }

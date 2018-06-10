@@ -144,19 +144,20 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed)
 {
 	// Hardcoded Link in R31.
-	regFileWriteAddrMux.Connect({ stage2.RT.Out(), stage2.RD.Out(), Bundle<5>(31), Bundle<5>(31) },
+	regFileWriteAddrMux.Connect({ stage2.RT.Out(), stage2.RD.Out(), Bundle<5>(31U), Bundle<5>(31U) },
 		{ &stage2.OpcodeControl().RFormat(), &stage2.OpcodeControl().JumpLink() });
 
-	// ALU
+	// ALU Input A
 	aluAInputMux.Connect({ stage2.reg1.Out(), hazard.ForwardExMem(),
 		hazard.ForwardMemWb(), hazard.ForwardMemWb() },
 		hazard.AluRsMux());
 
+	// ALU Input B
 	aluBForwardMux.Connect({ stage2.reg2.Out(), hazard.ForwardExMem(), hazard.ForwardMemWb(), Bundle<32>::ERROR },
 		hazard.AluRtMux());
-
 	aluBInputMux.Connect({ aluBForwardMux.Out(), stage2.immExt.Out() }, stage2.OpcodeControl().AluBFromImm());
-
+	
+	// ALU
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
 	
 	// PC Jump address calculation (A + B, no carry)
@@ -169,6 +170,7 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 	// Bit of a hack? Drop the PC+4 into the alu out field for Jump Link instructions
 	aluOutOrPcIncMux.Connect({ alu.Out(), stage2.PCinc.Out() }, stage2.OpcodeControl().JumpLink());
 	
+	// Out Buffer
 	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutOrPcIncMux.Out(),
 		alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
 }
@@ -187,12 +189,15 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 	memOutWordMux.Connect({ cache.Out(), byteSelect.Out(), halfWordSelect.Out(), cache.Out() }, 
 		{ &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
 
-	Bundle<32> sltExtended(Wire::OFF);
+	// SLT instruction
+	Bundle<32> sltExtended = Bundle<32>::OFF;
 	sltExtended.Connect(0, stage3.Flags().Negative());
 
+	// Regfile Data Write
 	regWriteDataMux.Connect({ memAddr, memOutWordMux.Out(), sltExtended, sltExtended },
 		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
 	
+	// Out Buffer
 	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
 }
 

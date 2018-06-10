@@ -13,7 +13,7 @@ template <unsigned int N>
 class Bundle
 {
 public:
-	static const int WIDTH = N;
+	static const unsigned int N = N;
 	static const Bundle<N> OFF;
 	static const Bundle<N> ON;
 	static const Bundle<N> ERROR;
@@ -83,42 +83,52 @@ public:
 		wires[n] = &wire;
 	}
 
-	template <unsigned int WIDTH>
-	const Bundle<WIDTH> Range(unsigned int start=0) const
+	template <unsigned int TO>
+	const Bundle<TO> Range(unsigned int start=0) const
 	{
 		int shiftby = -(int)start;
-		return Bundle<WIDTH>(*this, shiftby);
+		return Bundle<TO>(*this, shiftby);
 	}
 
 	// Sign-extends a Bundle to a wider one, current wires in the low bits.
-	template <unsigned int WIDTH>
-	const Bundle<WIDTH> ZeroExtend() const
+	template <unsigned int TO>
+	const Bundle<TO> ZeroExtend() const
 	{
-		return Bundle<WIDTH>(*this);
+		return Bundle<TO>(*this);
 	}
 
 	// Sign-extends a Bundle to a wider one, current wires in the low bits.
-	template <unsigned int WIDTH>
-	const Bundle<WIDTH> SignExtend() const
+	template <unsigned int TO>
+	const Bundle<TO> SignExtend() const
 	{
-		return Bundle<WIDTH>(*this, 0, Get(N-1));
+		return ShiftRightSignExtend<TO>(0);
 	}
 
 	// Zero-extends a bundle, shifting the current wires over by `shiftby`.
 	// Asserts if there isn't enough room in the extended bundle size.
-	template <unsigned int WIDTH>
-	const Bundle<WIDTH> ShiftZeroExtend(unsigned int shiftby) const
+	// shiftby > 0 is a left shift (larger number)
+	template <unsigned int TO>
+	const Bundle<TO> ShiftZeroExtend(int shiftby) const
 	{
-		assert(N + shiftby <= WIDTH);
-		return Bundle<WIDTH>(*this, shiftby);
+		assert(N + shiftby <= TO);
+		return ShiftZeroExtendCanLose<TO>(shiftby);
 	}
 
 	// Zero-extends a bundle, shifting the current wires over by `shiftby`.
 	// May lose wires if you shift by more than you have output space for.
-	template <unsigned int WIDTH>
-	const Bundle<WIDTH> ShiftZeroExtendCanLose(unsigned int shiftby) const
+	// shiftby > 0 is a left shift (larger number)
+	template <unsigned int TO>
+	const Bundle<TO> ShiftZeroExtendCanLose(int shiftby) const
 	{	
-		return Bundle<WIDTH>(*this, shiftby);
+		return Bundle<TO>(*this, shiftby);
+	}
+
+	// Right-shifts, sign-extending a bundle, shifting the current wires over by `shiftby`.
+	// Loses the low bits
+	template <unsigned int TO>
+	const Bundle<TO> ShiftRightSignExtend(int shiftby) const
+	{
+		return Bundle<TO>(*this, -shiftby, Get(N-1));
 	}
 
 	const Wire& Get(unsigned int n) const 
