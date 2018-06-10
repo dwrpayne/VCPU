@@ -87,6 +87,9 @@
     <ClCompile Include="CPU\Interlock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CPU\BranchControl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -234,6 +237,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Control\SelectBundle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\BranchControl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Control\Extender.h">

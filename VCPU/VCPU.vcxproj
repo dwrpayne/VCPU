@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Control\Wire.cpp" />
+    <ClCompile Include="CPU\BranchControl.cpp" />
     <ClCompile Include="CPU\BranchDetector.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\HazardUnit.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Control\SelectBundle.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
     <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\BranchControl.h" />
     <ClInclude Include="CPU\BranchDetector.h" />
     <ClInclude Include="CPU\Cache.h" />
     <ClInclude Include="CPU\CPU.h" />

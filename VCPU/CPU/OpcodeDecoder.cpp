@@ -6,7 +6,7 @@ OpcodeDecoder::OpcodeDecoder()
 		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
 		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &jumpReg.Out(),
 		&luiOp.Out(), &mathOp.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1],
-		&memOpByte.Out(), &memOpHalf.Out(), &inv.Out()[2]
+		&memOpByte.Out(), &memOpHalf.Out(), &inv.Out()[2], &jumpOrBranch.Out()
 		});
 }
 
@@ -49,6 +49,7 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	subOr.Connect(funcOpMux.Out()[1], branchOp.Out());
 	addOp.Connect(addOr.Out(), branchInv.Out());
 	subOp.Connect(subOr.Out(), loadstoreInv.Out());
+	jumpOrBranch.Connect(branchOp.Out(), jumpOp.Out());
 
 	// Make LUI have an ALU opcode of A_OR_B by tweaking the 3rd bit off and 4th bit on in that case.
 	Bundle<4> mathControl({ &subOp.Out(), &addOp.Out(), &luiOpInv.Out(), &luiOp.Out() });
@@ -88,6 +89,7 @@ void OpcodeDecoder::Update()
 	jumpReg.Update();
 	jumpOp.Update();
 	jumpLink.Update();
+	jumpOrBranch.Update();
 	regWrite.Update();
 	sltop.Update();
 	mathOp.Update();

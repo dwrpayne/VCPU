@@ -14,6 +14,7 @@ public:
 	void Update(); 
 
 	const Wire& Equal() { return zeroOut.Out(); }
+	const Wire& NonEqual() { return nonzeroOut.Out(); }
 	const Wire& Less() { return adders.Out()[N-1]; }
 	const Wire& LessEqual() { return lessEq.Out(); }
 	const Wire& Greater() { return greater.Out(); }

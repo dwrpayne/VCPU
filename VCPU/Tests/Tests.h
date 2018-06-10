@@ -614,7 +614,7 @@ bool TestComparator(Verbosity verbosity)
 	Comparator<8> test;
 	MagicBundle<8> num1, num2;
 	test.Connect(num1, num2);
-	for (const auto&[a, b] : std::map<int, int>({ { -12, -12 },{ -13, -12 },{ -11, -12 },{ 0, 0 },{ 62, 63 } }))
+	for (const auto&[a, b] : std::map<int, int>({ { -12, -12 },{ -13, -12 },{ -11, -12 },{ 0, 0 },{ 62, 63 },{ 12, 0 } }))
 	{
 		num1.Write(a);
 		num2.Write(b);
