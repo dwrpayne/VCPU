@@ -12,8 +12,8 @@ addiu	$t2, $t2, 2			; we know $t3 < 0, next subtractor (if done, stomps $t2 afte
 beqz 	$at, -24			; while $t2 < sqrt(num), try again
 subu	$t3, $t1, $t2		; copied from line 3
 subu	$t3, $t3, $t2
-b		-56
 sb		$t1, 0($t8)
+b		-56
 addiu	$t8, $t8, 1
 ;sqrt
 li		$s0, 1
