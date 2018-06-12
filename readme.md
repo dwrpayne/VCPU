@@ -1,12 +1,12 @@
 Virtual CPU
 ---------
 
-VCPU is a homebrew CPU implementing the MIPS I ISA, built entirely in software. It consists of software logic gates, wired together in building blocks of ever-increasing complexity. The two major types of building blocks are `Component`s and `Wire`s. 
+VCPU is a homebrew CPU implementing the MIPS I ISA, built entirely in software. It consists of software logic gates, wired together in building blocks of ever-increasing complexity. The two major types of building blocks are `Component` and `Wire`. 
 
 Wire
 ------
 
-A `Wire` is a wrapper around a boolean, and is used by `Component`s to propagate state changes throughout the system. It has `Set()` and `On()` functions that do exactly what you expect.
+A `Wire` is a wrapper around a boolean, and is used by `Component` to propagate state changes throughout the system. It has `Set()` and `On()` functions that do exactly what you expect.
 
 You can think of these sort of like the pin-ins and pin-outs on a physical chip.
 
@@ -14,8 +14,8 @@ Component
 ----------
 
 A `Component` is any building block, from a logic gate to a register to an ALU to the opcode decoder. It owns all its subcomponents, and implements two primary methods:
-* Connect(), which wires together the subcomponents, connecting their inputs and outputs.
-* Update(), which merely calls the `Update()` function of its subcomponents in the correct order to propagate signal flow along the internal `Wire`-ing.
+* `Connect()`, which wires together the subcomponents, connecting their inputs and outputs.
+* `Update()`, which merely calls the `Update()` function of its subcomponents in the correct order to propagate signal flow along the internal `Wire`-ing.
 
 It also has a getter method which gets some number of output `Wire`s or collections thereof, which vary by `Component`.
 
@@ -24,8 +24,8 @@ It also has a getter method which gets some number of output `Wire`s or collecti
 Philosophy
 ----------
 
-* VCPU is unclocked, but the Update() functions are called in such a way that "leading edge" of the data flow is propagated around the chip.
-* Update() is always called unconditionally by all `Component`s. Conditionally updating subcomponents based on the state of `Wire`s is cheating. Those decisions must be implemented in "hardware".
+* VCPU is unclocked, but the `Update()` functions are called in such a way to propagate the "leading edge" of the data around the chip.
+* Update() is always called unconditionally by every `Component`. Conditionally updating subcomponents based on the state of a `Wire` is cheating. Those decisions must be implemented in "hardware".
 
 Feature Set
 ------------
