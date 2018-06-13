@@ -13,7 +13,7 @@ class CPU::Stage1 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed);
+	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& stall);
 	void Update();
 	void PostUpdate();
 	const BufferIFID& Out() const { return bufIFID; }
@@ -23,6 +23,7 @@ private:
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
 	CPU::InsCache instructionCache;
+	NorGate incPC;
 	BufferIFID bufIFID;
 
 	friend class CPU;
@@ -98,12 +99,12 @@ private:
 };
 
 
-void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed)
+void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& stall)
 {
 	// Program Counter. Select between PC + 4 and the calculated jump addr from the last executed branch
-	pcBranchInMux.Connect({ pcIncrementer.Out(), pcBranchAddr }, takeBranch);
+	pcBranchInMux.Connect({ bufIFID.PCinc.Out(), pcBranchAddr }, takeBranch);
 
-	pc.Connect(pcBranchInMux.Out(), proceed);
+	pc.Connect(pcBranchInMux.Out(), Wire::ON);
 
 	// PC Increment. Instruction width is 4, hardwired.
 	Bundle<32> insWidth(Wire::OFF);
@@ -113,8 +114,11 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 	// Instruction memory
 	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle(Wire::OFF), Wire::OFF, Wire::ON, Wire::OFF, Wire::OFF);
 
+	// Or gate to check whether to increment pc
+	incPC.Connect(stall, instructionCache.NeedStall());
+
 	// Out Buffer
-	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
+	bufIFID.Connect(incPC.Out(), instructionCache.Out(), pcIncrementer.Out(), instructionCache.NeedStall());
 }
 
 void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const HazardUnit& hazard, const Wire& proceed, const Wire& flush)
@@ -223,6 +227,7 @@ void CPU::Stage1::Update()
 	pc.Update();
 	pcIncrementer.Update();
 	instructionCache.Update();
+	incPC.Update();
 }
 void CPU::Stage1::PostUpdate()
 {
@@ -302,7 +307,7 @@ CPU::CPU()
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
-	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(),
+	interlock.Connect(Wire::OFF, MainMem().NeedStall(), stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(),
 		stage2->Out().RD.Out(), stage2->Out().OpcodeControl().LoadOp(), stage1->Out().IR.Opcode());
 
 	stage1Thread.detach();
@@ -313,7 +318,7 @@ CPU::CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.FreezeOrBubbleInv());
+	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.Freeze());
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.FreezeOrBubbleInv(), interlock.Bubble());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.FreezeInv());
 	stage4->Connect(stage3->Out(), interlock.FreezeInv());

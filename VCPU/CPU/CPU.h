@@ -60,6 +60,7 @@ private:
 	MainCache& MainMem();
 	RegFile& Registers();
 
+	bool InstructionFetchNop() { return InstructionMem().NeedStall().On(); }
 	bool PipelineBubble() { return interlock.Bubble().On(); }
 	bool PipelineFreeze() { return interlock.Freeze().On(); }
 	bool Halt();
