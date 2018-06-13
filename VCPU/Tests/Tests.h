@@ -445,14 +445,6 @@ bool TestDFlipFlopReset(Verbosity verbosity)
 	success &= TestState(i++, q.On(), true, verbosity);
 	success &= TestState(i++, notq.On(), false, verbosity);
 
-	test.Connect(Wire::ON, Wire::ON, Wire::ON); test.Update();
-	success &= TestState(i++, q.On(), false, verbosity);
-	success &= TestState(i++, notq.On(), true, verbosity);
-
-	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
-	success &= TestState(i++, q.On(), true, verbosity);
-	success &= TestState(i++, notq.On(), false, verbosity);
-
 	test.Connect(Wire::ON, Wire::OFF, Wire::ON); test.Update();
 	success &= TestState(i++, q.On(), false, verbosity);
 	success &= TestState(i++, notq.On(), true, verbosity);

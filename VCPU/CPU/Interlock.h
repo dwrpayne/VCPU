@@ -14,8 +14,7 @@ public:
 	typedef Bundle<ADDR> RegBundle;
 
 	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const RegBundle& readR1, const RegBundle& readR2, 
-		const RegBundle& loadingReg, const Wire& loadop, const RegBundle& branchR1, const RegBundle& branchR2, const Wire& branchOp,
-		const RegBundle& aluRD);
+		const RegBundle& writingReg, const Wire& loadop, const Bundle<6>& opcodeIF);
 	void Update();
 
 	const Wire& Bubble() { return bubble.Out(); }
@@ -26,8 +25,11 @@ public:
 private:
 	Matcher<ADDR> r1match;
 	Matcher<ADDR> r2match;
-	AndGateN<ADDR> regNonZero;
+	OrGateN<ADDR> regNonZero;
 	OrGate regmatch;
+	NorGateN<3> branchopnor;
+	AndGate branchopand;
+	OrGate loadorbranch;
 	AndGateN<3> bubble;
 	Inverter bubbleInv;
 	OrGate freeze;

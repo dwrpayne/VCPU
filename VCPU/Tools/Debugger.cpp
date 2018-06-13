@@ -64,7 +64,7 @@ void Debugger::Step()
 	{
 		if (pCPU->PipelineBubble())
 		{
-			mLastInstructions.insert(mLastInstructions.begin() + 2, -1);
+			mLastInstructions.insert(mLastInstructions.begin() + 1, -1);
 		}
 		else
 		{

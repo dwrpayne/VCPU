@@ -10,10 +10,10 @@
 class BufferIFID : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<32>& instruction, const Bundle<32>& pcInc)
+	void Connect(const Wire& enable, const Bundle<32>& instruction, const Bundle<32>& pcInc)
 	{
-		IR.Connect(instruction, go);
-		PCinc.Connect(pcInc, go);
+		IR.Connect(instruction, enable);
+		PCinc.Connect(pcInc, enable);
 	}
 	void Update()
 	{
@@ -28,21 +28,21 @@ public:
 class BufferIDEX : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rs, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& immext, const Bundle<32>& regR1, const Bundle<32>& regR2, 
+	void Connect(const Wire& enable, const Wire& flush, const Bundle<5>& rs, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& immext, const Bundle<32>& regR1, const Bundle<32>& regR2,
 		const Bundle<32>& jumpaddr, const Bundle<32>& pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol, const Wire& branchtaken)
 	{
-		RS.Connect(rs, go);
-		RT.Connect(rt, go);
-		RD.Connect(rd, go);
-		pcJumpAddr.Connect(jumpaddr, go);
-		immExt.Connect(immext, go);
-		reg1.Connect(regR1, go);
-		reg2.Connect(regR2, go);
-		PCinc.Connect(pcInc, go);
-		opcode.Connect(op, go);
-		opcodeControl.Connect(opcodeDec, go);
-		aluControl.Connect(alucontrol, go);
-		branchTaken.Connect(Bundle<1>(branchtaken), go);
+		RS.Connect(rs, enable, flush);
+		RT.Connect(rt, enable, flush);
+		RD.Connect(rd, enable, flush);
+		pcJumpAddr.Connect(jumpaddr, enable, flush);
+		immExt.Connect(immext, enable, flush);
+		reg1.Connect(regR1, enable, flush);
+		reg2.Connect(regR2, enable, flush);
+		PCinc.Connect(pcInc, enable, flush);
+		opcode.Connect(op, enable, flush);
+		opcodeControl.Connect(opcodeDec, enable, flush);
+		aluControl.Connect(alucontrol, enable, flush);
+		branchTaken.Connect(Bundle<1>(branchtaken), enable, flush);
 	}
 	void Update()
 	{
@@ -62,33 +62,33 @@ public:
 
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
-	Register<5> RS;
-	Register<5> RT;
-	Register<5> RD;
-	Register<32> pcJumpAddr;
-	Register<32> immExt;
-	Register<32> reg1;
-	Register<32> reg2;
-	Register<32> PCinc;
-	Register<6> opcode;
-	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
-	Register<4> aluControl;
-	Register<1> branchTaken;
+	RegisterReset<5> RS;
+	RegisterReset<5> RT;
+	RegisterReset<5> RD;
+	RegisterReset<32> pcJumpAddr;
+	RegisterReset<32> immExt;
+	RegisterReset<32> reg1;
+	RegisterReset<32> reg2;
+	RegisterReset<32> PCinc;
+	RegisterReset<6> opcode;
+	RegisterReset<OpcodeDecoder::OUT_WIDTH> opcodeControl;
+	RegisterReset<4> aluControl;
+	RegisterReset<1> branchTaken;
 };
 
 class BufferEXMEM : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, 
+	void Connect(const Wire& enable, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, 
 		const Bundle<32>& pcjumpAdd, const Wire& branchtaken, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
-		Rwrite.Connect(rwrite, go);
-		reg2.Connect(regR2, go);
-		aluOut.Connect(aluout, go);
-		aluFlags.Connect(flags, go);
-		pcJumpAddr.Connect(pcjumpAdd, go);
-		branchTaken.Connect(Bundle<1>(branchtaken), go);
-		opcodeControl.Connect(opcodeDec, go);
+		Rwrite.Connect(rwrite, enable);
+		reg2.Connect(regR2, enable);
+		aluOut.Connect(aluout, enable);
+		aluFlags.Connect(flags, enable);
+		pcJumpAddr.Connect(pcjumpAdd, enable);
+		branchTaken.Connect(Bundle<1>(branchtaken), enable);
+		opcodeControl.Connect(opcodeDec, enable);
 	}
 	void Update()
 	{
@@ -117,11 +117,11 @@ public:
 class BufferMEMWB : public Component
 {
 public:
-	void Connect(const Wire& go, const Bundle<5>& rwrite, const Bundle<32>& rwritedata, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+	void Connect(const Wire& enable, const Bundle<5>& rwrite, const Bundle<32>& rwritedata, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
-		Rwrite.Connect(rwrite, go);
-		RWriteData.Connect(rwritedata, go);
-		opcodeControl.Connect(opcodeDec, go);
+		Rwrite.Connect(rwrite, enable);
+		RWriteData.Connect(rwritedata, enable);
+		opcodeControl.Connect(opcodeDec, enable);
 	}
 	void Update()
 	{
