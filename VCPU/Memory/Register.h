@@ -59,6 +59,8 @@ public:
 	const Bundle<N>& Out() const { return out; }
 
 private:
+	Inverter resetInv;
+	AndGate doLoad;
 	std::array<DFlipFlopReset, N> bits;
 	Bundle<N> out;
 };
@@ -75,6 +77,8 @@ inline RegisterReset<N>::RegisterReset()
 template<unsigned int N>
 inline void RegisterReset<N>::Update()
 {
+	resetInv.Update();
+	doLoad.Update();
 	for (int i = 0; i < N; ++i)
 	{
 		bits[i].Update();
@@ -84,8 +88,10 @@ inline void RegisterReset<N>::Update()
 template<unsigned int N>
 inline void RegisterReset<N>::Connect(const Bundle<N>& data, const Wire & load, const Wire& reset)
 {
+	resetInv.Connect(reset);
+	doLoad.Connect(load, resetInv.Out());
 	for (int i = 0; i < N; ++i)
 	{
-		bits[i].Connect(data[i], load, reset);
+		bits[i].Connect(data[i], doLoad.Out(), reset);
 	}
 }

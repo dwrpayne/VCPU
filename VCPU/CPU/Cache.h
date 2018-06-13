@@ -40,6 +40,7 @@ public:
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
 	const Wire& NeedStall() { return readMiss.Out(); }
+	const Wire& NoStall() { return readMissInv.Out(); }
 	
 private:
 	void UpdateCache();
@@ -53,6 +54,7 @@ private:
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
 	AndGate readMiss;
+	Inverter readMissInv;
 	OrGate needWaitForMemory;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
@@ -104,6 +106,7 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
 	readMiss.Connect(read, cacheMiss.Out());
+	readMissInv.Connect(readMiss.Out());
 	needWaitForMemory.Connect(readMiss.Out(), write);
 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
@@ -152,6 +155,7 @@ inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTE
 	cacheHitMux.Update();
 	cacheMiss.Update();
 	readMiss.Update();
+	readMissInv.Update();
 	needWaitForMemory.Update();
 	outCacheLineMux.Update();
 	outDataMux.Update();

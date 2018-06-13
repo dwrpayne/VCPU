@@ -30,7 +30,7 @@ void Debugger::Start(int cycles)
 	{
 		Step();
 
-		if (pCPU->Halt())
+ 		if (pCPU->Halt())
 		{
 			break;
 		}
