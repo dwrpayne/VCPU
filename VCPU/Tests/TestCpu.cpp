@@ -369,11 +369,11 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, -2591, debugger.GetRegisterVal(7), verbosity);
 	success &= TestState(i++, -5182, debugger.GetRegisterVal(8), verbosity);
 	success &= TestState(i++, 1234, debugger.GetRegisterVal(10), verbosity);
-	success &= TestState(i++, 1238, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, 2468, debugger.GetRegisterVal(11), verbosity);
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(12), verbosity);
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(13), verbosity);
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
-	success &= TestState(i++, 366, debugger.GetRegisterVal(20), verbosity);
+	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
 	success &= TestState(i++, 156, debugger.GetNextPCAddr(), verbosity);
@@ -425,10 +425,10 @@ bool RunCPUTests()
 	bool success = true;
 	auto default_verb = Debugger::MINIMAL;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
-	//RUN_TEST(TestCache, FAIL_ONLY);
-	//RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
-	//RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::VERBOSE);
+	RUN_TEST(TestCache, FAIL_ONLY);
+	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::VERBOSE);
+	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
 
 	return success;
