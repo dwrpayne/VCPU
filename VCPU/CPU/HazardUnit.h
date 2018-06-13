@@ -18,10 +18,10 @@ public:
 		const RegBundle& idexRs, const RegBundle& idexRt);
 	void Update();
 
-	const Bundle<2> AluRsMux() const { return { &ForwardExMemRs.Out(), &ForwardMemWbRs.Out() }; }
-	const Bundle<2> AluRtMux() const { return { &ForwardExMemRt.Out(), &ForwardMemWbRt.Out() }; }
-	const DataBundle& ForwardExMem() const { return ExMemData; }
-	const DataBundle& ForwardMemWb() const { return MemWbData; }
+	const DataBundle& ForwardDataRs() const { return ForwardRsDataMux.Out(); }
+	const DataBundle& ForwardDataRt() const { return ForwardRtDataMux.Out(); }
+	const Wire& DoForwardRs() const { return DoForwardRsOr.Out(); }
+	const Wire& DoForwardRt() const { return DoForwardRtOr.Out(); }
 
 private:
 	DataBundle ExMemData;
@@ -42,5 +42,12 @@ private:
 
 	AndGateN<4> ForwardMemWbRs;
 	AndGateN<4> ForwardMemWbRt;
+
+	MuxBundle<32, 2> ForwardRsDataMux;
+	MuxBundle<32, 2> ForwardRtDataMux;
+
+	OrGate DoForwardRsOr;
+	OrGate DoForwardRtOr;
 		
+	friend class Debugger;
 };

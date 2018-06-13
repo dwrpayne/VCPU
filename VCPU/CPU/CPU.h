@@ -86,7 +86,8 @@ private:
 	std::thread stage3Thread;
 	std::thread stage4Thread;
 
-	HazardUnit hazard;
+	HazardUnit hazardIDEX;
+	HazardUnit hazardIFID;
 	Interlock interlock;
 
 	friend class ProgramLoader;

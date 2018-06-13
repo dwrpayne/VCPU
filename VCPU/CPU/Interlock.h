@@ -14,7 +14,8 @@ public:
 	typedef Bundle<ADDR> RegBundle;
 
 	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const RegBundle& readR1, const RegBundle& readR2, 
-		const RegBundle& loadingReg, const Wire& loadop);
+		const RegBundle& loadingReg, const Wire& loadop, const RegBundle& branchR1, const RegBundle& branchR2, const Wire& branchOp,
+		const RegBundle& aluRD);
 	void Update();
 
 	const Wire& Bubble() { return bubble.Out(); }

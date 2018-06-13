@@ -29,7 +29,7 @@ class BufferIDEX : public Component
 {
 public:
 	void Connect(const Wire& go, const Bundle<5>& rs, const Bundle<5>& rt, const Bundle<5>& rd, const Bundle<32>& immext, const Bundle<32>& regR1, const Bundle<32>& regR2, 
-		const Bundle<32>& jumpaddr, const Bundle<32>& pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol)
+		const Bundle<32>& jumpaddr, const Bundle<32>& pcInc, const Bundle<6>& op, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec, const Bundle<4> alucontrol, const Wire& branchtaken)
 	{
 		RS.Connect(rs, go);
 		RT.Connect(rt, go);
@@ -42,6 +42,7 @@ public:
 		opcode.Connect(op, go);
 		opcodeControl.Connect(opcodeDec, go);
 		aluControl.Connect(alucontrol, go);
+		branchTaken.Connect(Bundle<1>(branchtaken), go);
 	}
 	void Update()
 	{
@@ -56,6 +57,7 @@ public:
 		opcode.Update();
 		opcodeControl.Update();
 		aluControl.Update();
+		branchTaken.Update();
 	}
 
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
@@ -71,7 +73,7 @@ public:
 	Register<6> opcode;
 	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 	Register<4> aluControl;
-
+	Register<1> branchTaken;
 };
 
 class BufferEXMEM : public Component

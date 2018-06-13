@@ -82,6 +82,11 @@ void Debugger::Step()
 
 void Debugger::PrintCycle()
 {
+	if (bPrintInstruction)
+	{
+		std::cout << "--------------------- CYCLE " << pCPU->cycles << " -----";
+		std::cout << (pCPU->PipelineFreeze() ? " PIPELINE FREEZE" : "---------------") << "---------" << std::endl;
+	}
 	if (bPrintDataForward)
 	{
 		PrintDataForward();
@@ -140,8 +145,6 @@ int Debugger::GetNextPCAddr()
 
 void Debugger::PrintInstruction()
 {
-	std::cout << "--------------------- CYCLE " << pCPU->cycles << " -----";
-	std::cout << (pCPU->PipelineFreeze() ? " PIPELINE FREEZE" : "---------------") << "---------" << std::endl;
 	std::cout << "Address  Stage   Assembled Instruction      Source Instruction" << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
@@ -209,21 +212,49 @@ void Debugger::PrintOutputReg()
 
 void Debugger::PrintDataForward()
 {
-	if (pCPU->hazard.AluRsMux()[0].On())
+	if (pCPU->hazardIFID.DoForwardRs().On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to EX stage RS (alu input A)" << std::endl;
+		if (pCPU->hazardIFID.ForwardExMemRs.Out().On())
+		{
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRs().Read() << " from Ex/Mem to ID stage RS" << std::endl;
+		}
+		else
+		{
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRs().Read() << " from Mem/WB to ID stage RS" << std::endl;
+		}
 	}
-	if (pCPU->hazard.AluRsMux()[1].On())
+	if (pCPU->hazardIFID.DoForwardRt().On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to EX stage RS (alu input A)" << std::endl;
+		if (pCPU->hazardIFID.ForwardExMemRt.Out().On())
+		{
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRt().Read() << " from Ex/Mem to ID stage RT" << std::endl;
+		}
+		else
+		{
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRt().Read() << " from Mem/WB to ID stage RT" << std::endl;
+		}
 	}
-	if (pCPU->hazard.AluRtMux()[0].On())
+	if (pCPU->hazardIDEX.DoForwardRs().On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardExMem().Read() << " from Ex/Mem to EX stage RT (alu input B)" << std::endl;
+		if (pCPU->hazardIDEX.ForwardExMemRs.Out().On())
+		{
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRs().Read() << " from Ex/Mem to EX stage RS (alu input A)" << std::endl;
+		}
+		else
+		{
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRs().Read() << " from Mem/WB to EX stage RS (alu input A)" << std::endl;
+		}
 	}
-	if (pCPU->hazard.AluRtMux()[1].On())
+	if (pCPU->hazardIDEX.DoForwardRt().On())
 	{
-		std::cout << "Forwarding " << pCPU->hazard.ForwardMemWb().Read() << " from Mem/WB to EX stage RT (alu input B)" << std::endl;
+		if (pCPU->hazardIDEX.ForwardExMemRt.Out().On())
+		{
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRt().Read() << " from Ex/Mem to EX stage RT (alu input B)" << std::endl;
+		}
+		else
+		{
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRt().Read() << " from Mem/WB to EX stage RT (alu input B)" << std::endl;
+		}
 	}
 }
 

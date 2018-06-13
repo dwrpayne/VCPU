@@ -26,6 +26,12 @@ void HazardUnit::Connect(const RegBundle& exmemRd, const Bundle<32>& exmemAluOut
 
 	ForwardMemWbRt.Connect({ &MemWbRdNonZero.Out(), &memwbRegWrite,
 		&MemWbRdRt.Out(), &NotForwardExMemRt.Out() });
+
+	ForwardRsDataMux.Connect({ MemWbData, ExMemData }, ForwardExMemRs.Out());
+	ForwardRtDataMux.Connect({ MemWbData, ExMemData }, ForwardExMemRt.Out());
+
+	DoForwardRsOr.Connect(ForwardExMemRs.Out(), ForwardMemWbRs.Out());
+	DoForwardRtOr.Connect(ForwardExMemRt.Out(), ForwardMemWbRt.Out());
 }
 
 void HazardUnit::Update()
@@ -44,5 +50,10 @@ void HazardUnit::Update()
 	NotForwardExMemRt.Update();
 	ForwardMemWbRs.Update();
 	ForwardMemWbRt.Update();
+
+	ForwardRsDataMux.Update();
+	ForwardRtDataMux.Update();
+	DoForwardRsOr.Update();
+	DoForwardRtOr.Update();
 	
 }
