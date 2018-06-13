@@ -5,7 +5,7 @@ main:	li		$t0, 0x6f6c6548
 		li		$t0, 0x2121646c
 		sw		$t0, 24($r0)
 		li		$a0, 16
-		li		$a1, 60
+		li		$a1, 40
 		call	strcpy
 		nop
 		nop

@@ -26,8 +26,8 @@ mul3:	clr		$v0				; $v0 = 0
 
 strcpy:	lb		$t0, 0($a0)
 		beqz	$t0, 16
-		sb		$a0, 0($a1)
+		sb		$t0, 0($a1)
 		addi	$a0, $a0, 1
-		addi	$a1, $a1, 1
 		j		strcpy
+		addi	$a1, $a1, 1
 		ret
