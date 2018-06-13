@@ -1,7 +1,7 @@
 		li	 	$t1, 3				; $t1 holds the number we are testing
 next:	addiu	$t1, $t1, 2			; increment number
 		move	$a0, $t1			; move number into args register
-		jal		sqrt				; call sqrt, now $v0 holds the sqrt
+		call	sqrt				; call sqrt, now $v0 holds the sqrt
 		move	$t3, $t1			; $t3 holds the current remainder, starting at $t1
 		li 		$t2, 3				; $t2 holds the current subtractor
 dec:	bgtz	$t3, dec			; while $t3 > 0, keep subtracting
@@ -20,6 +20,6 @@ sqrt: 	li		$s0, 1
 		bgtz	$a0, -8
 		addiu	$s0, $s0, 2
 		srl		$v0, $s0, 1
-		jr		$ra
+		ret
 		nop
 		nop
