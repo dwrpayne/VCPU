@@ -155,7 +155,8 @@ void Debugger::PrintInstruction()
 	{
 		int addr = mLastInstructions[i];
 		auto ass_line = addr >= 0 ? pAssembler->GetAssembledLine(addr) : "inserted bubble";
-		auto src_line = addr >= 0 ? pAssembler->GetSourceLine(addr) : "";
+		auto src_line = addr >= 0 ? pAssembler->GetSourceLine(addr) : "inserted bubble";
+		addr = std::max(addr, 0);
 
 		std::stringstream ss;
 		ss << "0x" << std::hex << std::setfill('0') << std::setw(6) << addr * 4;
