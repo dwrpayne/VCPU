@@ -37,7 +37,7 @@ const Program* Assembler::Assemble(const std::string& filename)
 
 		unsigned int source_line = program->AddSourceLine(label, code_line, comment);
 				
-		if (code_line.size() >= 2)
+		if (code_line.size() >= 3)
 		{
 			for (auto& line : ParseLine(code_line))
 			{

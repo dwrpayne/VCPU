@@ -1,0 +1,59 @@
+; testing routines
+		li 		$a0, 0x1ae
+		li 		$a1, 0x29
+		call	mult
+		move 	$gp, $v0
+		nop
+		nop
+		nop
+		li 		$a0, 0x1ae
+		li 		$a1, 0x29
+		call	mul2
+		move 	$gp, $v0
+		nop
+		nop
+		nop
+		li 		$a0, 0x1ae
+		li 		$a1, 0x29
+		call	mul3
+		move 	$gp, $v0
+		nop
+		nop
+		nop
+		hlt
+
+
+
+
+sqrt:	li		$t5, 1
+		sub		$a0, $a0, $t5
+		bgtz	$a0, -8
+		addiu	$t5, $t5, 2
+		srl		$v0, $t5, 1
+		ret
+
+mult:	clr		$v0
+		addiu	$a1, $a1, -1
+		bgtz	$a1, -8
+		add		$v0, $v0, $a0
+		ret
+
+mul2:	clr		$v0
+		bgt		$a0, $a1, 12
+		move	$t5, $a0
+		move 	$a0, $a1
+		move 	$a1, $t5
+		addiu	$a1, $a1, -1
+		bgtz	$a1, -8
+		add		$v0, $v0, $a0
+		ret
+		
+mul3:	clr		$v0
+mul3st:	sll		$v0, $v0, 1
+		andi	$t5, $a1, 1		; $t5 = $a1 & 1
+		beqz	$t5, mul3sh
+		srl		$a1, $a1, 1
+		add		$v0, $v0, $a0	; $v0 += $a0		
+mul3sh:	bgtz	$a1, mul3st
+		nop
+		ret

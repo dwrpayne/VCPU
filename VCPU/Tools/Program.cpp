@@ -7,21 +7,9 @@
 
 unsigned int Program::AddSourceLine(const std::string& label, std::string source, const std::string& comment)
 {
-	// Strip begin and end whitespace, and collapse multiple
-	source = std::regex_replace(source, std::regex("^\\s*"), "");
-	source = std::regex_replace(source, std::regex("\\s*$"), "");
-	source = std::regex_replace(source, std::regex("\\s+"), " ");
-
-	// Replace the first space with a fixed tab.
-	auto first_space = source.find_first_of(' ');
-	if (first_space != std::string::npos)
-	{
-		source.insert(first_space, 6 - first_space, ' ');
-	}
-
 	// Insert the line.
 	unsigned int line_num = mSourceLines.size();
-	auto codeline = CodeLine(label, source, comment, line_num);
+	auto codeline = CodeLine(label, TrimWhitespace(source), comment, line_num);
 	codeline.mFirstInstructionNum = mInstructions.size();
 	mSourceLines.push_back(codeline);
 
@@ -37,7 +25,7 @@ unsigned int Program::AddSourceLine(const std::string& label, std::string source
 void Program::AddInstruction(unsigned int source_line, const std::string& text)
 {
 	mSourceLines[source_line].mFirstInstructionNum = mInstructions.size();
-	mInstructions.push_back(Instruction(text, 0, source_line));
+	mInstructions.push_back(Instruction(TrimWhitespace(text), 0, source_line));
 }
 
 const Instruction * Program::GetInstruction(unsigned int addr) const
@@ -108,4 +96,20 @@ void Program::ConvertLabels()
 			}			
 		}
 	}
+}
+
+std::string Program::TrimWhitespace(const std::string& s)
+{
+	// Strip begin and end whitespace, and collapse multiple
+	std::string line = std::regex_replace(s, std::regex("^\\s*"), "");
+	line = std::regex_replace(line, std::regex("\\s*$"), "");
+	line = std::regex_replace(line, std::regex("\\s+"), " ");
+
+	// Replace the first space with a fixed tab.
+	auto first_space = line.find_first_of(' ');
+	if (first_space != std::string::npos)
+	{
+		line.insert(first_space, 6 - first_space, ' ');
+	}
+	return line;
 }

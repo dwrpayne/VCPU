@@ -51,6 +51,7 @@ public:
 	void ConvertLabels();
 
 private:
+	std::string TrimWhitespace(const std::string& s);
 	std::vector<CodeLine> mSourceLines;
 	std::vector<Instruction> mInstructions;
 	std::map<std::string, unsigned int> mLabelAddrNum;
