@@ -19,12 +19,24 @@ Program* Assembler::Assemble(const std::string& filename)
 	std::string line;
 	while (std::getline(file, line))
 	{
+		// Get code line without comment
 		std::string code_line = line.substr(0, line.find(';'));
 		code_line.erase(code_line.find_last_not_of(" \t\r\n") + 1);
 
+		// Get comment separately
 		auto comment_pos = line.find(';');
 		std::string comment = comment_pos == std::string::npos ? "" : line.substr(comment_pos);
-		unsigned int source_line = program->AddSourceLine("", code_line, comment);
+
+		// Get label
+		auto colon_pos = line.find(':');
+		std::string label = "";
+		if (colon_pos != std::string::npos)
+		{
+			label = code_line.substr(0, colon_pos);
+			code_line = code_line.substr(colon_pos + 1);
+		}		
+
+		unsigned int source_line = program->AddSourceLine(label, code_line, comment);
 				
 		if (code_line.size() >= 2)
 		{
@@ -70,15 +82,15 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	
 	// Pseudo-Instructions
 	// Logic and Data
-	line = std::regex_replace(line, std::regex("nop\\b"),								"sll	$$zero, $$zero, 0");
-	line = std::regex_replace(line, std::regex("not\\s+(\\$.+), (\\$.+)\\b"),			"nor	$1, $2, $$zero");
-	line = std::regex_replace(line, std::regex("move\\s+(\\$.+), (\\$.+)\\b"),			"addiu	$1, $2, 0");
-	line = std::regex_replace(line, std::regex("clr\\s+(\\$.+)\\b"),					"addu	$1, $$zero, $$zero");
-	line = std::regex_replace(line, std::regex("push\\s+(\\$.+)\\b"),					"addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
-	line = std::regex_replace(line, std::regex("pop\\s+(\\$.+)\\b"),					"lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
+	line = std::regex_replace(line, std::regex("^\\s*nop\\b"),								"sll	$$zero, $$zero, 0");
+	line = std::regex_replace(line, std::regex("^\\s*not\\s+(\\$.+), (\\$.+)\\b"),			"nor	$1, $2, $$zero");
+	line = std::regex_replace(line, std::regex("^\\s*move\\s+(\\$.+), (\\$.+)\\b"),			"addiu	$1, $2, 0");
+	line = std::regex_replace(line, std::regex("^\\s*clr\\s+(\\$.+)\\b"),					"addu	$1, $$zero, $$zero");
+	line = std::regex_replace(line, std::regex("^\\s*push\\s+(\\$.+)\\b"),					"addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
+	line = std::regex_replace(line, std::regex("^\\s*pop\\s+(\\$.+)\\b"),					"lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
 
 	// Load Immediate, needs to check size of immediate op.
-	std::regex li_regex("li\\s+(\\$.+), (\\d+)");
+	std::regex li_regex("^\\s*li\\s+(\\$.+), (\\d+)");
 	std::smatch li_match;
 	if (std::regex_search(line, li_match, li_regex))
 	{
@@ -98,14 +110,14 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	}	
 	
 	// Branch
-	line = std::regex_replace(line, std::regex("b\\s+(-?\\d+)"),						"beq	$$zero, $$zero, $1");
-	line = std::regex_replace(line, std::regex("bgt\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $2, $1\nbne	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("blt\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $1, $2\nbne	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("bge\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("ble\\s+(\\$.+), (\\$.+), (-?\\d+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
-	line = std::regex_replace(line, std::regex("beqz\\s+(\\$.+), (-?\\d+)"),			"beq	$1, $$zero, $2");
-	line = std::regex_replace(line, std::regex("beq\\s+(\\$.+), (\\d+), (-?\\d+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
-	line = std::regex_replace(line, std::regex("bne\\s+(\\$.+), (\\d+), (-?\\d+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+	line = std::regex_replace(line, std::regex("^\\s*b\\s+(\\S+)"),						"beq	$$zero, $$zero, $1");
+	line = std::regex_replace(line, std::regex("^\\s*bgt\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $2, $1\nbne	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("^\\s*blt\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $1, $2\nbne	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("^\\s*bge\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("^\\s*ble\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
+	line = std::regex_replace(line, std::regex("^\\s*beqz\\s+(\\$.+), (\\S+)"),			"beq	$1, $$zero, $2");
+	line = std::regex_replace(line, std::regex("^\\s*beq\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+	line = std::regex_replace(line, std::regex("^\\s*bne\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 
 	// Register Names
 
