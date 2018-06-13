@@ -3,6 +3,9 @@
 #include <deque>
 #include "CPU/CPU.h"
 
+class Assembler;
+class Program;
+
 class Debugger
 {
 public:
@@ -54,7 +57,7 @@ private:
 	inline static const int BUCKETS[NUM_BUCKETS] = {
 		130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 190, 200, 225, 250, 275, 300, 400, 500, 750, 1000, 2000, 5000, 1000000 };
 
-	class Assembler* pAssembler;
-	class Program* pProgram;
+	Assembler* pAssembler;
+	const Program* pProgram;
 };
 

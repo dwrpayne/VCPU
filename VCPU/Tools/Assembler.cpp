@@ -11,7 +11,7 @@
 #include "Program.h"
 
 
-Program* Assembler::Assemble(const std::string& filename)
+const Program* Assembler::Assemble(const std::string& filename)
 {
 	Program* program = new Program();
 
@@ -21,7 +21,6 @@ Program* Assembler::Assemble(const std::string& filename)
 	{
 		// Get code line without comment
 		std::string code_line = line.substr(0, line.find(';'));
-		code_line.erase(code_line.find_last_not_of(" \t\r\n") + 1);
 
 		// Get comment separately
 		auto comment_pos = line.find(';');
@@ -42,10 +41,17 @@ Program* Assembler::Assemble(const std::string& filename)
 		{
 			for (auto& line : ParseLine(code_line))
 			{
-				program->AddInstruction(source_line, line, GetMachineLanguage(line));
+				program->AddInstruction(source_line, line);
 			}
 		}
 	}
+
+	program->ConvertLabels();
+	for (auto& ins : program->Instructions())
+	{
+		ins.mBinary = GetMachineLanguage(ins.mText);
+	}
+
 	return program;
 }
 
@@ -120,7 +126,6 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("^\\s*bne\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 
 	// Register Names
-
 	// Special case 0 because it has two names, $r0 and $zero
 	line = std::regex_replace(line, std::regex("\\$zero"), "$$0");
 	for (int i = 0; i < 32; i++)
@@ -128,9 +133,6 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 		std::string rep = "$$" + std::to_string(i);
 		line = std::regex_replace(line, std::regex("\\$"+reg_names[i]), rep);
 	}
-
-	// Replace all tabs with spaces for better readability in the debugger
-	std::replace(line.begin(), line.end(), '\t', ' ');
 
 	// Split up the ops if we have more than one.
 	std::vector<std::string> lines;

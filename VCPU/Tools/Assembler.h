@@ -3,6 +3,8 @@
 #include <map>
 #include <regex>
 
+class Program;
+
 enum InstType
 {
 	R_TYPE,
@@ -15,7 +17,7 @@ enum InstType
 class Assembler
 {
 public:
-	class Program* Assemble(const std::string& filename);
+	const Program* Assemble(const std::string& filename);
 
 	const std::string GetRegName(unsigned int reg) const;
 		

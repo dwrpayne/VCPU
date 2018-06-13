@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 class Instruction
 {
@@ -29,23 +30,29 @@ public:
 	std::string mSource;
 	std::string mComment;
 	unsigned int mLineNum;
+	unsigned int mFirstInstructionNum;
 };
 
 class Program
 {
 public:
 	Program() {}
-	unsigned int AddSourceLine(std::string label, std::string source, std::string comment);
-	void AddInstruction(unsigned int source_line, std::string text, unsigned int binary);
-	const Instruction* GetIns(unsigned int addr) const;
+	unsigned int AddSourceLine(const std::string& label, std::string source, const std::string& comment);
+	void AddInstruction(unsigned int source_line, const std::string& text);
+	const Instruction* GetInstruction(unsigned int addr) const;	
 	const CodeLine* GetLine(unsigned int addr) const;
+	unsigned int GetAddrByLabel(std::string label) const;
 
-	const std::string GetSourceLine(unsigned int line) const;
-	const std::string GetAssembledLine(unsigned int line) const;
+	const std::string GetSourceLine(unsigned int addr) const;
+	const std::string GetAssembledLine(unsigned int addr) const;
 
+	std::vector<Instruction>& Instructions() { return mInstructions; }
 	const std::vector<Instruction>& Instructions() const { return mInstructions; }
+
+	void ConvertLabels();
 
 private:
 	std::vector<CodeLine> mSourceLines;
 	std::vector<Instruction> mInstructions;
+	std::map<std::string, unsigned int> mLabelAddrNum;
 };
