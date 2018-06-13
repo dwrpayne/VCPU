@@ -18,7 +18,6 @@ class Assembler
 {
 public:
 	Assembler();
-	void IncludeLib(const std::string& filename);
 	const Program* Assemble(const std::string& filename);
 
 	const std::string GetRegName(unsigned int reg) const;
@@ -29,6 +28,7 @@ private:
 
 	void ParseFile(const std::string & filename, Program * program);
 	void ParseSourceLine(const std::string &line, Program * program);
+	void IncludeLib(const std::string& filename);
 		
 	static const std::vector<std::pair<std::regex, std::string>> instructionMnemonics;
 	static const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> opcodeInfo;

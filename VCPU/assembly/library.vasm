@@ -21,12 +21,11 @@ mul2:	clr		$v0
 		add		$v0, $v0, $a0
 		ret
 		
-mul3:	clr		$v0
-mul3st:	sll		$v0, $v0, 1
-		andi	$t5, $a1, 1		; $t5 = $a1 & 1
-		beqz	$t5, mul3sh
-		srl		$a1, $a1, 1
-		add		$v0, $v0, $a0	; $v0 += $a0		
-mul3sh:	bgtz	$a1, mul3st
-		nop
-		ret
+mul3:	clr		$v0				; $v0 = 0
+mul3st:	andi	$t5, $a1, 1		; if ($a1 & 1)
+		beqz	$t5, mul3sh		; {
+		srl		$a1, $a1, 1		; 	$a1 <<= 1
+		add		$v0, $v0, $a0	; 	$v0 += $a0		
+mul3sh:	bgtz	$a1, mul3st		; }
+		sll		$a0, $a0, 1		; $a0 <<= 1
+		ret						; if ($a1 > 0) goto mul3st

@@ -36,7 +36,7 @@ public:
 class Program
 {
 public:
-	Program() {}
+	Program();
 	unsigned int AddSourceLine(const std::string& label, std::string source, const std::string& comment);
 	void AddInstruction(unsigned int source_line, const std::string& text);
 	const Instruction* GetInstruction(unsigned int addr) const;	
@@ -54,5 +54,6 @@ private:
 	std::string TrimWhitespace(const std::string& s);
 	std::vector<CodeLine> mSourceLines;
 	std::vector<Instruction> mInstructions;
+
 	std::map<std::string, unsigned int> mLabelAddrNum;
 };

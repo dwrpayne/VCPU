@@ -19,7 +19,7 @@ void Test()
 
 void RunCPU(std::string filename)
 {
-	Debugger debugger(filename, Debugger::MEMORY);
+	Debugger debugger(filename, Debugger::VERBOSE);
 	debugger.Start();
 }
 

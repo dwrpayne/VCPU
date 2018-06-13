@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <regex>
 
+Program::Program()
+{
+}
+
 unsigned int Program::AddSourceLine(const std::string& label, std::string source, const std::string& comment)
 {
 	// Insert the line.
@@ -75,7 +79,12 @@ const std::string Program::GetAssembledLine(unsigned int addr)  const
 // Perhaps that is an Assembler piece of knowledge.
 void Program::ConvertLabels()
 {
-	for (const auto&[label, addr] : mLabelAddrNum)
+	std::vector<std::pair<std::string, unsigned int>> items(mLabelAddrNum.begin(), mLabelAddrNum.end());
+	std::sort(items.begin(), items.end(), [](const std::pair<std::string, unsigned int>& a, const std::pair<std::string, unsigned int>& b)
+	{
+		return a.first.size() > b.first.size();
+	});
+	for (const auto&[label, addr] : items)
 	{
 		for (unsigned int i = 0; i < mInstructions.size(); ++i)
 		{
