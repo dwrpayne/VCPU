@@ -1,4 +1,17 @@
-main:	li	 	$t1, 3				; $t1 holds the number we are testing
+main:	li		$t0, 0x6f6c6548
+		sw		$t0, 16($r0)
+		li		$t0, 0x726f5720
+		sw		$t0, 20($r0)
+		li		$t0, 0x2121646c
+		sw		$t0, 24($r0)
+		li		$a0, 16
+		li		$a1, 60
+		call	strcpy
+		nop
+		nop
+		nop
+		nop
+		li	 	$t1, 3				; $t1 holds the number we are testing
 next:	addiu	$t1, $t1, 2			; increment number
 		move	$a0, $t1			; move number into args register
 		call	sqrt				; call sqrt, now $v0 holds the sqrt
