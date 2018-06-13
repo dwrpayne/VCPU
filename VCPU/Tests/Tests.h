@@ -15,6 +15,7 @@
 #include "SRLatch.h"
 #include "JKFlipFlop.h"
 #include "DFlipFlop.h"
+#include "DFlipFlopReset.h"
 #include "Bundle.h"
 #include "Register.h"
 #include "Counter.h"
@@ -372,6 +373,95 @@ bool TestDFlipFlop(Verbosity verbosity)
 	success &= TestState(i++, notq.On(), true, verbosity);
 
 	test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	return success;
+}
+
+bool TestDFlipFlopReset(Verbosity verbosity)
+{
+	DFlipFlopReset test;
+	test.Connect(Wire::OFF, Wire::ON, Wire::OFF);
+	test.Update();
+	const Wire& q = test.Q();
+	const Wire& notq = test.NotQ();
+
+	bool success = true;
+
+	int i = 0;
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::OFF, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::OFF, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::OFF, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::OFF, Wire::ON, Wire::ON); test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::ON); test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::ON, Wire::OFF, Wire::ON); test.Update();
+	success &= TestState(i++, q.On(), false, verbosity);
+	success &= TestState(i++, notq.On(), true, verbosity);
+
+	test.Connect(Wire::ON, Wire::ON, Wire::OFF); test.Update();
+	success &= TestState(i++, q.On(), true, verbosity);
+	success &= TestState(i++, notq.On(), false, verbosity);
+
+	test.Connect(Wire::OFF, Wire::OFF, Wire::ON); test.Update();
 	success &= TestState(i++, q.On(), false, verbosity);
 	success &= TestState(i++, notq.On(), true, verbosity);
 
@@ -1059,6 +1149,7 @@ bool RunAllTests()
 	RUN_TEST(TestSRLatch, FAIL_ONLY);
 	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
 	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
+	RUN_TEST(TestDFlipFlopReset, FAIL_ONLY);
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_TEST(TestCounter, FAIL_ONLY);
