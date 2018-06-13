@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include "Debugger.h"
+#include "Program.h" 
 #include "ProgramLoader.h" 
 #include "Assembler.h"
 
@@ -17,10 +18,11 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
 
-	pAssembler = new Assembler(source_filename);
+	pAssembler = new Assembler();
+	pProgram = pAssembler->Assemble(source_filename);
 	
 	ProgramLoader loader(*pCPU);
-	loader.Load(pAssembler->GetBinary());
+	loader.Load(pProgram);
 	pCPU->Connect();
 }
 
@@ -154,8 +156,8 @@ void Debugger::PrintInstruction()
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
 		int addr = mLastInstructions[i];
-		auto ass_line = addr >= 0 ? pAssembler->GetAssembledLine(addr) : "inserted bubble";
-		auto src_line = addr >= 0 ? pAssembler->GetSourceLine(addr) : "inserted bubble";
+		auto ass_line = addr >= 0 ? pProgram->GetAssembledLine(addr) : "inserted bubble";
+		auto src_line = addr >= 0 ? pProgram->GetSourceLine(addr) : "inserted bubble";
 		addr = std::max(addr, 0);
 
 		std::stringstream ss;

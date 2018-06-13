@@ -7,7 +7,7 @@ class ProgramLoader
 {
 public:
 	ProgramLoader(CPU& cpu);
-	void Load(const std::vector<unsigned int>& instructions);
+	void Load(const class Program* program);
 
 private:
 	CPU::InsCache& insMemory;

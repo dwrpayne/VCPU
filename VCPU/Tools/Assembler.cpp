@@ -7,64 +7,34 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <assert.h>
+#include "Program.h"
 
 
-Assembler::Assembler(const std::string& filename)
-	: mSourceFilename(filename)
+Program* Assembler::Assemble(const std::string& filename)
 {
-	ParseSource();
-}
+	Program* program = new Program();
 
-void Assembler::ParseSource()
-{
-	unsigned int source_line_num = 0;
-	mSource.push_back("Line 0");
-	mComments.push_back("Line 0");
-	std::ifstream file(mSourceFilename);
+	std::ifstream file(filename);
 	std::string line;
 	while (std::getline(file, line))
 	{
-		source_line_num++;
 		std::string code_line = line.substr(0, line.find(';'));
 		code_line.erase(code_line.find_last_not_of(" \t\r\n") + 1);
-		mSource.push_back(code_line);
 
 		auto comment_pos = line.find(';');
-		mComments.push_back(comment_pos == std::string::npos ? "" : line.substr(comment_pos));
-
-		if (code_line.size() < 2)
+		std::string comment = comment_pos == std::string::npos ? "" : line.substr(comment_pos);
+		unsigned int source_line = program->AddSourceLine("", code_line, comment);
+				
+		if (code_line.size() >= 2)
 		{
-			continue;
-		}
-
-		for (auto& line : ParseLine(code_line))
-		{
-			mAssembled.push_back(line);
-			mBinary.push_back(GetMachineLanguage(line));
-			mSourceLine.push_back(source_line_num);
+			for (auto& line : ParseLine(code_line))
+			{
+				program->AddInstruction(source_line, line, GetMachineLanguage(line));
+			}
 		}
 	}
-}
-
-const std::string Assembler::GetAssembledLine(unsigned int line)  const
-{
-	if (line >= mAssembled.size())
-	{
-		return "";
-	}
-	return mAssembled[line];
-}
-
-const std::string Assembler::GetSourceLine(unsigned int line) const
-{
-	if (line >= mSourceLine.size())
-	{
-		return "";
-	}
-	int source_line = mSourceLine[line];
-	std::stringstream ss;
-	ss << std::left << std::setw(3) << source_line << std::setw(25) << mSource[source_line] << mComments[source_line];
-	return ss.str();
+	return program;
 }
 
 const std::string Assembler::GetRegName(unsigned int reg) const

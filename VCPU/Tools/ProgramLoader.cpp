@@ -1,4 +1,5 @@
 #include "ProgramLoader.h"
+#include "Program.h"
 
 ProgramLoader::ProgramLoader(CPU & cpu)
 	: insMemory(cpu.InstructionMem())
@@ -7,11 +8,12 @@ ProgramLoader::ProgramLoader(CPU & cpu)
 	insMemory.Connect(addr_bundle.Range<CPU::InsCache::ADDR_BITS>(0), ins_bundle, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF);
 }
 
-void ProgramLoader::Load(const std::vector<unsigned int>& instructions)
+void ProgramLoader::Load(const Program * program)
 {
-	for (const auto& i : instructions)
+	for (const auto& i : program->Instructions())
 	{
-		ins_bundle.Write(i);
+		unsigned int bin = i.mBinary;
+		ins_bundle.Write(bin);
 		addr_bundle.Write(cur_addr);
 		insMemory.Update();
 		cur_addr += 4;

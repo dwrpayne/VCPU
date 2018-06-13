@@ -148,6 +148,7 @@
     <ClCompile Include="Tests\TestHelpers.cpp" />
     <ClCompile Include="Tools\Assembler.cpp" />
     <ClCompile Include="Tools\Debugger.cpp" />
+    <ClCompile Include="Tools\Program.cpp" />
     <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -202,6 +203,7 @@
     <ClInclude Include="Tools\Assembler.h" />
     <ClInclude Include="Tools\Debugger.h" />
     <ClInclude Include="Tools\MagicBundle.h" />
+    <ClInclude Include="Tools\Program.h" />
     <ClInclude Include="Tools\ProgramLoader.h" />
     <ClInclude Include="Tools\Utils.h" />
   </ItemGroup>
