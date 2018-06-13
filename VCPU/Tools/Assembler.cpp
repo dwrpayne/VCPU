@@ -11,48 +11,68 @@
 #include "Program.h"
 
 
+Assembler::Assembler()
+{
+	pProgram = new Program();
+	ParseSourceLine("call main", pProgram);
+	IncludeLib("library.vasm");
+}
+
+void Assembler::IncludeLib(const std::string & filename)
+{
+	ParseFile(filename, pProgram);
+}
+
 const Program* Assembler::Assemble(const std::string& filename)
 {
-	Program* program = new Program();
+	ParseFile(filename, pProgram);
 
-	std::ifstream file("assembly\\" + filename);
-	std::string line;
-	while (std::getline(file, line))
-	{
-		// Get code line without comment
-		std::string code_line = line.substr(0, line.find(';'));
-
-		// Get comment separately
-		auto comment_pos = line.find(';');
-		std::string comment = comment_pos == std::string::npos ? "" : line.substr(comment_pos);
-
-		// Get label
-		auto colon_pos = line.find(':');
-		std::string label = "";
-		if (colon_pos != std::string::npos)
-		{
-			label = code_line.substr(0, colon_pos);
-			code_line = code_line.substr(colon_pos + 1);
-		}		
-
-		unsigned int source_line = program->AddSourceLine(label, code_line, comment);
-				
-		if (code_line.size() >= 3)
-		{
-			for (auto& line : ParseLine(code_line))
-			{
-				program->AddInstruction(source_line, line);
-			}
-		}
-	}
-
-	program->ConvertLabels();
-	for (auto& ins : program->Instructions())
+	pProgram->ConvertLabels();
+	for (auto& ins : pProgram->Instructions())
 	{
 		ins.mBinary = GetMachineLanguage(ins.mText);
 	}
 
-	return program;
+	return pProgram;
+}
+
+void Assembler::ParseFile(const std::string & filename, Program * program)
+{
+	std::ifstream file("assembly\\" + filename);
+	std::string line;
+	while (std::getline(file, line))
+	{
+		ParseSourceLine(line, program);
+	}
+}
+
+void Assembler::ParseSourceLine(const std::string &line, Program * program)
+{
+	// Get code line without comment
+	std::string code_line = line.substr(0, line.find(';'));
+
+	// Get comment separately
+	auto comment_pos = line.find(';');
+	std::string comment = comment_pos == std::string::npos ? "" : line.substr(comment_pos);
+
+	// Get label
+	auto colon_pos = line.find(':');
+	std::string label = "";
+	if (colon_pos != std::string::npos)
+	{
+		label = code_line.substr(0, colon_pos);
+		code_line = code_line.substr(colon_pos + 1);
+	}
+
+	unsigned int source_line = program->AddSourceLine(label, code_line, comment);
+
+	if (code_line.size() >= 3)
+	{
+		for (auto& line : GetInstructionsForLine(code_line))
+		{
+			program->AddInstruction(source_line, line);
+		}
+	}
 }
 
 const std::string Assembler::GetRegName(unsigned int reg) const
@@ -78,7 +98,7 @@ std::vector<std::string> split(const char *str)
 	return result;
 }
 
-std::vector<std::string> Assembler::ParseLine(const std::string& l)
+std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 {
 	std::string line = l;
 
