@@ -41,7 +41,6 @@ public:
 	void AddInstruction(unsigned int source_line, const std::string& text);
 	const Instruction* GetInstruction(unsigned int addr) const;	
 	const CodeLine* GetLine(unsigned int addr) const;
-	unsigned int GetAddrByLabel(std::string label) const;
 
 	const std::string GetSourceLine(unsigned int addr) const;
 	const std::string GetAssembledLine(unsigned int addr) const;

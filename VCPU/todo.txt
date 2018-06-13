@@ -2,11 +2,7 @@ jal should store PC+8 in R31, not PC+4
 
 left shift 2 the jump addresses
 
-on instruction cache miss, don't freeze the pipeline, just insert a nop instruction?
-
 multiplier
-
-labels
 
 interrupts
 

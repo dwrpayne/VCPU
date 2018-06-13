@@ -15,7 +15,7 @@ const Program* Assembler::Assemble(const std::string& filename)
 {
 	Program* program = new Program();
 
-	std::ifstream file(filename);
+	std::ifstream file("assembly\\" + filename);
 	std::string line;
 	while (std::getline(file, line))
 	{
@@ -82,19 +82,22 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 {
 	std::string line = l;
 
-	// TODO: hex number replace
+	// TODO: hex number replaces
+	for (auto& word : split(l.c_str()))
+	{
+		if (word.size() > 2 && word[0] == '0' && (word[1] == 'x' || word[1] == 'X'))
+		{
+			int hex = std::stoi(word, 0, 16);
+			line = std::regex_replace(line, std::regex(word), std::to_string(hex));
+			break;
+		}
+	}
+	// Function calls
+	line = std::regex_replace(line, std::regex("^\\s*call\\s+(\\S+)\\b"), "jal	$1\nnop");
+	line = std::regex_replace(line, std::regex("^\\s*ret\\b"), "jr		$ra\nnop");
+	line = std::regex_replace(line, std::regex("^\\s*push\\s+(\\$.+)\\b"), "addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
+	line = std::regex_replace(line, std::regex("^\\s*pop\\s+(\\$.+)\\b"), "lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
 	
-	// TODO: label searching (after pseudo-expansion)
-	
-	// Pseudo-Instructions
-	// Logic and Data
-	line = std::regex_replace(line, std::regex("^\\s*nop\\b"),								"sll	$$zero, $$zero, 0");
-	line = std::regex_replace(line, std::regex("^\\s*not\\s+(\\$.+), (\\$.+)\\b"),			"nor	$1, $2, $$zero");
-	line = std::regex_replace(line, std::regex("^\\s*move\\s+(\\$.+), (\\$.+)\\b"),			"addiu	$1, $2, 0");
-	line = std::regex_replace(line, std::regex("^\\s*clr\\s+(\\$.+)\\b"),					"addu	$1, $$zero, $$zero");
-	line = std::regex_replace(line, std::regex("^\\s*push\\s+(\\$.+)\\b"),					"addi	$$sp, $$sp, -4\nsw	$1, 0($$sp)");
-	line = std::regex_replace(line, std::regex("^\\s*pop\\s+(\\$.+)\\b"),					"lw		$1, 0($$sp)\naddi $$sp, $$sp, 4");
-
 	// Load Immediate, needs to check size of immediate op.
 	std::regex li_regex("^\\s*li\\s+(\\$.+), (\\d+)");
 	std::smatch li_match;
@@ -124,6 +127,13 @@ std::vector<std::string> Assembler::ParseLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("^\\s*beqz\\s+(\\$.+), (\\S+)"),			"beq	$1, $$zero, $2");
 	line = std::regex_replace(line, std::regex("^\\s*beq\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 	line = std::regex_replace(line, std::regex("^\\s*bne\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
+	
+	// Pseudo-Instructions
+	// Logic and Data
+	line = std::regex_replace(line, std::regex("^\\s*nop\\b"), "sll	$$zero, $$zero, 0");
+	line = std::regex_replace(line, std::regex("^\\s*not\\s+(\\$.+), (\\$.+)\\b"), "nor	$1, $2, $$zero");
+	line = std::regex_replace(line, std::regex("^\\s*move\\s+(\\$.+), (\\$.+)\\b"), "addiu	$1, $2, 0");
+	line = std::regex_replace(line, std::regex("^\\s*clr\\s+(\\$.+)\\b"), "addu	$1, $$zero, $$zero");
 
 	// Register Names
 	// Special case 0 because it has two names, $r0 and $zero

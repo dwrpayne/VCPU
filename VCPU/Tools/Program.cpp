@@ -61,19 +61,6 @@ const CodeLine * Program::GetLine(unsigned int addr) const
 	return nullptr;
 }
 
-unsigned int Program::GetAddrByLabel(std::string label) const
-{
-	for (const auto& line : mSourceLines)
-	{
-		if (line.mLabel == label)
-		{
-			return line.mFirstInstructionNum;
-		}
-	}
-	assert(false && "Fatal error: Couldn't find label.");
-	return 0;
-}
-
 const std::string Program::GetSourceLine(unsigned int addr) const
 {
 	const CodeLine* source = GetLine(addr);

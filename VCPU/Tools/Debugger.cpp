@@ -272,7 +272,7 @@ void Debugger::PrintTiming()
 		std::cout << "Cycle time: " << mThisCycleTime.count() << "us" << std::endl;
 	}
 	
-	if (pCPU->cycles % 10000 == 0)
+	if (pCPU->cycles % 1000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
 		std::cout << pCPU->cycles << " cycles in " << ms / 1000.0 << "sec.";
