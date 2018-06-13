@@ -19,7 +19,7 @@ void Test()
 
 void RunCPU(std::string filename)
 {
-	Debugger debugger(filename, Debugger::VERBOSE);
+	Debugger debugger(filename, Debugger::MEMORY);
 	debugger.Start();
 }
 
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		Test();
+		//Test();
 		RunCPU("primes2.vasm");
 	}
 	else

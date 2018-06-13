@@ -13,8 +13,8 @@ nop
 nop
 nop
 li		$s0, 1
-bgtz	$a0, -4
 sub		$a0, $a0, $s0
+bgtz	$a0, -8
 addiu	$s0, $s0, 2
 srl		$v0, $s0, 1
 jr		$ra
