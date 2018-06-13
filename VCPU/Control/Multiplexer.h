@@ -19,6 +19,10 @@ public:
 	const Wire& Out() const { return muxOut.Out(); }
 
 private:
+#if DEBUG
+	Bundle<N> input;
+	Bundle<BITS> select;
+#endif
 	Multiplexer<N/2> mux0;
 	Multiplexer<N/2> mux1;
 	Multiplexer<2> muxOut;
@@ -27,6 +31,10 @@ private:
 template <unsigned int N>
 inline void Multiplexer<N>::Connect(const Bundle<N>& in, const Bundle<BITS>& sel)
 {
+#if DEBUG
+	input.Connect(0,in);
+	select.Connect(0,sel);
+#endif
 	const Bundle<BITS-1> local_sel = sel.Range<BITS - 1>(0);
 	mux0.Connect(in.Range<N/2>(0), local_sel);
 	mux1.Connect(in.Range<N/2>(N/2), local_sel);
