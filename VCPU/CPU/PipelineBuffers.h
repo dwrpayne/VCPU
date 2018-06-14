@@ -10,9 +10,9 @@
 class BufferIFID : public Component
 {
 public:
-	void Connect(const Wire& enable, const Bundle<32>& instruction, const Bundle<32>& pcInc, const Wire& flush)
+	void Connect(const Wire& enable, const Bundle<32>& instruction, const Bundle<32>& pcInc)
 	{
-		IR.Connect(instruction, enable, flush);
+		IR.Connect(instruction, enable);
 		PCinc.Connect(pcInc, enable);
 	}
 	void Update()

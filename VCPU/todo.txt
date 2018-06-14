@@ -7,5 +7,3 @@ multiplier
 interrupts
 
 BRK
-
-load before branch needs a *2-cycle* bubble in order to forward from lw MEM/WB to branch's ID...

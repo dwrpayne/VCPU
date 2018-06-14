@@ -110,7 +110,7 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::OFF, Wire::ON, Wire::OFF, Wire::OFF);
 
 	// Out Buffer
-	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out(), Wire::OFF);
+	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
 }
 
 void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const HazardUnit& hazard, const Wire& proceed, const Wire& flush)

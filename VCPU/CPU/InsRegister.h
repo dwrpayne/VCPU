@@ -2,11 +2,11 @@
 
 #include "Register.h"
 
-class InsRegister : public RegisterReset<32>
+class InsRegister : public Register<32>
 {
 public:
 	InsRegister()
-		: RegisterReset<32>()
+		: Register<32>()
 	{
 		function = Out().Range<6>(0);
 		shamt = Out().Range<5>(6);
