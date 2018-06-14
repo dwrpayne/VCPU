@@ -40,7 +40,6 @@ private:
 	OpcodeDecoder opcodeControl;
 	CPU::RegFile regFile;
 	MuxBundle<32, 2> reg2ShiftMux;
-	MuxBundle<32, 4> jumpAddrMux;
 	Extender<16, 32> immExtender;
 	MuxBundle<32, 2> immShiftMux;
 	
@@ -138,11 +137,8 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 
 	// Branch Controller
 	branchControl.Connect(rsForwardMux.Out(), rtForwardMux.Out(), stage1.PCinc.Out(), stage1.IR.Immediate(),
-		opcodeControl.OutBundle().Branch(), opcodeControl.OutBundle().BranchSel());
-
-	// Jump Address
-	jumpAddrMux.Connect({ stage1.IR.Address().ZeroExtend<32>(), rsForwardMux.Out(), branchControl.NewPC(), branchControl.NewPC() },
-		{ &opcodeControl.OutBundle().JumpReg(), &opcodeControl.OutBundle().Branch() });
+		opcodeControl.OutBundle().Branch(), opcodeControl.OutBundle().BranchSel(),
+		stage1.IR.Address().ZeroExtend<32>(), opcodeControl.OutBundle().JumpReg());
 
 	branchTaken.Connect(branchControl.BranchTaken(), opcodeControl.OutBundle().JumpOp());
 
@@ -150,7 +146,7 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 	
 	// Out Buffer
 	bufIDEX.Connect(proceed, flush, stage1.IR.RsAddr(), stage1.IR.RtAddr(), regWriteAddrMux.Out(),
-		immShiftMux.Out(), regFile.Out1(), reg2ShiftMux.Out(), jumpAddrMux.Out(),
+		immShiftMux.Out(), regFile.Out1(), reg2ShiftMux.Out(), branchControl.NewPC(),
 		stage1.PCinc.Out(), stage1.IR.Opcode(),
 		opcodeControl.OutBundle(), opcodeControl.AluControl(), branchTaken.Out());
 }
@@ -161,12 +157,12 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 	regFileWriteAddrMux.Connect({ stage2.RD.Out(), Bundle<5>(31U) }, stage2.OpcodeControl().JumpLink());
 
 	// ALU Input A
-	aluAInputMux.Connect({ stage2.reg1.Out(), hazard.ForwardDataRs()},	hazard.DoForwardRs());
+	aluAInputMux.Connect({ stage2.reg1.Out(), hazard.ForwardDataRs() }, hazard.DoForwardRs());
 
 	// ALU Input B
-	aluBForwardMux.Connect({ stage2.reg2.Out(), hazard.ForwardDataRt() },	hazard.DoForwardRt());
+	aluBForwardMux.Connect({ stage2.reg2.Out(), hazard.ForwardDataRt() }, hazard.DoForwardRt());
 	aluBInputMux.Connect({ aluBForwardMux.Out(), stage2.immExt.Out() }, stage2.OpcodeControl().AluBFromImm());
-	
+
 	// ALU
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
 		
@@ -230,7 +226,6 @@ void CPU::Stage2::Update()
 	immExtender.Update();
 	immShiftMux.Update();
 	branchControl.Update();
-	jumpAddrMux.Update();
 	branchTaken.Update();
 	regWriteAddrMux.Update();
 }
