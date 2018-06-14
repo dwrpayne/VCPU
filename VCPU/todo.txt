@@ -1,5 +1,3 @@
-jal should store PC+8 in R31, not PC+4
-
 left shift 2 the jump addresses
 
 multiplier
