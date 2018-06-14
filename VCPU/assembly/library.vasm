@@ -25,9 +25,8 @@ mul3:	clr		$v0				; $v0 = 0
 		ret						; if ($a1 > 0) goto mul3st
 
 strcpy:	lb		$t0, 0($a0)
-		beqz	$t0, 16
-		sb		$t0, 0($a1)
 		addi	$a0, $a0, 1
-		j		strcpy
+		sb		$t0, 0($a1)
+		bgtz	$t0, strcpy
 		addi	$a1, $a1, 1
 		ret
