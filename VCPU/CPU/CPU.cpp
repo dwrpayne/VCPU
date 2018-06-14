@@ -70,8 +70,6 @@ private:
 	MuxBundle<32, 2> aluBInputMux;
 
 	ALU<32> alu;
-	FullAdderN<32> pcJumpAdder;
-	BranchDetector branchDetector;
 	MuxBundle<32, 2> aluOutOrPcIncMux;
 	BufferEXMEM bufEXMEM;
 
@@ -171,20 +169,13 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 	
 	// ALU
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
-	
-	// PC Jump address calculation (A + B, no carry)
-	pcJumpAdder.Connect(stage2.PCinc.Out(), stage2.immExt.Out(), Wire::OFF);
-	
-	// Branch Detection
-	branchDetector.Connect(alu.Flags().Zero(), alu.Flags().Negative(),
-		stage2.OpcodeControl().BranchSel(), stage2.OpcodeControl().Branch());
-
+		
 	// Bit of a hack? Drop the PC+4 into the alu out field for Jump Link instructions
 	aluOutOrPcIncMux.Connect({ alu.Out(), stage2.PCinc.Out() }, stage2.OpcodeControl().JumpLink());
 	
 	// Out Buffer
 	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutOrPcIncMux.Out(),
-		alu.Flags(), pcJumpAdder.Out(), branchDetector.Out(), stage2.OpcodeControl());
+		alu.Flags(), stage2.OpcodeControl());
 }
 
 void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
@@ -257,8 +248,6 @@ void CPU::Stage3::Update()
 	aluBForwardMux.Update();
 	aluBInputMux.Update();
 	alu.Update();
-	pcJumpAdder.Update();
-	branchDetector.Update();
 	aluOutOrPcIncMux.Update();
 }
 void CPU::Stage3::PostUpdate()

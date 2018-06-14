@@ -5,7 +5,6 @@
 
 #include "OpcodeDecoder.h"
 #include "InsRegister.h"
-#include "BranchDetector.h"
 #include "PipelineBuffers.h"
 #include "Cache.h"
 #include "HazardUnit.h"

@@ -80,14 +80,12 @@ class BufferEXMEM : public Component
 {
 public:
 	void Connect(const Wire& enable, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, 
-		const Bundle<32>& pcjumpAdd, const Wire& branchtaken, const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
+		const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
 		Rwrite.Connect(rwrite, enable);
 		reg2.Connect(regR2, enable);
 		aluOut.Connect(aluout, enable);
 		aluFlags.Connect(flags, enable);
-		pcJumpAddr.Connect(pcjumpAdd, enable);
-		branchTaken.Connect(Bundle<1>(branchtaken), enable);
 		opcodeControl.Connect(opcodeDec, enable);
 	}
 	void Update()
@@ -96,8 +94,6 @@ public:
 		reg2.Update();
 		aluOut.Update();
 		aluFlags.Update();
-		pcJumpAddr.Update();
-		branchTaken.Update();
 		opcodeControl.Update();
 	}
 	
@@ -109,8 +105,6 @@ public:
 	Register<32> reg2;
 	Register<32> aluOut;
 	Register<4> aluFlags;
-	Register<32> pcJumpAddr;
-	Register<1> branchTaken;
 	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 };
 

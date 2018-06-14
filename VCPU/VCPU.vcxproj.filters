@@ -81,9 +81,6 @@
     <ClCompile Include="CPU\HazardUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CPU\BranchDetector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CPU\Interlock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -219,9 +216,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPU\Cache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\BranchDetector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPU\HazardUnit.h">
