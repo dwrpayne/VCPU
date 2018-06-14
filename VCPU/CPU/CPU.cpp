@@ -70,6 +70,7 @@ private:
 
 	ALU<32> alu;
 	MuxBundle<32, 2> aluOutOrPcIncMux;
+	FullAdderN<32> jumpLinkAdder;
 	BufferEXMEM bufEXMEM;
 
 	friend class CPU;
@@ -165,9 +166,10 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 
 	// ALU
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
-		
-	// Bit of a hack? Drop the PC+4 into the alu out field for Jump Link instructions
-	aluOutOrPcIncMux.Connect({ alu.Out(), stage2.PCinc.Out() }, stage2.OpcodeControl().JumpLink());
+
+	// Bit of a hack? Drop the PC+4+4 into the alu out field for Jump Link instructions
+	jumpLinkAdder.Connect(stage2.PCinc.Out(), Bundle<32>(4), Wire::OFF);
+	aluOutOrPcIncMux.Connect({ alu.Out(), jumpLinkAdder.Out() }, stage2.OpcodeControl().JumpLink());
 	
 	// Out Buffer
 	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutOrPcIncMux.Out(),
@@ -243,6 +245,7 @@ void CPU::Stage3::Update()
 	aluBForwardMux.Update();
 	aluBInputMux.Update();
 	alu.Update();
+	jumpLinkAdder.Update();
 	aluOutOrPcIncMux.Update();
 }
 void CPU::Stage3::PostUpdate()
