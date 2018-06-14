@@ -21,6 +21,10 @@ public:
 	const Wire& GreaterEqual() { return greaterEq.Out(); }
 
 private:
+#if DEBUG
+	Bundle<N> inA;
+	Bundle<N> inB;
+#endif
 	InverterN<N> bInv;
 	FullAdderN<N> adders;
 	OrGateN<N> nonzeroOut;
@@ -33,6 +37,10 @@ private:
 template<unsigned int N>
 inline void Comparator<N>::Connect(const Bundle<N>& a, const Bundle<N>& b)
 {
+#if DEBUG
+	inA.Connect(0, a);
+	inB.Connect(0, b);
+#endif
 	bInv.Connect(b);
 	adders.Connect(a, bInv.Out(), Wire::ON);
 	nonzeroOut.Connect(adders.Out());
