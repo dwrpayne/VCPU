@@ -301,7 +301,8 @@ CPU::CPU()
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
 	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(),
-		stage2->Out().RD.Out(), stage2->Out().OpcodeControl().LoadOp(), stage1->Out().IR.Opcode());
+		stage2->Out().RD.Out(), stage2->Out().OpcodeControl().LoadOp(), stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp(),
+		stage1->Out().IR.Opcode());
 
 	stage1Thread.detach();
 	stage2Thread.detach();

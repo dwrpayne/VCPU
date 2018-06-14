@@ -7,6 +7,7 @@
 #include "OrGate.h"
 #include "NorGate.h"
 
+
 class Interlock : public Component
 {
 public:
@@ -14,7 +15,8 @@ public:
 	typedef Bundle<ADDR> RegBundle;
 
 	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const RegBundle& readR1, const RegBundle& readR2, 
-		const RegBundle& writingReg, const Wire& loadop, const Bundle<6>& opcodeIF);
+		const RegBundle& writingRegIDEX, const Wire& loadopIDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM, 
+		const Bundle<6>& opcodeIF);
 	void Update();
 
 	const Wire& Bubble() { return bubble.Out(); }
@@ -23,14 +25,12 @@ public:
 	const Wire& FreezeOrBubbleInv() { return freezeOrBubbleInv.Out(); }
 
 private:
-	Matcher<ADDR> r1match;
-	Matcher<ADDR> r2match;
-	OrGateN<ADDR> regNonZero;
-	OrGate regmatch;
+	NonZeroMatcher<ADDR> idexMatcher;
+	NonZeroMatcher<ADDR> exmemMatcher;
 	NorGateN<3> branchopnor;
 	AndGate branchopand;
-	OrGate loadorbranch;
-	AndGateN<3> bubble;
+	AndGate branchExMemMatch;
+	OrGate bubble;
 	Inverter bubbleInv;
 	OrGate freeze;
 	Inverter freezeInv;
