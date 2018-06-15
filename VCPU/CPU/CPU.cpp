@@ -69,7 +69,7 @@ private:
 	MuxBundle<32, 2> aluBInputMux;
 
 	ALU<32> alu;
-	MuxBundle<32, 2> aluOutOrPcIncMux;
+	MuxBundle<32, 4> aluOutMux;
 	FullAdderN<32> jumpLinkAdder;
 	BufferEXMEM bufEXMEM;
 
@@ -89,7 +89,7 @@ private:
 	SubWordSelector<32> byteSelect;
 	SubWordSelector<32, 16> halfWordSelect;
 	MuxBundle<32, 4> memOutWordMux;
-	MuxBundle<32, 4> regWriteDataMux;
+	MuxBundle<32, 2> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
 
 	friend class CPU;
@@ -167,12 +167,17 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 	// ALU
 	alu.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.aluControl.Out());
 
+	// SLT instruction
+	Bundle<32> sltExtended = Bundle<32>::OFF;
+	sltExtended.Connect(0, alu.Flags().Negative());
+
 	// Bit of a hack? Drop the PC+4+4 into the alu out field for Jump Link instructions
 	jumpLinkAdder.Connect(stage2.PCinc.Out(), Bundle<32>(4), Wire::OFF);
-	aluOutOrPcIncMux.Connect({ alu.Out(), jumpLinkAdder.Out() }, stage2.OpcodeControl().JumpLink());
+	aluOutMux.Connect({ alu.Out(), jumpLinkAdder.Out(), sltExtended, sltExtended }, 
+		{ &stage2.OpcodeControl().JumpLink(), &stage2.OpcodeControl().SltOp() });
 	
 	// Out Buffer
-	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutOrPcIncMux.Out(),
+	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutMux.Out(),
 		alu.Flags(), stage2.OpcodeControl());
 }
 
@@ -190,13 +195,8 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 	memOutWordMux.Connect({ cache.Out(), byteSelect.Out(), halfWordSelect.Out(), cache.Out() }, 
 		{ &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
 
-	// SLT instruction
-	Bundle<32> sltExtended = Bundle<32>::OFF;
-	sltExtended.Connect(0, stage3.Flags().Negative());
-
 	// Regfile Data Write
-	regWriteDataMux.Connect({ memAddr, memOutWordMux.Out(), sltExtended, sltExtended },
-		{ &stage3.OpcodeControl().LoadOp(), &stage3.OpcodeControl().SltOp() });
+	regWriteDataMux.Connect({ stage3.aluOut.Out(), memOutWordMux.Out() }, stage3.OpcodeControl().LoadOp());
 	
 	// Out Buffer
 	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
@@ -246,7 +246,7 @@ void CPU::Stage3::Update()
 	aluBInputMux.Update();
 	alu.Update();
 	jumpLinkAdder.Update();
-	aluOutOrPcIncMux.Update();
+	aluOutMux.Update();
 }
 void CPU::Stage3::PostUpdate()
 {
