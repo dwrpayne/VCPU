@@ -32,6 +32,7 @@
 #include "ALU.h"
 #include "RegisterFile.h"
 #include "CacheLine.h"
+#include "Multiplier.h"
 
 #ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -1054,6 +1055,29 @@ bool TestRegisterFile(Verbosity verbosity)
 	return success;
 }
 
+bool TestMultiplier(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	Multiplier<8> test;
+	MagicBundle<8> a_reg, b_reg;
+	test.Connect(a_reg, b_reg);
+
+	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 }, {47, 63} }))
+	{
+		a_reg.Write(a);
+		b_reg.Write(b);
+
+		if (verbosity == VERBOSE)
+		{
+			std::cout << i << ". Testing " << a << ", " << b << std::endl;
+		}
+		test.Update();
+		success &= TestState(i++, a*b, test.Out().Read(), verbosity);
+	} 
+	return success;
+}
 
 bool TestCacheLine(Verbosity verbosity)
 {
@@ -1117,8 +1141,6 @@ bool TestCacheLine(Verbosity verbosity)
 	success &= TestState(i++, 67305985, test.OutLine().Read(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	
-
-
 	return success;
 }
 
@@ -1162,6 +1184,7 @@ bool RunAllTests()
 	RUN_TEST(TestALU, FAIL_ONLY);
 	RUN_TEST(TestRegisterFile, FAIL_ONLY);
 	RUN_TEST(TestCacheLine, FAIL_ONLY);
+	RUN_TEST(TestMultiplier, VERBOSE);
 	return success;
 }
 #endif

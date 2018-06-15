@@ -68,3 +68,58 @@ inline void FullAdderN<N>::Update()
 		adders[i].Update();
 	}
 }
+
+
+template <unsigned int N>
+class CarrySaveAdderN : public Component
+{
+public:
+	CarrySaveAdderN();
+	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<N>& cin);
+	void Update();
+
+	const Bundle<N>& Out() const { return sum; }
+	const Bundle<N>& Cout() { return carries; }
+
+private:
+#if DEBUG
+	Bundle<N> in1, in2, inc;
+#endif
+	std::array<FullAdder, N> adders;
+	Bundle<N> sum;
+	Bundle<N> carries;
+};
+
+template<unsigned int N>
+inline CarrySaveAdderN<N>::CarrySaveAdderN()
+{
+	for (int i = 0; i < N; ++i)
+	{
+		sum.Connect(i, adders[i].S());
+		carries.Connect(i, adders[i].Cout());
+	}
+}
+
+template<unsigned int N>
+inline void CarrySaveAdderN<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Bundle<N>& cin)
+{
+#if DEBUG
+	in1.Connect(0, a);
+	in2.Connect(0, b);
+	inc.Connect(0, cin);
+#endif
+	for (int i = 0; i < N; ++i)
+	{
+		adders[i].Connect(a[i], b[i], cin[i]);
+	}
+}
+
+template<unsigned int N>
+inline void CarrySaveAdderN<N>::Update()
+{
+	for (int i = 0; i < N; ++i)
+	{
+		adders[i].Update();
+	}
+}
+
