@@ -24,7 +24,8 @@ mul3:	clr		$v0				; $v0 = 0
 		sll		$a0, $a0, 1		; $a0 <<= 1
 		ret						; if ($a1 > 0) goto mul3st
 
-strcpy:	lb		$t0, 0($a0)
+; strcpy takes the src in $a0 and the dest in $a1
+strcpy:	lb		$t0, 0($a0)		
 		addi	$a0, $a0, 1
 		sb		$t0, 0($a1)
 		bgtz	$t0, strcpy
