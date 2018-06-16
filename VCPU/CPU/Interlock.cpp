@@ -5,12 +5,12 @@ void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss, const R
 	const RegBundle& writingRegIDEX, const Wire& loadopIDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM, 
 	const Bundle<6>& opcodeIF)
 {
-	idexMatcher.Connect(readR1, readR2, writingRegIDEX, loadopIDEX);
-	exmemMatcher.Connect(readR1, readR2, writingRegEXMEM, loadopEXMEM);
 	branchopnor.Connect(opcodeIF.Range<3>(3));
 	branchopand.Connect(opcodeIF[2], branchopnor.Out());
-	branchExMemMatch.Connect(branchopand.Out(), exmemMatcher.Match());	
-	bubble.Connect(idexMatcher.Match(), branchExMemMatch.Out());
+	branchorloadexmem.Connect(branchopand.Out(), loadopEXMEM);
+	idexMatcher.Connect(readR1, readR2, writingRegIDEX, loadopIDEX);
+	exmemMatcher.Connect(readR1, readR2, writingRegEXMEM, branchorloadexmem.Out());
+	bubble.Connect(idexMatcher.Match(), exmemMatcher.Match());
 	bubbleInv.Connect(bubble.Out());
 	freeze.Connect(inscachemiss, cachemiss);
 	freezeInv.Connect(freeze.Out());
@@ -19,11 +19,11 @@ void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss, const R
 
 void Interlock::Update()
 {
-	idexMatcher.Update();
-	exmemMatcher.Update();
 	branchopnor.Update();
 	branchopand.Update();
-	branchExMemMatch.Update();
+	branchorloadexmem.Update();
+	idexMatcher.Update();
+	exmemMatcher.Update();
 	bubble.Update();
 	bubbleInv.Update();
 	freeze.Update();

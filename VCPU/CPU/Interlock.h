@@ -25,6 +25,7 @@ public:
 	const Wire& FreezeOrBubbleInv() { return freezeOrBubbleInv.Out(); }
 
 private:
+	OrGate branchorloadexmem;
 	NonZeroMatcher<ADDR> idexMatcher;
 	NonZeroMatcher<ADDR> exmemMatcher;
 	NorGateN<3> branchopnor;
