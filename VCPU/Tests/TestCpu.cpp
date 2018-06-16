@@ -27,6 +27,10 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		{ A_OR_B, OP_OR, F_OR },
 		{ A_XOR_B, OP_XOR, F_XOR },
 		{ A_NOR_B, OP_NOR, F_NOR },
+		{ A_PLUS_B, OP_MFHI, F_MFHI },
+		{ A_MINUS_B, OP_MFLO, F_MFLO },
+		{ A_PLUS_B, OP_MULT, F_MULT },
+		{ A_PLUS_B, OP_MULTU, F_MULTU },
 		{ A_MINUS_B, OP_SLT, F_SLT },
 		{ A_MINUS_B, OP_SLTU, F_SLTU },
 		{ A_SHLL, OP_SLL, F_SLL },
@@ -51,6 +55,13 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA || f == F_SLLV || f == F_SRLV || f == F_SRAV), out.ShiftOp().On(), verbosity);
 		success &= TestState(i++, (f == F_SLL || f == F_SRL || f == F_SRA), out.ShiftAmtOp().On(), verbosity);
 		success &= TestState(i++, false, out.LoadUpperImm().On(), verbosity);
+		success &= TestState(i++, (f == F_MULT || f == F_MULTU), out.MultOp().On(), verbosity);
+		success &= TestState(i++, (f == F_MFLO || f == F_MFHI), out.MultMoveReg()[1].On(), verbosity);
+		if (f == F_MFLO || f == F_MFHI)
+		{
+			success &= TestState(i++, f == F_MFLO, out.MultMoveReg()[0].On(), verbosity);
+		}
+
 	}
 
 	std::cout << "Testing I-ALU Ops" << std::endl;
@@ -210,13 +221,13 @@ bool TestCache(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	Cache<32, 512, 256, 2048>* pCache = new Cache<32, 512, 256, 2048>();
-	Cache<32, 512, 256, 2048>& test = *pCache;
+	Cache<32, 256, 256, 1024>* pCache = new Cache<32, 256, 256, 1024>();
+	Cache<32, 256, 256, 1024>& test = *pCache;
 
 	MagicBundle<32> data;
 	Wire write(true);
 	Wire read(false);
-	MagicBundle<11> addr;
+	MagicBundle<10> addr;
 	test.Connect(addr, data, write, read, Wire::OFF, Wire::OFF);
 
 	for (int a = 0; a < 8; a++)
@@ -323,15 +334,15 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
 	success &= TestState(i++, 1887, debugger.GetMemoryWord(16), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
-	success &= TestState(i++, 0, debugger.GetRegisterVal(20), verbosity);
-	success &= TestState(i++, 22691, debugger.GetRegisterVal(23), verbosity);
-	success &= TestState(i++, 5, debugger.GetRegisterVal(24), verbosity);
-	success &= TestState(i++, 5808896, debugger.GetRegisterVal(25), verbosity);
-	success &= TestState(i++, 726112, debugger.GetRegisterVal(26), verbosity);
-	success &= TestState(i++, 2836, debugger.GetRegisterVal(27), verbosity);
-	success &= TestState(i++, 709, debugger.GetRegisterVal(28), verbosity);
+	success &= TestState(i++, 4325, debugger.GetRegisterVal(20), verbosity);
+	success &= TestState(i++, -898477309, debugger.GetRegisterVal(23), verbosity);
+	success &= TestState(i++, 159, debugger.GetRegisterVal(24), verbosity);
+	success &= TestState(i++, 40704, debugger.GetRegisterVal(25), verbosity);
+	success &= TestState(i++, 636, debugger.GetRegisterVal(26), verbosity);
+	success &= TestState(i++, 19, debugger.GetRegisterVal(27), verbosity);
+	success &= TestState(i++, 39, debugger.GetRegisterVal(28), verbosity);
 	success &= TestState(i++, -35, debugger.GetRegisterVal(29), verbosity);
-	success &= TestState(i++, -18, debugger.GetRegisterVal(30), verbosity);
+	success &= TestState(i++, -138, debugger.GetRegisterVal(30), verbosity);
 	return success;
 }
 
@@ -376,7 +387,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
-	success &= TestState(i++, 152, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 160, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -426,9 +437,9 @@ bool RunCPUTests()
 	auto default_verb = Debugger::MEMORY;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::TIMING);
+	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::VERBOSE);
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
 
 	return success;

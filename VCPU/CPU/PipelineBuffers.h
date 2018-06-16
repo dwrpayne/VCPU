@@ -79,14 +79,14 @@ public:
 class BufferEXMEM : public Component
 {
 public:
-	void Connect(const Wire& enable, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags, 
+	void Connect(const Wire& enable, const Wire& flush, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags,
 		const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
-		Rwrite.Connect(rwrite, enable);
-		reg2.Connect(regR2, enable);
-		aluOut.Connect(aluout, enable);
-		aluFlags.Connect(flags, enable);
-		opcodeControl.Connect(opcodeDec, enable);
+		Rwrite.Connect(rwrite, enable, flush);
+		reg2.Connect(regR2, enable, flush);
+		aluOut.Connect(aluout, enable, flush);
+		aluFlags.Connect(flags, enable, flush);
+		opcodeControl.Connect(opcodeDec, enable, flush);
 	}
 	void Update()
 	{
@@ -101,11 +101,11 @@ public:
 
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
-	Register<5> Rwrite;
-	Register<32> reg2;
-	Register<32> aluOut;
-	Register<4> aluFlags;
-	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
+	RegisterReset<5> Rwrite;
+	RegisterReset<32> reg2;
+	RegisterReset<32> aluOut;
+	RegisterReset<4> aluFlags;
+	RegisterReset<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 };
 
 class BufferMEMWB : public Component

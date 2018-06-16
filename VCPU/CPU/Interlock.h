@@ -14,26 +14,29 @@ public:
 	static const int ADDR = 5;
 	typedef Bundle<ADDR> RegBundle;
 
-	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const RegBundle& readR1, const RegBundle& readR2, 
-		const RegBundle& writingRegIDEX, const Wire& loadopIDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM, 
-		const Bundle<6>& opcodeIF);
+	void Connect(const Wire& inscachemiss, const Wire& cachemiss, 
+		const RegBundle& readR1IFID, const RegBundle& readR2IFID, const RegBundle& writingRegIDEX, const Bundle<6>& opcodeIF,
+		const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM);
 	void Update();
 
-	const Wire& Bubble() { return bubble.Out(); }
+	const Wire& BubbleID() { return bubbleID.Out(); }
+	const Wire& BubbleEX() { return bubbleEX.Out(); }
 	const Wire& Freeze() { return freeze.Out(); }
-	const Wire& FreezeInv() { return freezeInv.Out(); }
-	const Wire& FreezeOrBubbleInv() { return freezeOrBubbleInv.Out(); }
+	const Wire& ProceedEX() { return freezeInv.Out(); }
+	const Wire& ProceedMEM() { return freezeInv.Out(); }
+	const Wire& ProceedIF() { return proceedIF.Out(); }
+	const Wire& ProceedID() { return proceedID.Out(); }
 
 private:
-	OrGate branchorloadexmem;
 	NonZeroMatcher<ADDR> idexMatcher;
 	NonZeroMatcher<ADDR> exmemMatcher;
 	NorGateN<3> branchopnor;
 	AndGate branchopand;
-	AndGate branchExMemMatch;
 	OrGate bubble;
-	Inverter bubbleInv;
 	OrGate freeze;
 	Inverter freezeInv;
-	NorGate freezeOrBubbleInv;
+	AndGate bubbleID;
+	AndGate bubbleEX;
+	NorGate proceedIF;
+	NorGate proceedID;
 };

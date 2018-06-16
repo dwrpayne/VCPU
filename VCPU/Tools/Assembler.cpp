@@ -212,14 +212,14 @@ unsigned int Assembler::GetMachineLanguage(const std::string& line)
 			if (words.size() > 2 && sscanf_s(words[2].c_str(), "$%d", &val2))
 			{
 				// Got register 2
-				if (sscanf_s(words[3].c_str(), "$%d", &val3))
+				if (words.size() > 3 && sscanf_s(words[3].c_str(), "$%d", &val3))
 				{
 					// $rd, $rs, $rt
 					rd = val1;
 					rs = val2;
 					rt = val3;
 				}
-				else if (sscanf_s(words[3].c_str(), "%d", &val3))
+				else if (words.size() > 3 && sscanf_s(words[3].c_str(), "%d", &val3))
 				{
 					// $rd, $rs, shamt
 					rd = val1;
@@ -235,9 +235,11 @@ unsigned int Assembler::GetMachineLanguage(const std::string& line)
 			}
 			else
 			{
-				// val1
+				// val1 
 				// $rs
+				// For both MFLO/MFHI and JR instructions
 				rs = val1;
+				rd = val1;
 			}
 		}
 		else

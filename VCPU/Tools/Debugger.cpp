@@ -64,13 +64,13 @@ void Debugger::Step()
 	int word = GetNextPCAddr() / 4;
 	if (!pCPU->PipelineFreeze())
 	{
-		if (pCPU->PipelineBubble())
+		if (pCPU->PipelineBubbleID())
 		{
 			mLastInstructions.insert(mLastInstructions.begin() + 1, -1);
 		}
-		else if (pCPU->InstructionFetchNop())
+		else if (pCPU->PipelineBubbleEX())
 		{
-			mLastInstructions.insert(mLastInstructions.begin(), -1);
+			mLastInstructions.insert(mLastInstructions.begin() + 2, -1);
 		}
 		else
 		{

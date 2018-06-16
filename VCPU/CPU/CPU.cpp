@@ -58,7 +58,7 @@ class CPU::Stage3 : public PipelineStage
 {
 public:
 	using PipelineStage::PipelineStage;
-	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed);
+	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed, const Wire& flush);
 	void Update();
 	void PostUpdate();
 	const BufferEXMEM& Out() const { return bufEXMEM; }
@@ -70,6 +70,8 @@ private:
 	MuxBundle<32, 2> aluBInputMux;
 
 	ALU<32> alu;
+	Multiplier<32> multiplier;
+	MuxBundle<32, 4> aluMultOutMux;
 	MuxBundle<32, 4> aluOutMux;
 	FullAdderN<32> jumpLinkAdder;
 	BufferEXMEM bufEXMEM;
@@ -153,7 +155,7 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 		opcodeControl.OutBundle(), opcodeControl.AluControl(), branchTaken.Out());
 }
 
-void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed)
+void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed, const Wire& flush)
 {
 	// Hardcoded Link in R31.
 	regFileWriteAddrMux.Connect({ stage2.RD.Out(), Bundle<5>(31U) }, stage2.OpcodeControl().JumpLink());
@@ -172,13 +174,17 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 	Bundle<32> sltExtended = Bundle<32>::OFF;
 	sltExtended.Connect(0, alu.Flags().Negative());
 
+	// Multiplier
+	multiplier.Connect(aluAInputMux.Out(), aluBInputMux.Out(), stage2.OpcodeControl().MultOp());
+	aluMultOutMux.Connect({ alu.Out(), alu.Out(), multiplier.OutHi(), multiplier.OutLo() }, stage2.OpcodeControl().MultMoveReg());
+
 	// Bit of a hack? Drop the PC+4+4 into the alu out field for Jump Link instructions
 	jumpLinkAdder.Connect(stage2.PCinc.Out(), Bundle<32>(4), Wire::OFF);
-	aluOutMux.Connect({ alu.Out(), jumpLinkAdder.Out(), sltExtended, sltExtended }, 
+	aluOutMux.Connect({ aluMultOutMux.Out(), jumpLinkAdder.Out(), sltExtended, sltExtended },
 		{ &stage2.OpcodeControl().JumpLink(), &stage2.OpcodeControl().SltOp() });
 	
 	// Out Buffer
-	bufEXMEM.Connect(proceed, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutMux.Out(),
+	bufEXMEM.Connect(proceed, flush, regFileWriteAddrMux.Out(), aluBForwardMux.Out(), aluOutMux.Out(),
 		alu.Flags(), stage2.OpcodeControl());
 }
 
@@ -246,6 +252,8 @@ void CPU::Stage3::Update()
 	aluBForwardMux.Update();
 	aluBInputMux.Update();
 	alu.Update();
+	multiplier.Update();
+	aluMultOutMux.Update();
 	jumpLinkAdder.Update();
 	aluOutMux.Update();
 }
@@ -289,9 +297,9 @@ CPU::CPU()
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
-	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(),
-		stage2->Out().RD.Out(), stage2->Out().OpcodeControl().LoadOp(), stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp(),
-		stage1->Out().IR.Opcode());
+	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), 
+		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(),
+		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
 
 	stage1Thread.detach();
 	stage2Thread.detach();
@@ -301,10 +309,10 @@ CPU::CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.FreezeOrBubbleInv());
-	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.FreezeOrBubbleInv(), interlock.Bubble());
-	stage3->Connect(stage2->Out(), hazardIDEX, interlock.FreezeInv());
-	stage4->Connect(stage3->Out(), interlock.FreezeInv());
+	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.ProceedIF());
+	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
+	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
+	stage4->Connect(stage3->Out(), interlock.ProceedMEM());
 	cycles = 0;
 }
 

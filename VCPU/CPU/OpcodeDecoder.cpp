@@ -2,11 +2,12 @@
 
 OpcodeDecoder::OpcodeDecoder()
 {
-	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &zeroOpcode.Out(),
-		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),
-		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &jumpReg.Out(),
-		&luiOp.Out(), &mathOp.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1],
-		&memOpByte.Out(), &memOpHalf.Out(), &inv.Out()[2], &jumpOrBranch.Out(), &multOp.Out()
+	out.Connect({ &branchOp.Out(), &loadOp.Out(), &storeOp.Out(), &zeroOpcode.Out(),		// 4
+		&aluBImm.Out(), &regWrite.Out(), &sltop.Out(), &shiftOp.Out(),&shiftAmtOp.Out(),	// 9
+		&halt.Out(), &jumpOp.Out(), &jumpLink.Out(), &jumpReg.Out(),						// 13
+		&luiOp.Out(), &mathOp.Out(), &funcOpMux.Out()[0], &funcOpMux.Out()[1],				// 17
+		&memOpByte.Out(), &memOpHalf.Out(), &inv.Out()[2], &jumpOrBranch.Out(),				// 21
+		&multOp.Out(), &funcOpMux.Out()[1], &multMoveOp.Out()								// 24
 		});
 }
 
@@ -37,6 +38,7 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	funcOpMux.Connect({ opcode, func }, zeroOpcode.Out());
 	func1Inv.Connect(funcOpMux.Out()[1]);
 	func2Inv.Connect(funcOpMux.Out()[2]);
+	func3Inv.Connect(funcOpMux.Out()[3]);
 	func4Inv.Connect(funcOpMux.Out()[4]);
 	
 	jumpReg.Connect({ &zeroOpcode.Out(), &func1Inv.Out(), &func2Inv.Out(), &funcOpMux.Out()[3], &func4Inv.Out() });
@@ -45,6 +47,8 @@ void OpcodeDecoder::Connect(const Bundle<6>& opcode, const Bundle<6>& func)
 	regWrite.Connect({ &zeroOpcode.Out(), &loadOp.Out(), &immOp.Out(), &jumpLink.Out() });
 	sltop.Connect({ &funcOpMux.Out()[1], &func2Inv.Out(), &funcOpMux.Out()[3], &func4Inv.Out(), &loadstoreInv.Out() });
 	mathOp.Connect({ &func2Inv.Out(), &branchOp.Out(), &loadstore.Out(), &luiOp.Out() });
+
+	multMoveOp.Connect({ &func2Inv.Out(), &func3Inv.Out(), &funcOpMux.Out()[4]});
 	multOp.Connect({ &func1Inv.Out(), &func2Inv.Out(), &funcOpMux.Out()[3], &funcOpMux.Out()[4] });
 	addOr.Connect(loadstore.Out(), func1Inv.Out());
 	subOr.Connect(funcOpMux.Out()[1], branchOp.Out());
@@ -86,6 +90,7 @@ void OpcodeDecoder::Update()
 	memOpHalf.Update();
 	func1Inv.Update();
 	func2Inv.Update();
+	func3Inv.Update();
 	func4Inv.Update();
 	jumpReg.Update();
 	jumpOp.Update();
@@ -94,6 +99,7 @@ void OpcodeDecoder::Update()
 	regWrite.Update();
 	sltop.Update();
 	mathOp.Update();
+	multMoveOp.Update();
 	multOp.Update();
 	addOr.Update();
 	subOr.Update();
