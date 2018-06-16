@@ -37,13 +37,14 @@ public:
 	typedef Bundle<TAG_BITS> TagBundle;
 
 	Cache();
+	virtual ~Cache();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite);
 	void Update();
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
-	const Wire& NeedStall() { return readMiss.Out(); }
-	const Wire& NoStall() { return readMissInv.Out(); }
+	const Wire& NeedStall() { return needStall.Out(); }
+	const Wire& NoStall() { return needStallInv.Out(); }
 	
 private:
 	void UpdateCache();
@@ -54,19 +55,22 @@ private:
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;	
+	Matcher<ADDR_BITS> addrReadMatcher;
+	AndGate gotResultFromMemory;
 	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
 	AndGate readMiss;
-	Inverter readMissInv;
-	OrGate needWaitForMemory;
+	AndGateN<3> writeBufferFull;
+	OrGate needStall;
+	Inverter needStallInv;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
 
 	std::condition_variable mCondVar;
 	std::mutex mMutex;
-	bool mCacheWaitingOnMemory;
+	int mCacheState;
 	std::thread memUpdateThread;
 	
 	friend class Debugger;
@@ -75,10 +79,16 @@ private:
 
 template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Cache()
-	: mCacheWaitingOnMemory(false)
+	: mCacheState(0)
 	, memUpdateThread(&Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory, this)
 {
-	memUpdateThread.detach();
+}
+
+template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+inline Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::~Cache()
+{
+	mCacheState = 2;
+	memUpdateThread.join();
 }
 
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
@@ -97,7 +107,9 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	TagBundle tag = wordAddr.Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);
 
 	indexDecoder.Connect(index);
-	writeEnable.Connect(indexDecoder.Out(), Bundle<NUM_CACHE_LINES>(readMiss.Out()));
+	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
+	gotResultFromMemory.Connect(addrReadMatcher.Out(), readMiss.Out());
+	writeEnable.Connect(indexDecoder.Out(), Bundle<NUM_CACHE_LINES>(gotResultFromMemory.Out()));
 
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
@@ -111,8 +123,9 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
 	readMiss.Connect(read, cacheMiss.Out());
-	readMissInv.Connect(readMiss.Out());
-	needWaitForMemory.Connect(readMiss.Out(), write);
+	writeBufferFull.Connect({ &cacheMiss.Out(), &write, &buffer.Full() });
+	needStall.Connect(readMiss.Out(), writeBufferFull.Out());
+	needStallInv.Connect(readMiss.Out());
 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
 
@@ -123,36 +136,21 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	}
 
 	outDataMux.Connect(dataWordBundles, offset);
+	mCacheState = 1;
 }
 
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
 	UpdateCache();
-
-	static const int MEM_UPDATE_FREQUENCY = 1;
-	int mem_update_counter = 0;
-	
-	if (!(mem_update_counter % MEM_UPDATE_FREQUENCY))
-	{
-		mem_update_counter = 0;
-		{
-			std::lock_guard<std::mutex> lk(mMutex);
-			mCacheWaitingOnMemory = true;
-		}
-		mCondVar.notify_one();
-		{
-			std::unique_lock<std::mutex> lk(mMutex);
-			mCondVar.wait(lk, [this] {return !mCacheWaitingOnMemory; });
-		}
-	}
-	mem_update_counter++;
 }
 
 template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateCache()
 {
 	indexDecoder.Update();
+	addrReadMatcher.Update();
+	gotResultFromMemory.Update();
 	writeEnable.Update();
 
 	for (auto& line : cachelines)
@@ -162,8 +160,9 @@ inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTE
 	cacheHitMux.Update();
 	cacheMiss.Update();
 	readMiss.Update();
-	readMissInv.Update();
-	needWaitForMemory.Update();
+	writeBufferFull.Update();
+	needStall.Update();
+	needStallInv.Update();
 	outCacheLineMux.Update();
 	outDataMux.Update();
 	buffer.Update();
@@ -172,15 +171,11 @@ inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTE
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory()
 {
-	while (true)
+	while (mCacheState < 2)
 	{
-		std::unique_lock<std::mutex> lk(mMutex);
-		mCondVar.wait(lk, [this] {return mCacheWaitingOnMemory; });
-
-		mMemory.Update();
-		mCacheWaitingOnMemory = false;
-		lk.unlock();
-		mCondVar.notify_one();
-
+		if (mCacheState == 1)
+		{
+			mMemory.Update();
+		}
 	}
 }

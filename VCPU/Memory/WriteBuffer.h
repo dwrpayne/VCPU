@@ -55,6 +55,9 @@ public:
 	void Update();
 	void UpdateRead(); // Hack until I can figure out how this can work.
 	const BufBundle Out() { return buffer.Out(); }
+
+	const Wire& Full() { return buffer.Full(); }
+	const Wire& NonEmpty() { return buffer.NonEmpty(); }
 	
 private:
 	OrGateN<ACTION_LEN> pushBuffer;

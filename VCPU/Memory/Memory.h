@@ -37,12 +37,15 @@ public:
 	void Update();
 
 	const DataBundle& Out() const { return outMux.Out(); }
+	const Bundle<ADDR_BITS>& ReadAddr() const { return addrReadOrNullMux.Out(); }
 	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:
 	WBuffer* pWriteBuffer;
 	MuxBundle<ADDR_BITS, 2> addrRWMux;
+	MuxBundle<ADDR_BITS, 2> addrReadOrNullMux;
 	Inverter readRequestInv;
+	OrGate readBufAndWriteMem;
 	
 	Decoder<NUM_WORDS> addrDecoder;
 	Decoder<WORD_LEN> byteDecoder;
@@ -79,9 +82,11 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf, const Wire&
 {
 	pWriteBuffer = &writebuf;
 	readRequestInv.Connect(read);
-	pWriteBuffer->ConnectRead(readRequestInv.Out());
+	readBufAndWriteMem.Connect(readRequestInv.Out(), pWriteBuffer->NonEmpty());
+	pWriteBuffer->ConnectRead(readBufAndWriteMem.Out());
 
-	addrRWMux.Connect({ pWriteBuffer->Out().Addr(), readaddr }, read);
+	addrRWMux.Connect({ readaddr, pWriteBuffer->Out().Addr()}, readBufAndWriteMem.Out());
+	addrReadOrNullMux.Connect({ addrRWMux.Out(), Bundle<ADDR_BITS>::OFF }, readBufAndWriteMem.Out());
 	
 	auto byteAddr = addrRWMux.Out().Range<ADDR_BYTE_LEN>(0);
 	auto wordAddr = addrRWMux.Out().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
@@ -93,7 +98,7 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf, const Wire&
 	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pWriteBuffer->Out().Action().WriteByte(), &pWriteBuffer->Out().Action().WriteHalf() });
 	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pWriteBuffer->Out().Action().Write()));
 
-	writeEnableMaskOrReadMux.Connect({ writeEnabledMask.Out(), Bundle<WORD_LEN>::OFF }, read);
+	writeEnableMaskOrReadMux.Connect({ Bundle<WORD_LEN>::OFF, writeEnabledMask.Out() }, readBufAndWriteMem.Out());
 
 	for (int i = 0; i < BYTES; ++i)
 	{
@@ -128,6 +133,7 @@ template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<N, BYTES, NCacheLine>::Update()
 {
 	readRequestInv.Update();
+	readBufAndWriteMem.Update();
 	pWriteBuffer->UpdateRead();
 	addrRWMux.Update();
 	addrDecoder.Update();
@@ -156,4 +162,5 @@ inline void Memory<N, BYTES, NCacheLine>::Update()
 			reg.Update();
 		}
 	}
+	addrReadOrNullMux.Update();
 }
