@@ -5,12 +5,11 @@
 #include "Tools/Assembler.h"
 #include "Tests/ComponentCost.h"
 
-
 void Test()
 {
 	bool success = true;
-	PrintComponentCosts();
 #ifdef DEBUG
+	PrintComponentCosts();
 	success &= RunAllTests();
 #endif
 	success &= RunCPUTests();
