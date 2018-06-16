@@ -16,8 +16,7 @@ public:
 	static const int ADDR_LEN = bits(Nreg);
 	typedef Bundle<ADDR_LEN> AddrBundle;
 	
-	void Connect(const Bundle<N>& in, const Wire & read, const Wire& write);
-	void ConnectRead(const Wire& read);
+	void Connect(const Bundle<N>& in, const Wire & pop, const Wire& push);
 	void Update();
 	const Bundle<N>& Out() { return outMux.Out(); }
 
@@ -49,8 +48,8 @@ private:
 	};
 
 	CounterPair counters;
-	AndGate writeEnable;
-	AndGate readEnable;
+	AndGate pushEnable;
+	AndGate popEnable;
 	Decoder<Nreg> writeDecoder;
 	MultiGate<AndGate, Nreg> bufferWriteEnable;
 	std::array<Register<N>, Nreg> buffers;
@@ -58,13 +57,13 @@ private:
 };
 
 template<unsigned int N, unsigned int Nreg>
-inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & read, const Wire & write)
+inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & pop, const Wire& push)
 {
-	writeEnable.Connect(write, counters.HasRoom());
-	readEnable.Connect(read, counters.NonEmpty());
-	counters.Connect(readEnable.Out(), writeEnable.Out());
+	pushEnable.Connect(push, counters.HasRoom());
+	readEnable.Connect(pop, counters.NonEmpty());
+	counters.Connect(popEnable.Out(), pushEnable.Out());
 	writeDecoder.Connect(counters.WriteIndex());
-	bufferWriteEnable.Connect(writeDecoder.Out(), Bundle<Nreg>(writeEnable.Out()));
+	bufferWriteEnable.Connect(writeDecoder.Out(), Bundle<Nreg>(pushEnable.Out()));
 	std::array<Bundle<N>, Nreg> regOuts;
 	for (int i = 0; i < Nreg; i++)
 	{
@@ -79,8 +78,8 @@ inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & r
 template<unsigned int N, unsigned int Nreg>
 inline void CircularBuffer<N, Nreg>::Update()
 {
-	writeEnable.Update();
-	readEnable.Update();
+	pushEnable.Update();
+	popEnable.Update();
 	counters.Update();
 
 	writeDecoder.Update();

@@ -19,6 +19,7 @@ public:
 		VERBOSE,
 	};
 	Debugger(const std::string& source_filename, Verbosity verbosity = NORMAL);
+	~Debugger();
 
 	void Start(int cycles = -1);
 	void Step();

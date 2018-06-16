@@ -308,6 +308,8 @@ bool TestCache(Verbosity verbosity)
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 525252, test.Out().Read(), verbosity);
 
+	delete pCache;
+
 	return success;
 }
 
@@ -451,7 +453,7 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 bool RunCPUTests()
 {
 	bool success = true;
-	auto default_verb = Debugger::MEMORY;
+	auto default_verb = Debugger::VERBOSE;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);

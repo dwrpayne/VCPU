@@ -26,6 +26,11 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	pCPU->Connect();
 }
 
+Debugger::~Debugger()
+{
+	delete pCPU;
+}
+
 void Debugger::Start(int cycles)
 {
 	while (cycles != 0)
@@ -33,7 +38,7 @@ void Debugger::Start(int cycles)
 		Step();
 		if (bPrintInstruction)
 		{
-			__debugbreak();
+			//__debugbreak();
 		}
  		if (pCPU->Halt())
 		{

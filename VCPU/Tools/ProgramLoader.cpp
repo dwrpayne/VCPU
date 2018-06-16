@@ -16,7 +16,7 @@ void ProgramLoader::Load(const Program * program)
 		unsigned int bin = i.mBinary;
 		ins_bundle.Write(bin);
 		addr_bundle.Write(cur_addr);
-		insMemory.Update();
+		insMemory.UpdateUntilNoStall();
 		cur_addr += 4;
 	}
 }

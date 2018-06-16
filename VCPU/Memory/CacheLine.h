@@ -41,6 +41,9 @@ private:
 	MultiGate<AndGate, Nwords> writeWordEnableAnd;
 
 	LineBundle outLineBundle;
+#ifdef DEBUG
+	template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES> friend class Cache;
+#endif
 };
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>

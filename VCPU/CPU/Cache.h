@@ -40,6 +40,7 @@ public:
 	virtual ~Cache();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite);
 	void Update();
+	void UpdateUntilNoStall();
 
 	const DataBundle& Out() const { return outDataMux.Out(); }
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
@@ -50,13 +51,13 @@ private:
 	void UpdateCache();
 	void UpdateMemory();
 	
-	WriteBuffer<WORD_SIZE, ADDR_BITS, 8> buffer;
+	RequestBuffer<WORD_SIZE, ADDR_BITS, 8> buffer;
 	Memory<WORD_SIZE, MAIN_MEMORY_BYTES, CACHE_LINE_BITS> mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;	
 	Matcher<ADDR_BITS> addrReadMatcher;
-	AndGate gotResultFromMemory;
+	AndGateN<3> gotResultFromMemory;
 	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
@@ -72,6 +73,10 @@ private:
 	std::mutex mMutex;
 	volatile int mCacheState;
 	std::thread memUpdateThread;
+
+#ifdef DEBUG
+	AddrBundle DEBUG_addr;
+#endif
 	
 	friend class Debugger;
 };
@@ -96,6 +101,9 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 																					const Wire& write, const Wire& read,
 																					const Wire& bytewrite, const Wire& halfwrite)
 {
+#ifdef DEBUG
+	DEBUG_addr.Connect(0, addr);
+#endif
 	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite });
 	mMemory.Connect(buffer, read, addr);
 
@@ -108,9 +116,9 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 
 	indexDecoder.Connect(index);
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
-	gotResultFromMemory.Connect(addrReadMatcher.Out(), readMiss.Out());
+	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &readMiss.Out(), &mMemory.ServicedRead() });
 	writeEnable.Connect(indexDecoder.Out(), Bundle<NUM_CACHE_LINES>(gotResultFromMemory.Out()));
-
+	
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
 
@@ -146,6 +154,16 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 }
 
 template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateUntilNoStall()
+{
+	UpdateCache();
+	while (NeedStall().On())
+	{
+		UpdateCache();
+	}
+}
+
+template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateCache()
 {
 	indexDecoder.Update();
@@ -157,6 +175,18 @@ inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTE
 	{
 		line.Update();
 	}
+#ifdef DEBUG
+	if (gotResultFromMemory.Out().On())
+	{
+		std::cout << "Cache got ";
+		auto& line = cachelines[(DEBUG_addr.UnsignedRead()/8) % cachelines.size()];
+		for (auto& reg : line.words)
+		{
+			std::cout << reg.Out().Read() << ", ";
+		}
+		std::cout << " on " << DEBUG_addr.UnsignedRead() << std::endl;
+	}
+#endif
 	cacheHitMux.Update();
 	cacheMiss.Update();
 	readMiss.Update();

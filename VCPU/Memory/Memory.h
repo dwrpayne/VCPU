@@ -11,7 +11,7 @@
 #include "MuxBundle.h"
 #include "Shifter.h"
 #include "SelectBundle.h"
-#include "WriteBuffer.h"
+#include "RequestBuffer.h"
 
 // Memory is always read in words, but stored and addressed by byte.
 // For byte-writes we have to keep an std::array of Register<8>, not Register<N>
@@ -30,22 +30,24 @@ public:
 	static const unsigned int COUNTER_LEN = 3;
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
-	typedef WriteBuffer<N, ADDR_BITS, 8> WBuffer;
+	typedef RequestBuffer<N, ADDR_BITS, 8> ReqBuffer;
 
 	Memory();
-	void Connect(WBuffer& writebuf, const Wire& read, const AddrBundle& readaddr);
+	void Connect(ReqBuffer& reqbuf, const Wire& read, const AddrBundle& readaddr);
 	void Update();
 
 	const DataBundle& Out() const { return outMux.Out(); }
 	const Bundle<ADDR_BITS>& ReadAddr() const { return addrReadOrNullMux.Out(); }
+	const Wire& ServicedRead() const { return servicedRead.Out(); }
 	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:
-	WBuffer* pWriteBuffer;
+	ReqBuffer* pReqBuffer;
 	MuxBundle<ADDR_BITS, 2> addrRWMux;
 	MuxBundle<ADDR_BITS, 2> addrReadOrNullMux;
 	Inverter readRequestInv;
 	OrGate readBufAndWriteMem;
+	Inverter servicedRead;
 	
 	Decoder<NUM_WORDS> addrDecoder;
 	Decoder<WORD_LEN> byteDecoder;
@@ -78,14 +80,15 @@ inline Memory<N, BYTES, NCacheLine>::Memory()
 }
 
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
-inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf, const Wire& read, const AddrBundle& readaddr)
+inline void Memory<N, BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
 {
-	pWriteBuffer = &writebuf;
+	pReqBuffer = &reqbuf;
 	readRequestInv.Connect(read);
-	readBufAndWriteMem.Connect(readRequestInv.Out(), pWriteBuffer->NonEmpty());
-	pWriteBuffer->ConnectRead(readBufAndWriteMem.Out());
+	readBufAndWriteMem.Connect(readRequestInv.Out(), pReqBuffer->NonEmpty());
+	servicedRead.Connect(readBufAndWriteMem.Out());
+	pReqBuffer->ConnectRead(readBufAndWriteMem.Out());
 
-	addrRWMux.Connect({ readaddr, pWriteBuffer->Out().Addr()}, readBufAndWriteMem.Out());
+	addrRWMux.Connect({ readaddr, pReqBuffer->Out().Addr()}, readBufAndWriteMem.Out());
 	addrReadOrNullMux.Connect({ addrRWMux.Out(), Bundle<ADDR_BITS>::OFF }, readBufAndWriteMem.Out());
 	
 	auto byteAddr = addrRWMux.Out().Range<ADDR_BYTE_LEN>(0);
@@ -95,8 +98,8 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf, const Wire&
 	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
 
 	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
-	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pWriteBuffer->Out().Action().WriteByte(), &pWriteBuffer->Out().Action().WriteHalf() });
-	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pWriteBuffer->Out().Action().Write()));
+	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pReqBuffer->Out().Action().WriteByte(), &pReqBuffer->Out().Action().WriteHalf() });
+	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pReqBuffer->Out().Action().Write()));
 
 	writeEnableMaskOrReadMux.Connect({ Bundle<WORD_LEN>::OFF, writeEnabledMask.Out() }, readBufAndWriteMem.Out());
 
@@ -105,7 +108,7 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf, const Wire&
 		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnableMaskOrReadMux.Out()[i % 4]);
 	}
 
-	dataByteShifter.Connect(pWriteBuffer->Out().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
+	dataByteShifter.Connect(pReqBuffer->Out().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
 
 	std::array<DataBundle, NUM_WORDS> regOuts;
 	for (int i = 0; i < BYTES; ++i)
@@ -134,7 +137,8 @@ inline void Memory<N, BYTES, NCacheLine>::Update()
 {
 	readRequestInv.Update();
 	readBufAndWriteMem.Update();
-	pWriteBuffer->UpdateRead();
+	servicedRead.Update();
+	pReqBuffer->UpdatePop();
 	addrRWMux.Update();
 	addrDecoder.Update();
 	byteDecoder.Update();
@@ -163,4 +167,16 @@ inline void Memory<N, BYTES, NCacheLine>::Update()
 		}
 	}
 	addrReadOrNullMux.Update();
+
+#ifdef DEBUG
+	if (servicedRead.Out().On())
+	{
+		std::cout << "Memory put ";
+		for (auto& reg : outBufferWords)
+		{
+			std::cout << reg.Out().Read() << ", ";
+		}
+		std::cout << " on " << addrReadOrNullMux.Out().Read() << std::endl;
+	}
+#endif
 }
