@@ -104,8 +104,8 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 #ifdef DEBUG
 	DEBUG_addr.Connect(0, addr);
 #endif
-	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite });
-	mMemory.Connect(buffer, read, addr);
+	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite }, read);
+	mMemory.Connect(buffer);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
 	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));

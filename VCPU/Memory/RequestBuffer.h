@@ -51,24 +51,26 @@ public:
 	};
 
 	void Connect(const AddrBundle & addr, const DataBundle & data, const WriteReqType& action, const Wire& readreq);
-	void ConnectPop(const Wire& writereq, const Wire& readreq);
 	void Update();
 	void UpdatePop(); // Hack until I can figure out how this can work.
 	const WriteReqBundle OutWrite() { return writebuffer.Out(); }
 	const AddrBundle& OutRead() { return readbuffer.Out(); }
+	const Wire& PoppedWrite() { return popWriteBuffer.Out(); }
+	const Wire& PoppedRead() { return popReadBuffer.Out(); }
+
 
 	const Wire& Full() { return writebuffer.Full(); }
 	const Wire& NonEmpty() { return writebuffer.NonEmpty(); }
 	
 private:
 	OrGateN<ACTION_LEN> pushWriteBuffer;
-	AndGate popWriteBuffer;
+	OrGate popWriteBuffer;
 	AndGate pushReadBuffer;
 	AndGate popReadBuffer;
 	Wire popwrite, pushwrite;
 	Wire popread, pushread;
 	CircularBuffer<BUF_WIDTH, Nreg> writebuffer;
-	CircularBuffer<N, 1> readbuffer;
+	CircularBuffer<ADDR_LEN, 1> readbuffer;
 	std::mutex mMutex;
 };
 
@@ -77,19 +79,14 @@ inline void RequestBuffer<N, ADDR_LEN, Nreg>::Connect(const AddrBundle & addr, c
 {
 	pushWriteBuffer.Connect(action);
 	pushReadBuffer.Connect(Wire::ON, readreq);
+	popReadBuffer.Connect(Wire::ON, writebuffer.Empty());
+	popWriteBuffer.Connect(Wire::ON, writebuffer.NonEmpty());
 	pushwrite.Set(false);
 	popwrite.Set(false);
 	pushread.Set(false);
 	popread.Set(false);
 	writebuffer.Connect(WriteReqBundle(addr, data, action), popwrite, pushwrite);
 	readbuffer.Connect(addr, popread, pushread);
-}
-
-template<unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg>
-inline void RequestBuffer<N, ADDR_LEN, Nreg>::ConnectPop(const Wire& writereq, const Wire& readreq)
-{
-	popReadBuffer.Connect(Wire::ON, readreq);
-	popWriteBuffer.Connect(Wire::ON, writereq);
 }
 
 template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg>

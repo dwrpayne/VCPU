@@ -81,3 +81,24 @@ inline void Multiplexer<2>::Update()
 	and1.Update();
 	orOut.Update();
 }
+
+
+template <>
+class Multiplexer<1> : public Component
+{
+public:
+	void Connect(const Bundle<1>& in, const Wire& sel);
+	void Update();
+
+	const Wire& Out() const { return Wire::OFF; }
+
+private:
+};
+
+inline void Multiplexer<1>::Connect(const Bundle<1>& in, const Wire& sel)
+{
+}
+
+inline void Multiplexer<1>::Update()
+{
+}

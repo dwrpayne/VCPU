@@ -22,6 +22,7 @@ public:
 
 	const Wire& Full() { return counters.Full(); }
 	const Wire& NonEmpty() { return counters.NonEmpty(); }
+	const Wire& Empty() { return counters.Empty(); }
 
 private:
 	class CounterPair : public Component
@@ -35,6 +36,7 @@ private:
 		const Wire& Full() { return queueFull.Out(); }
 		const Wire& HasRoom() { return queueNotFull.Out(); }
 		const Wire& NonEmpty() { return queueNotEmpty.Out(); }
+		const Wire& Empty() { return queueEmpty.Out(); }
 
 	private:
 		Counter<ADDR_LEN + 1> readCounter;
@@ -44,7 +46,8 @@ private:
 		Inverter counterHiBitsEqual;
 		AndGate queueFull;
 		Inverter queueNotFull;
-		NandGate queueNotEmpty;
+		AndGate queueEmpty;
+		Inverter queueNotEmpty;
 	};
 
 	CounterPair counters;
@@ -60,7 +63,7 @@ template<unsigned int N, unsigned int Nreg>
 inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & pop, const Wire& push)
 {
 	pushEnable.Connect(push, counters.HasRoom());
-	readEnable.Connect(pop, counters.NonEmpty());
+	popEnable.Connect(pop, counters.NonEmpty());
 	counters.Connect(popEnable.Out(), pushEnable.Out());
 	writeDecoder.Connect(counters.WriteIndex());
 	bufferWriteEnable.Connect(writeDecoder.Out(), Bundle<Nreg>(pushEnable.Out()));
@@ -102,7 +105,8 @@ inline void CircularBuffer<N, Nreg>::CounterPair::Connect(const Wire & read, con
 	counterHiBitsEqual.Connect(counterHiBitsDifferent.Out());
 	queueFull.Connect(matcher.Out(), counterHiBitsDifferent.Out());
 	queueNotFull.Connect(queueFull.Out());
-	queueNotEmpty.Connect(matcher.Out(), counterHiBitsEqual.Out());
+	queueEmpty.Connect(matcher.Out(), counterHiBitsEqual.Out());
+	queueNotEmpty.Connect(queueEmpty.Out());
 }
 
 template<unsigned int N, unsigned int Nreg>
@@ -115,6 +119,7 @@ inline void CircularBuffer<N, Nreg>::CounterPair::Update()
 	counterHiBitsEqual.Update();
 	queueFull.Update();
 	queueNotFull.Update();
+	queueEmpty.Update();
 	queueNotEmpty.Update();
 }
 

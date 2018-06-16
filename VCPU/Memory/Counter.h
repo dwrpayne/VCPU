@@ -72,9 +72,12 @@ inline void Counter<N>::Connect(const Wire& clear, const Wire& enable)
 	Bundle<N> inputs;
 	inputs.Connect(0, Wire::ON);
 	inputs.Connect(1, bits[0].Q());
-	inputs.Connect(2, ands[0].Out());
+	if (N > 2)
+	{
+		inputs.Connect(2, ands[0].Out());
+		ands[0].Connect(bits[0].Q(), bits[1].Q());
+	}
 
-	ands[0].Connect(bits[0].Q(), bits[1].Q());
 	for (int i = 1; i < N - 2; ++i)
 	{
 		ands[i].Connect(ands[i - 1].Out(), bits[i + 1].Q());

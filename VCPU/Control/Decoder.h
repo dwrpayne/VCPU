@@ -90,3 +90,29 @@ inline void Decoder<2>::Update()
 	inv.Update();
 	buffer.Update();
 }
+
+template <>
+class Decoder<1> : public Component
+{
+public:
+	Decoder();
+	void Connect(const Bundle<1>& in);
+	void Update();
+
+	const Bundle<1>& Out() const { return Bundle<1>::OFF; }
+
+
+private:
+};
+
+inline Decoder<1>::Decoder()
+{
+}
+
+inline void Decoder<1>::Connect(const Bundle<1>& in)
+{
+}
+
+inline void Decoder<1>::Update()
+{
+}

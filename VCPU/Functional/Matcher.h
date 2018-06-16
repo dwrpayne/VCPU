@@ -70,3 +70,27 @@ inline void NonZeroMatcher<N>::Update()
 	matchOr.Update();
 	matchAnd.Update();
 }
+
+
+template <>
+class Matcher<1> : public Component
+{
+public:
+	void Connect(const Bundle<1>& a, const Bundle<1>& b);
+	void Update();
+
+	const Wire& Out() const { return and.Out(); }
+
+private:
+	AndGate and;
+};
+
+inline void Matcher<1>::Connect(const Bundle<1>& a, const Bundle<1>& b)
+{
+	and.Connect(a[0], b[0]);
+}
+
+inline void Matcher<1>::Update()
+{
+	and.Update();
+}

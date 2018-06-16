@@ -33,21 +33,19 @@ public:
 	typedef RequestBuffer<N, ADDR_BITS, 8> ReqBuffer;
 
 	Memory();
-	void Connect(ReqBuffer& reqbuf, const Wire& read, const AddrBundle& readaddr);
+	void Connect(ReqBuffer& reqbuf);
 	void Update();
 
 	const DataBundle& Out() const { return outMux.Out(); }
-	const Bundle<ADDR_BITS>& ReadAddr() const { return addrReadOrNullMux.Out(); }
+	const Bundle<ADDR_BITS>& ReadAddr() const { return addrReadOrNull.Out(); }
 	const Wire& ServicedRead() const { return servicedRead.Out(); }
 	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:
 	ReqBuffer* pReqBuffer;
 	MuxBundle<ADDR_BITS, 2> addrRWMux;
-	MuxBundle<ADDR_BITS, 2> addrReadOrNullMux;
-	Inverter readRequestInv;
-	OrGate readBufAndWriteMem;
-	Inverter servicedRead;
+	MultiGate<AndGate, ADDR_BITS> addrReadOrNull;
+	AndGate servicedRead;
 	
 	Decoder<NUM_WORDS> addrDecoder;
 	Decoder<WORD_LEN> byteDecoder;
@@ -83,13 +81,11 @@ template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<N, BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
 {
 	pReqBuffer = &reqbuf;
-	readRequestInv.Connect(read);
-	readBufAndWriteMem.Connect(readRequestInv.Out(), pReqBuffer->NonEmpty());
-	servicedRead.Connect(readBufAndWriteMem.Out());
-	pReqBuffer->ConnectRead(readBufAndWriteMem.Out());
 
-	addrRWMux.Connect({ readaddr, pReqBuffer->Out().Addr()}, readBufAndWriteMem.Out());
-	addrReadOrNullMux.Connect({ addrRWMux.Out(), Bundle<ADDR_BITS>::OFF }, readBufAndWriteMem.Out());
+	servicedRead.Connect(Wire::ON, pReqBuffer->PoppedRead());
+
+	addrRWMux.Connect({ pReqBuffer->OutRead(), pReqBuffer->OutWrite().Addr()}, pReqBuffer->PoppedWrite());
+	addrReadOrNull.Connect(addrRWMux.Out(), Bundle<ADDR_BITS>(pReqBuffer->PoppedWrite()));
 	
 	auto byteAddr = addrRWMux.Out().Range<ADDR_BYTE_LEN>(0);
 	auto wordAddr = addrRWMux.Out().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
@@ -98,17 +94,18 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
 	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
 
 	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
-	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pReqBuffer->Out().Action().WriteByte(), &pReqBuffer->Out().Action().WriteHalf() });
-	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pReqBuffer->Out().Action().Write()));
+	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, 
+		{ &pReqBuffer->OutWrite().Action().WriteByte(), &pReqBuffer->OutWrite().Action().WriteHalf() });
+	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pReqBuffer->OutWrite().Action().Write()));
 
-	writeEnableMaskOrReadMux.Connect({ Bundle<WORD_LEN>::OFF, writeEnabledMask.Out() }, readBufAndWriteMem.Out());
+	writeEnableMaskOrReadMux.Connect({ Bundle<WORD_LEN>::OFF, writeEnabledMask.Out() }, pReqBuffer->PoppedWrite());
 
 	for (int i = 0; i < BYTES; ++i)
 	{
 		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnableMaskOrReadMux.Out()[i % 4]);
 	}
 
-	dataByteShifter.Connect(pReqBuffer->Out().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
+	dataByteShifter.Connect(pReqBuffer->OutWrite().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
 
 	std::array<DataBundle, NUM_WORDS> regOuts;
 	for (int i = 0; i < BYTES; ++i)
@@ -135,10 +132,8 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<N, BYTES, NCacheLine>::Update()
 {
-	readRequestInv.Update();
-	readBufAndWriteMem.Update();
-	servicedRead.Update();
 	pReqBuffer->UpdatePop();
+	servicedRead.Update();
 	addrRWMux.Update();
 	addrDecoder.Update();
 	byteDecoder.Update();
@@ -166,7 +161,7 @@ inline void Memory<N, BYTES, NCacheLine>::Update()
 			reg.Update();
 		}
 	}
-	addrReadOrNullMux.Update();
+	addrReadOrNull.Update();
 
 #ifdef DEBUG
 	if (servicedRead.Out().On())
@@ -176,7 +171,7 @@ inline void Memory<N, BYTES, NCacheLine>::Update()
 		{
 			std::cout << reg.Out().Read() << ", ";
 		}
-		std::cout << " on " << addrReadOrNullMux.Out().Read() << std::endl;
+		std::cout << " on " << addrReadOrNull.Out().Read() << std::endl;
 	}
 #endif
 }
