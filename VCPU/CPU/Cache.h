@@ -128,9 +128,12 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 {
 	UpdateCache();
 
-	// TODO: Figure out exactly how this signaling should work. Should we let the cache update at its own frequency?
-	if (needWaitForMemory.Out().On())
+	static const int MEM_UPDATE_FREQUENCY = 8;
+	int mem_update_counter = 0;
+	
+	if (!(mem_update_counter % MEM_UPDATE_FREQUENCY))
 	{
+		mem_update_counter = 0;
 		{
 			std::lock_guard<std::mutex> lk(mMutex);
 			mCacheWaitingOnMemory = true;
@@ -141,6 +144,7 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 			mCondVar.wait(lk, [this] {return !mCacheWaitingOnMemory; });
 		}
 	}
+	mem_update_counter++;
 }
 
 template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
