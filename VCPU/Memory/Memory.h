@@ -33,7 +33,7 @@ public:
 	typedef WriteBuffer<N, ADDR_BITS, 8> WBuffer;
 
 	Memory();
-	void Connect(WBuffer& writebuf);
+	void Connect(WBuffer& writebuf, const Wire& read, const AddrBundle& readaddr);
 	void Update();
 
 	const DataBundle& Out() const { return outMux.Out(); }
@@ -41,12 +41,15 @@ public:
 
 private:
 	WBuffer* pWriteBuffer;
+	MuxBundle<ADDR_BITS, 2> addrRWMux;
+	Inverter readRequestInv;
 	
 	Decoder<NUM_WORDS> addrDecoder;
 	Decoder<WORD_LEN> byteDecoder;
 	Decoder<2> halfDecoder;
 	MuxBundle<WORD_LEN, 4> masker;
 	MultiGate<AndGate, WORD_LEN> writeEnabledMask;
+	MuxBundle<WORD_LEN, 2> writeEnableMaskOrReadMux;
 	LeftShifter<N> dataByteShifter;
 	
 	std::array<AndGate, BYTES> writeEnable;
@@ -72,24 +75,29 @@ inline Memory<N, BYTES, NCacheLine>::Memory()
 }
 
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
-inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf)
+inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf, const Wire& read, const AddrBundle& readaddr)
 {
 	pWriteBuffer = &writebuf;
+	readRequestInv.Connect(read);
+	pWriteBuffer->ConnectRead(readRequestInv.Out());
+
+	addrRWMux.Connect({ pWriteBuffer->Out().Addr(), readaddr }, read);
 	
-	auto byteAddr = pWriteBuffer->Out().Addr().Range<ADDR_BYTE_LEN>(0);
-	auto wordAddr = pWriteBuffer->Out().Addr().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
+	auto byteAddr = addrRWMux.Out().Range<ADDR_BYTE_LEN>(0);
+	auto wordAddr = addrRWMux.Out().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
 	addrDecoder.Connect(wordAddr);
 	byteDecoder.Connect(byteAddr);
 	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
 
 	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
-	Bundle<4> wordMaskBundle({ &Wire::ON, &Wire::ON, &Wire::ON, &Wire::ON });
-	masker.Connect({ wordMaskBundle, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pWriteBuffer->Out().Action().WriteByte(), &pWriteBuffer->Out().Action().WriteHalf() });
+	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pWriteBuffer->Out().Action().WriteByte(), &pWriteBuffer->Out().Action().WriteHalf() });
 	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pWriteBuffer->Out().Action().Write()));
+
+	writeEnableMaskOrReadMux.Connect({ writeEnabledMask.Out(), Bundle<WORD_LEN>::OFF }, read);
 
 	for (int i = 0; i < BYTES; ++i)
 	{
-		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnabledMask.Out()[i % 4]);
+		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnableMaskOrReadMux.Out()[i % 4]);
 	}
 
 	dataByteShifter.Connect(pWriteBuffer->Out().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
@@ -119,12 +127,15 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf)
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<N, BYTES, NCacheLine>::Update()
 {
+	readRequestInv.Update();
 	pWriteBuffer->UpdateRead();
+	addrRWMux.Update();
 	addrDecoder.Update();
 	byteDecoder.Update();
 	halfDecoder.Update();
 	masker.Update();
 	writeEnabledMask.Update();
+	writeEnableMaskOrReadMux.Update();
 	dataByteShifter.Update();
 	for (auto& i : writeEnable)
 	{

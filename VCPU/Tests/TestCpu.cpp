@@ -453,7 +453,7 @@ bool RunCPUTests()
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, Debugger::VERBOSE);
 
 	return success;
 }

@@ -15,7 +15,7 @@ template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg>
 class WriteBuffer : Component
 {
 public:
-	static const int ACTION_LEN = 4;
+	static const int ACTION_LEN = 3;
 	static const int BUF_WIDTH = N + ADDR_LEN + ACTION_LEN;
 	static const int REG_INDEX_BITS = bits(Nreg);
 	typedef Bundle<ADDR_LEN> AddrBundle;
@@ -28,7 +28,6 @@ public:
 		const Wire& Write() const { return Get(0); }
 		const Wire& WriteByte() const { return Get(1); }
 		const Wire& WriteHalf() const { return Get(2); }
-		const Wire& Read() const { return Get(3); }
 	};
 
 	class BufBundle : public Bundle<BUF_WIDTH>
@@ -52,12 +51,14 @@ public:
 	};
 
 	void Connect(const AddrBundle & addr, const DataBundle & data, const ActionBundle& action);
+	void ConnectRead(const Wire& read);
 	void Update();
 	void UpdateRead(); // Hack until I can figure out how this can work.
 	const BufBundle Out() { return buffer.Out(); }
 	
 private:
 	OrGateN<ACTION_LEN> pushBuffer;
+	AndGate popBuffer;
 	Wire read, write;
 	CircularBuffer<BUF_WIDTH, Nreg> buffer;
 	std::mutex mMutex;
@@ -70,6 +71,12 @@ inline void WriteBuffer<N, ADDR_LEN, Nreg>::Connect(const AddrBundle & addr, con
 	write.Set(false);
 	read.Set(false);
 	buffer.Connect(BufBundle(addr, data, action), read, write);
+}
+
+template<unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg>
+inline void WriteBuffer<N, ADDR_LEN, Nreg>::ConnectRead(const Wire & read)
+{
+	popBuffer.Connect(read, Wire::ON);
 }
 
 template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg>
@@ -86,8 +93,8 @@ template<unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg>
 inline void WriteBuffer<N, ADDR_LEN, Nreg>::UpdateRead()
 {
 	std::unique_lock<std::mutex> lk(mMutex);
-	pushBuffer.Update();
+	popBuffer.Update();
 	write.Set(false);
-	read.Set(true);
+	read.Set(popBuffer.Out().On());
 	buffer.Update();
 }

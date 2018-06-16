@@ -86,8 +86,8 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 																					const Wire& write, const Wire& read,
 																					const Wire& bytewrite, const Wire& halfwrite)
 {
-	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite, &read });
-	mMemory.Connect(buffer);
+	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite });
+	mMemory.Connect(buffer, read, addr);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
 	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));
@@ -152,8 +152,6 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 template<unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateCache()
 {
-	std::unique_lock<std::mutex> lk(mMutex);
-
 	indexDecoder.Update();
 	writeEnable.Update();
 
