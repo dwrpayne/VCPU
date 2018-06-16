@@ -10,6 +10,7 @@ ProgramLoader::ProgramLoader(CPU & cpu)
 
 void ProgramLoader::Load(const Program * program)
 {
+	assert(program->Instructions().size() < (insMemory.MEMORY_BYTES / 4));
 	for (const auto& i : program->Instructions())
 	{
 		unsigned int bin = i.mBinary;

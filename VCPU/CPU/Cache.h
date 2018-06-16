@@ -17,6 +17,9 @@ template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CA
 class Cache : public Component
 {
 public:
+	static const int CACHE_BYTES = CACHE_SIZE_BYTES;
+	static const int MEMORY_BYTES = MAIN_MEMORY_BYTES;
+
 	static const int WORD_BYTES = WORD_SIZE / 8;
 	static const int ADDR_BITS = bits(MAIN_MEMORY_BYTES);
 	static const int MAIN_MEMORY_LINES = MAIN_MEMORY_BYTES * 8 / CACHE_LINE_BITS;
