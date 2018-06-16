@@ -254,5 +254,8 @@
     <ClInclude Include="Tools\Program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Functional\Multiplier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

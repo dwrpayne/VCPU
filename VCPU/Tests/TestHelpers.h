@@ -54,7 +54,7 @@ template <typename T>
 bool TestState(int i, T val1, T val2, Verbosity verbosity)
 {
 	bool pass = val1 == val2;
-	if (verbosity == VERBOSE || (verbosity == FAIL_ONLY && !pass))
+	if (verbosity == VERBOSE || (!pass))
 	{
 		std::cout << i << ".\t" << (pass ? "PASS: " : "FAIL: ") << "Expecting " << val1 << ", got " << val2 << std::endl;
 	}

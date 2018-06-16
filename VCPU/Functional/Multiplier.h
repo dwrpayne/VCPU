@@ -5,6 +5,7 @@
 #include "Bundle.h"
 #include "FullAdder.h"
 #include "NandGate.h"
+#include "Register.h"
 
 // Implementation of a Baugh-Wooley signed integer multiplier: http://www.ece.uvic.ca/~fayez/courses/ceng465/lab_465/project2/multiplier.pdf
 
@@ -45,10 +46,11 @@ class Multiplier : public Component
 {
 public:
 	Multiplier();
-	void Connect(const Bundle<N>& a, const Bundle<N>& b);
+	void Connect(const Bundle<N>& a, const Bundle<N>& b, const Wire& enable);
 	void Update();
 
-	const Bundle<N * 2>& Out() const { return out; }
+	const Bundle<N>& OutLo() const { return outLo.Out(); }
+	const Bundle<N>& OutHi() const { return outHi.Out(); }
 
 private:
 #if DEBUG
@@ -57,7 +59,8 @@ private:
 	std::array<std::array<BaughWooleyCell*, N>, N> cells;
 
 	FullAdderN<N> outAdder;
-	Bundle<N * 2> out;
+	Register<N> outLo;
+	Register<N> outHi;
 };
 
 template<unsigned int N>
@@ -77,16 +80,10 @@ inline Multiplier<N>::Multiplier()
 			}
 		}
 	}
-
-	for (int i = 0; i < N; ++i)
-	{
-		out.Connect(i, cells[0][i]->S());
-	}
-	out.Connect(N, outAdder.Out());
 }
 
 template<unsigned int N>
-inline void Multiplier<N>::Connect(const Bundle<N>& a, const Bundle<N>& b)
+inline void Multiplier<N>::Connect(const Bundle<N>& a, const Bundle<N>& b, const Wire& enable)
 {
 #ifndef DEBUG
 	Bundle<N> sums, carries;
@@ -112,6 +109,14 @@ inline void Multiplier<N>::Connect(const Bundle<N>& a, const Bundle<N>& b)
 	carries.Connect(N - 1, cells[N - 1][N - 1]->C());
 
 	outAdder.Connect(sums, carries, Wire::ON);
+
+	Bundle<N> outLoBundle;
+	for (int i = 0; i < N; ++i)
+	{
+		outLoBundle.Connect(i, cells[0][i]->S());
+	}
+	outLo.Connect(outLoBundle, enable);
+	outHi.Connect(outAdder.Out(), enable);
 }
 
 template<unsigned int N>
@@ -125,5 +130,7 @@ inline void Multiplier<N>::Update()
 		}
 	}
 	outAdder.Update();
+	outLo.Update();
+	outHi.Update();
 }
 

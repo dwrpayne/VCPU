@@ -1062,7 +1062,7 @@ bool TestMultiplier(Verbosity verbosity)
 
 	Multiplier<8> test;
 	MagicBundle<8> a_reg, b_reg;
-	test.Connect(a_reg, b_reg);
+	test.Connect(a_reg, b_reg, Wire::ON);
 
 	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 }, {47, 63}, {127, 127 }, {-128, -128}, {-127, 127} }))
 	{
@@ -1074,7 +1074,8 @@ bool TestMultiplier(Verbosity verbosity)
 			std::cout << i << ". Testing " << a << ", " << b << std::endl;
 		}
 		test.Update();
-		success &= TestState(i++, a*b, test.Out().Read(), verbosity);
+		success &= TestState(i++, (unsigned int)(a*b) & 0xFF, test.OutLo().UnsignedRead(), verbosity);
+		success &= TestState(i++, (a*b) >> 8, test.OutHi().Read(), verbosity);
 	} 
 	return success;
 }
