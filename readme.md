@@ -1,7 +1,7 @@
 Virtual CPU
 ---------
 
-VCPU is a homebrew CPU implementing the MIPS I ISA, built entirely in software. It consists of software logic gates, wired together in building blocks of ever-increasing complexity. The two major types of building blocks are `Component` and `Wire`. 
+VCPU is a homebrew CPU built entirely in software that simulates a hardware CPU. It consists of software logic gates, wired together in building blocks of increasing complexity. The two major types of building blocks are `Component` and `Wire`. 
 
 Wire
 ------
@@ -13,13 +13,11 @@ You can think of these sort of like the pin-ins and pin-outs on a physical chip.
 Component
 ----------
 
-A `Component` is any building block, from a logic gate to a register to an ALU to the opcode decoder. It owns all its subcomponents, and implements two primary methods:
-* `Connect()`, which wires together the subcomponents, connecting their inputs and outputs.
-* `Update()`, which merely calls the `Update()` function of its subcomponents in the correct order to propagate signal flow along the internal `Wire`-ing.
+A `Component` is the base class for all elements of the VCPU, from logic gates to registers to the ALU to the opcode decoder. It generally owns all its subcomponents, and implements two primary methods:
+* `Connect()`, which wires together the subcomponents by connecting their inputs and outputs appropriately.
+* `Update()`, which calls the `Update()` function of its subcomponents in the correct order to propagate signal flow along the internal `Wire`-ing.
 
-It also has a getter method which gets some number of output `Wire`s or collections thereof, which vary by `Component`.
-
-* AndGate and Inverter are special cases - they actually own their output `Wire`s as member variables, and modify state in their `Update()`. Every other component only ever deals with `Wire&`s.
+* AndGate and Inverter are special cases - they actually own their output `Wire`s as member variables, and modify `Wire` state in their `Update()`. All other components only pass references around.
 
 Philosophy
 ----------
@@ -37,6 +35,7 @@ Feature Set
 * 8K of main memory, 512bytes of L1 cache.
 * Memory is all byte-addressable.
 * Runs at ~6Khz on my desktop.
-* Full implementation of the MIPS I instruction set (multiplication and division not yet supported).
+* Planned full implementation of the MIPS I instruction set (division not yet supported).
 * Single branch delay slot.
 * Circuitry handles load stalls and cache miss stalls, no need for the assembler to handle these.
+* Single-cycle step debugger with memory, register, and pipeline state output.
