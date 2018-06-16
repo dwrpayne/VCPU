@@ -52,10 +52,10 @@ private:
 	std::chrono::microseconds mThisCycleTime;
 	std::chrono::microseconds mCpuElapsedTime;
 
-	static const int NUM_BUCKETS = 24;
+	static const int NUM_BUCKETS = 17;
 	int cycleTimeBuckets[NUM_BUCKETS];
 	inline static const int BUCKETS[NUM_BUCKETS] = {
-		130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 190, 200, 225, 250, 275, 300, 400, 500, 750, 1000, 2000, 5000, 1000000 };
+		100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 225, 250, 500, 1000, 5000, 1000000 };
 
 	Assembler* pAssembler;
 	const Program* pProgram;
