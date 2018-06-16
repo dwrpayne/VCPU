@@ -1064,7 +1064,7 @@ bool TestMultiplier(Verbosity verbosity)
 	MagicBundle<8> a_reg, b_reg;
 	test.Connect(a_reg, b_reg);
 
-	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 }, {47, 63} }))
+	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 }, {47, 63}, {127, 127 }, {-128, -128}, {-127, 128} }))
 	{
 		a_reg.Write(a);
 		b_reg.Write(b);
