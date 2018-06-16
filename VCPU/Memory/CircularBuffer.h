@@ -16,12 +16,11 @@ public:
 	static const int ADDR_LEN = bits(Nreg);
 	typedef Bundle<ADDR_LEN> AddrBundle;
 	
-	void Connect(const Bundle<N>& in, const Wire& read, const Wire& write);
+	void Connect(const Bundle<N>& in, const Wire & read, const Wire& write);
+	void ConnectRead(const Wire& read);
 	void Update();
 	const Bundle<N>& Out() { return outMux.Out(); }
 
-	//const AddrBundle WriteIndex() { return counters.WriteIndex(); }
-	//const AddrBundle ReadIndex() { return counters.ReadIndex(); }
 	const Wire& Full() { return counters.Full(); }
 	const Wire& NonEmpty() { return counters.NonEmpty(); }
 
@@ -73,6 +72,8 @@ inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & r
 		regOuts[i].Connect(0, buffers[i].Out());
 	}
 	outMux.Connect(regOuts, counters.ReadIndex());
+
+	counters.Update();
 }
 
 template<unsigned int N, unsigned int Nreg>

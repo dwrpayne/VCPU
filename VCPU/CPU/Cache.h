@@ -48,7 +48,8 @@ public:
 private:
 	void UpdateCache();
 	void UpdateMemory();
-
+	
+	WriteBuffer<WORD_SIZE, ADDR_BITS, 8> buffer;
 	Memory<WORD_SIZE, MAIN_MEMORY_BYTES, CACHE_LINE_BITS> mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
@@ -85,7 +86,8 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 																					const Wire& write, const Wire& read,
 																					const Wire& bytewrite, const Wire& halfwrite)
 {
-	mMemory.Connect(addr, data, write, bytewrite, halfwrite);
+	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite, &read });
+	mMemory.Connect(buffer);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
 	auto wordAddr = addr.Range<ADDR_BITS - bits(WORD_BYTES)>(bits(WORD_BYTES));
@@ -128,7 +130,7 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Upd
 {
 	UpdateCache();
 
-	static const int MEM_UPDATE_FREQUENCY = 8;
+	static const int MEM_UPDATE_FREQUENCY = 1;
 	int mem_update_counter = 0;
 	
 	if (!(mem_update_counter % MEM_UPDATE_FREQUENCY))
@@ -166,6 +168,7 @@ inline void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTE
 	needWaitForMemory.Update();
 	outCacheLineMux.Update();
 	outDataMux.Update();
+	buffer.Update();
 }
 
 template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>

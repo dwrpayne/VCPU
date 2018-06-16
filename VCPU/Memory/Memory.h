@@ -30,23 +30,18 @@ public:
 	static const unsigned int COUNTER_LEN = 3;
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
+	typedef WriteBuffer<N, ADDR_BITS, 8> WBuffer;
 
 	Memory();
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& bytewrite, const Wire& halfwrite);
+	void Connect(WBuffer& writebuf);
 	void Update();
 
 	const DataBundle& Out() const { return outMux.Out(); }
 	const Bundle<NCacheLine> OutLine() const { return outLine; }
 
 private:
-#if DEBUG
-	DataBundle DEBUG_inData;
-	AddrBundle DEBUG_inAddr;
-	Bundle<3> DEBUG_writeFlags;
-#endif
-
-	WriteBuffer<N, ADDR_BITS, 8> buffer;
-
+	WBuffer* pWriteBuffer;
+	
 	Decoder<NUM_WORDS> addrDecoder;
 	Decoder<WORD_LEN> byteDecoder;
 	Decoder<2> halfDecoder;
@@ -64,7 +59,6 @@ private:
 	Bundle<NCacheLine> outLine;
 
 	friend class Debugger;
-
 	 
 };
 
@@ -78,33 +72,27 @@ inline Memory<N, BYTES, NCacheLine>::Memory()
 }
 
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
-inline void Memory<N, BYTES, NCacheLine>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& write,
-												  const Wire& bytewrite, const Wire& halfwrite)
+inline void Memory<N, BYTES, NCacheLine>::Connect(WBuffer& writebuf)
 {
-#if DEBUG
-	DEBUG_inData.Connect(0, data);
-	DEBUG_inAddr.Connect(0, addr);
-	DEBUG_writeFlags = { &bytewrite, &halfwrite, &write };
-#endif
-	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite, &Wire::OFF }, Wire::ON);
-
-	auto byteAddr = buffer.Out().Addr().Range<ADDR_BYTE_LEN>(0);
-	auto wordAddr = buffer.Out().Addr().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
+	pWriteBuffer = &writebuf;
+	
+	auto byteAddr = pWriteBuffer->Out().Addr().Range<ADDR_BYTE_LEN>(0);
+	auto wordAddr = pWriteBuffer->Out().Addr().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
 	addrDecoder.Connect(wordAddr);
-
 	byteDecoder.Connect(byteAddr);
 	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
+
 	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
 	Bundle<4> wordMaskBundle({ &Wire::ON, &Wire::ON, &Wire::ON, &Wire::ON });
-	masker.Connect({ wordMaskBundle, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &buffer.Out().WriteByte(), &buffer.Out().WriteHalf() });
-	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(buffer.Out().Write()));
+	masker.Connect({ wordMaskBundle, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON }, { &pWriteBuffer->Out().Action().WriteByte(), &pWriteBuffer->Out().Action().WriteHalf() });
+	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pWriteBuffer->Out().Action().Write()));
 
 	for (int i = 0; i < BYTES; ++i)
 	{
 		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnabledMask.Out()[i % 4]);
 	}
 
-	dataByteShifter.Connect(buffer.Out().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
+	dataByteShifter.Connect(pWriteBuffer->Out().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
 
 	std::array<DataBundle, NUM_WORDS> regOuts;
 	for (int i = 0; i < BYTES; ++i)
@@ -131,7 +119,7 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(const AddrBundle & addr, const
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<N, BYTES, NCacheLine>::Update()
 {
-	buffer.Update();
+	pWriteBuffer->UpdateRead();
 	addrDecoder.Update();
 	byteDecoder.Update();
 	halfDecoder.Update();

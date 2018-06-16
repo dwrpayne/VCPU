@@ -1233,7 +1233,7 @@ bool TestCircularBuffer(Verbosity verbosity)
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
 	success &= TestState(i++, 4444444, test.Out().Read(), verbosity);
-
+	
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
@@ -1283,7 +1283,7 @@ bool RunAllTests()
 	RUN_TEST(TestRegisterFile, SILENT);
 	RUN_TEST(TestCacheLine, SILENT);
 	RUN_TEST(TestMultiplier, SILENT);
-	RUN_TEST(TestCircularBuffer, FAIL_ONLY);
+	RUN_TEST(TestCircularBuffer, SILENT);
 	return success;
 }
 #endif
