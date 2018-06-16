@@ -267,11 +267,6 @@ void Debugger::PrintDataForward()
 
 void Debugger::PrintTiming()
 {	
-	if (bPrintTiming)
-	{
-		std::cout << "Cycle time: " << mThisCycleTime.count() << "us" << std::endl;
-	}
-	
 	if (pCPU->cycles % 1000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
@@ -284,6 +279,11 @@ void Debugger::PrintTiming()
 			for (int i = 0; i < NUM_BUCKETS; i++)
 			{
 				std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
+			}
+			int i = 0;
+			for (auto us : pCPU->GetStageTiming())
+			{
+				std::cout << "CPU Stage " << i++ << " average " << us.count() << "us" << std::endl;
 			}
 		}
 	}

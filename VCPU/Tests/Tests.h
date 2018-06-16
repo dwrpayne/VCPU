@@ -1064,7 +1064,7 @@ bool TestMultiplier(Verbosity verbosity)
 	MagicBundle<8> a_reg, b_reg;
 	test.Connect(a_reg, b_reg);
 
-	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 }, {47, 63}, {127, 127 }, {-128, -128}, {-127, 128} }))
+	for (const auto&[a, b] : std::map<int, int>({ { -64, -64 },{ 0, 0 },{ 15, 9 },{ 11, 115 },{ 4, -121 }, {47, 63}, {127, 127 }, {-128, -128}, {-127, 127} }))
 	{
 		a_reg.Write(a);
 		b_reg.Write(b);
@@ -1147,44 +1147,44 @@ bool TestCacheLine(Verbosity verbosity)
 bool RunAllTests()
 {
 	bool success = true;
-	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, FAIL_ONLY);
-	RUN_AUTO_TEST(TestBundleComponent, TestAndGate4, FAIL_ONLY);
-	RUN_AUTO_TEST(TestBundleComponent, TestOrGate4, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestXNorGate, FAIL_ONLY);
-	RUN_TEST(TestMultiGate, FAIL_ONLY);
-	RUN_TEST(TestMultiGateN, FAIL_ONLY);
-	RUN_TEST(TestMultiGateNBitwise, FAIL_ONLY);
-	RUN_TEST(TestSRLatch, FAIL_ONLY);
-	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
-	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
-	RUN_TEST(TestDFlipFlopReset, FAIL_ONLY);
-	RUN_TEST(TestBundle, FAIL_ONLY);
-	RUN_TEST(TestRegister, FAIL_ONLY);
-	RUN_TEST(TestCounter, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
-	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
-	RUN_TEST(TestMuxBundle, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestEncoder4, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder8, FAIL_ONLY);
-	RUN_TEST(TestSelectBundle, FAIL_ONLY);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
-	RUN_TEST(TestComparator, FAIL_ONLY);
-	RUN_TEST(TestShifter, FAIL_ONLY);
-	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, FAIL_ONLY);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, FAIL_ONLY);
-	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
-	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
-	RUN_TEST(TestALU, FAIL_ONLY);
-	RUN_TEST(TestRegisterFile, FAIL_ONLY);
-	RUN_TEST(TestCacheLine, FAIL_ONLY);
-	RUN_TEST(TestMultiplier, FAIL_ONLY);
+	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, SILENT);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, SILENT);
+	RUN_AUTO_TEST(TestBundleComponent, TestAndGate4, SILENT);
+	RUN_AUTO_TEST(TestBundleComponent, TestOrGate4, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestXNorGate, SILENT);
+	RUN_TEST(TestMultiGate, SILENT);
+	RUN_TEST(TestMultiGateN, SILENT);
+	RUN_TEST(TestMultiGateNBitwise, SILENT);
+	RUN_TEST(TestSRLatch, SILENT);
+	RUN_TEST(TestJKFlipFlop, SILENT);
+	RUN_TEST(TestDFlipFlop, SILENT);
+	RUN_TEST(TestDFlipFlopReset, SILENT);
+	RUN_TEST(TestBundle, SILENT);
+	RUN_TEST(TestRegister, SILENT);
+	RUN_TEST(TestCounter, SILENT);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, SILENT);
+	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, SILENT);
+	RUN_TEST(TestMuxBundle, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestEncoder4, SILENT);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder8, SILENT);
+	RUN_TEST(TestSelectBundle, SILENT);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, SILENT);
+	RUN_TEST(TestComparator, SILENT);
+	RUN_TEST(TestShifter, SILENT);
+	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, SILENT);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, SILENT);
+	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, SILENT);
+	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, SILENT);
+	RUN_TEST(TestALU, SILENT);
+	RUN_TEST(TestRegisterFile, SILENT);
+	RUN_TEST(TestCacheLine, SILENT);
+	RUN_TEST(TestMultiplier, SILENT);
 	return success;
 }
 #endif

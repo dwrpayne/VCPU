@@ -20,12 +20,16 @@ Assembler::Assembler()
 
 void Assembler::IncludeLib(const std::string & filename)
 {
-	ParseFile(filename, pProgram);
+	mIncludeFiles.push_back(filename);
 }
 
 const Program* Assembler::Assemble(const std::string& filename)
 {
 	ParseFile(filename, pProgram);
+	for (auto inc : mIncludeFiles)
+	{
+		ParseFile(inc, pProgram);
+	}
 
 	pProgram->ConvertLabels();
 	for (auto& ins : pProgram->Instructions())

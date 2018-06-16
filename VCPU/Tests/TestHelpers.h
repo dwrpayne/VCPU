@@ -11,9 +11,9 @@ enum Verbosity
 	VERBOSE
 };
 
-#define RUN_AUTO_TEST(runner, unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= runner(unit_test, v);
-#define RUN_TEST(unit_test, v) std::cout << "Testing " << #unit_test << std::endl; success &= unit_test(v);
-#define RUN_TEST2(unit_test, v, v2) std::cout << "Testing " << #unit_test << std::endl; success &= unit_test(v, v2);
+#define RUN_AUTO_TEST(runner, unit_test, v) if(v>SILENT){std::cout << "Testing " << #unit_test << std::endl;} success &= runner(unit_test, v);
+#define RUN_TEST(unit_test, v) if(v>SILENT){std::cout << "Testing " << #unit_test << std::endl; }success &= unit_test(v);
+#define RUN_TEST2(unit_test, v, v2) if(v>SILENT){std::cout << "Testing " << #unit_test << std::endl;} success &= unit_test(v, v2);
 
 void print();
 

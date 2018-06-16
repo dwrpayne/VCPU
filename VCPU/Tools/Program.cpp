@@ -86,23 +86,32 @@ void Program::ConvertLabels()
 	});
 	for (const auto&[label, addr] : items)
 	{
-		for (unsigned int i = 0; i < mInstructions.size(); ++i)
+		ReplaceLabel(label, addr);
+	}
+	if (mLabelAddrNum.count("main") == 0)
+	{
+		ReplaceLabel("main", 0);
+	}
+}
+
+void Program::ReplaceLabel(const std::string& label, unsigned int addr)
+{
+	for (unsigned int i = 0; i < mInstructions.size(); ++i)
+	{
+		auto label_pos = mInstructions[i].mText.find(label);
+		if (label_pos != std::string::npos)
 		{
-			auto label_pos = mInstructions[i].mText.find(label);
-			if (label_pos != std::string::npos)
+			auto first_alpha = mInstructions[i].mText.find_first_not_of(" \t\r\n");
+			int mem_addr = addr * 4;
+			if (mInstructions[i].mText[first_alpha] == 'b')
 			{
-				auto first_alpha = mInstructions[i].mText.find_first_not_of(" \t\r\n");
-				int mem_addr = addr * 4;
-				if (mInstructions[i].mText[first_alpha] == 'b')
-				{
-					mem_addr -= 4 * (i + 1);
-				}
-				else
-				{
-					assert(mInstructions[i].mText[first_alpha] == 'j' && "Labels must be on J or B instructions");
-				}
-				mInstructions[i].mText.replace(label_pos, label.size(), std::to_string(mem_addr));
-			}			
+				mem_addr -= 4 * (i + 1);
+			}
+			else
+			{
+				assert(mInstructions[i].mText[first_alpha] == 'j' && "Labels must be on J or B instructions");
+			}
+			mInstructions[i].mText.replace(label_pos, label.size(), std::to_string(mem_addr));
 		}
 	}
 }

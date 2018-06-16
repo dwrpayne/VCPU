@@ -22,7 +22,7 @@ public:
 	static const int NUM_REGISTERS = 32;
 
 	static const int INS_CACHE_BYTES = 128;
-	static const int MAIN_CACHE_BYTES = 256;
+	static const int MAIN_CACHE_BYTES = 128;
 
 	static const int INS_MEM_BYTES = 512;
 	static const int MAIN_MEM_BYTES = 2048;
@@ -42,16 +42,21 @@ private:
 		: mMutex(mutex)
 		, mCV(cv)
 		, mReady(ready)
+		, numBeforeWires(Wire::WireCount())
 		{}
 
 		void ThreadedUpdate();
 		virtual void Update() = 0;
 		virtual void PostUpdate() = 0;
+		std::chrono::microseconds GetElapsedTime() { return mElapsedTime; }
 
 	private:
 		std::condition_variable& mCV;
 		std::mutex& mMutex;
 		bool& mReady;
+		int numBeforeWires;
+
+		std::chrono::microseconds mElapsedTime;
 	};
 
 	const Bundle<32>& PC();
@@ -63,6 +68,7 @@ private:
 	bool PipelineBubble() { return interlock.Bubble().On(); }
 	bool PipelineFreeze() { return interlock.Freeze().On(); }
 	bool Halt();
+	std::array<std::chrono::microseconds, 4> GetStageTiming();
 
 private:
 	class Stage1;
@@ -89,6 +95,8 @@ private:
 	HazardUnit hazardIDEX;
 	HazardUnit hazardIFID;
 	Interlock interlock;
+
+	int numBeforeWires;
 
 	friend class ProgramLoader;
 	friend class Debugger;

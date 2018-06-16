@@ -426,7 +426,7 @@ bool RunCPUTests()
 	auto default_verb = Debugger::MEMORY;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::TIMING);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);

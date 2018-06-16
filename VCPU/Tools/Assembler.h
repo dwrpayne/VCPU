@@ -29,6 +29,8 @@ private:
 	void ParseFile(const std::string & filename, Program * program);
 	void ParseSourceLine(const std::string &line, Program * program);
 	void IncludeLib(const std::string& filename);
+
+	std::vector<std::string> mIncludeFiles;
 		
 	static const std::vector<std::pair<std::regex, std::string>> instructionMnemonics;
 	static const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> opcodeInfo;

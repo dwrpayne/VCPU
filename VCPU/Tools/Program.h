@@ -47,8 +47,9 @@ public:
 
 	std::vector<Instruction>& Instructions() { return mInstructions; }
 	const std::vector<Instruction>& Instructions() const { return mInstructions; }
-
+	
 	void ConvertLabels();
+	void ReplaceLabel(const std::string & label, unsigned int addr);
 
 private:
 	std::string TrimWhitespace(const std::string& s);

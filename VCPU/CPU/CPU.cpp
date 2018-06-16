@@ -2,6 +2,7 @@
 #include "Register.h"
 #include "Memory.h"
 #include "ALU.h"
+#include "Multiplier.h"
 #include "MuxBundle.h"
 #include "SubWordSelector.h"
 #include "BranchControl.h"
@@ -279,6 +280,7 @@ CPU::CPU()
 	, stage3Thread(&CPU::Stage3::ThreadedUpdate, stage3)
 	, stage4Thread(&CPU::Stage4::ThreadedUpdate, stage4)
 	, cycles(0)
+	, numBeforeWires(Wire::WireCount())
 {
 	hazardIFID.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
@@ -353,6 +355,14 @@ bool CPU::Halt()
 	// woken up by an interrupt. We are hijacking this to stop the debugger.
 	return stage2->Out().OpcodeControl().Halt().On();
 }
+std::array<std::chrono::microseconds, 4> CPU::GetStageTiming()
+{
+	return {stage1->GetElapsedTime() / cycles,
+		stage2->GetElapsedTime() / cycles,
+		stage3->GetElapsedTime() / cycles,
+		stage4->GetElapsedTime() / cycles
+		};
+}
 void CPU::PipelineStage::ThreadedUpdate()
 {
 	while (true)
@@ -361,7 +371,10 @@ void CPU::PipelineStage::ThreadedUpdate()
 			std::unique_lock<std::mutex> lk(mMutex);
 			mCV.wait(lk, [this] {return mReady; });
 		}
+		auto t1 = std::chrono::high_resolution_clock::now();
 		Update();
+		auto t2 = std::chrono::high_resolution_clock::now();
+		mElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 		{
 			std::unique_lock<std::mutex> lk(mMutex);
 			mReady = false;
