@@ -194,6 +194,7 @@
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />
+    <ClInclude Include="Memory\WriteBuffer.h" />
     <ClInclude Include="Tests\ComponentCost.h" />
     <ClInclude Include="Tests\Instructions.h" />
     <ClInclude Include="Tests\TestCPU.h" />

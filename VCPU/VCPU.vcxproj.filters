@@ -257,5 +257,8 @@
     <ClInclude Include="Functional\Multiplier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Memory\WriteBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

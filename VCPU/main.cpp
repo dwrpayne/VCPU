@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		//Test();
+		Test();
 		RunCPU("primes2.vasm");
 	}
 	else

@@ -9,6 +9,7 @@ template <unsigned int N>
 class Register : public Component
 {
 public:
+	static const int N = N;
 	Register();
 	void Connect(const Bundle<N>& data, const Wire& load);
 	void Update();
