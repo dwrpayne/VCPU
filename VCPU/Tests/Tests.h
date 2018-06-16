@@ -33,7 +33,7 @@
 #include "RegisterFile.h"
 #include "CacheLine.h"
 #include "Multiplier.h"
-#include "WriteBuffer.h"
+#include "CircularBuffer.h"
 
 #ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -1146,130 +1146,99 @@ bool TestCacheLine(Verbosity verbosity)
 	return success;
 }
 
-bool TestWriteBuffer(Verbosity verbosity)
+bool TestCircularBuffer(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
 
-	WriteBuffer<8, 5, 4> test;
+	CircularBuffer<32, 4> test;
 
-	MagicBundle<8> reg;
-	MagicBundle<5> addr;
+	MagicBundle<32> reg;
 	Wire read(false);
-	Wire w(false);
-	WriteBuffer<8, 5, 4>::ActionBundle write(w);
+	Wire write(false);
 
-	test.Connect(addr, reg, write, read);
+	test.Connect(reg, read, write);
 
-	reg.Write(123);
-	addr.Write(6);
+	reg.Write(123456);
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 0U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 0U, test.WriteIndex().UnsignedRead(), verbosity);
 
-	w.Set(true);
+	write.Set(true);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 0U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
 
 	reg.Write(11);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 0U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 2U, test.WriteIndex().UnsignedRead(), verbosity);
 
-	reg.Write(22);
-	addr.Write(2);
+	reg.Write(22222);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 0U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 3U, test.WriteIndex().UnsignedRead(), verbosity);
 	
 	read.Set(true);
-	w.Set(false);
+	write.Set(false);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 1U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 3U, test.WriteIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 7, test.Out().Addr().Read(), verbosity);
-	success &= TestState(i++, 123, test.Out().Data().Read(), verbosity);
+	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
 
 	read.Set(false);
-	w.Set(true);
-	reg.Write(33);
-	addr.Write(3);
+	write.Set(true);
+	reg.Write(3333333);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 1U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 0U, test.WriteIndex().UnsignedRead(), verbosity);
 
-	reg.Write(44);
-	addr.Write(9);
+	reg.Write(4444444);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, true, test.Full().On(), verbosity);
-	success &= TestState(i++, 1U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
 
-	reg.Write(55);
-	addr.Write(5);
+	reg.Write(5555555);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, true, test.Full().On(), verbosity);
-	success &= TestState(i++, 1U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
 
 	read.Set(true);
-	w.Set(false);
+	write.Set(false);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 2U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 11, test.Out().Addr().Read(), verbosity);
-	success &= TestState(i++, 6, test.Out().Data().Read(), verbosity);
+	success &= TestState(i++, 11, test.Out().Read(), verbosity);
+
+	read.Set(false);
+	write.Set(true);
+	reg.Write(9876);
+	test.Update();
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+
+	read.Set(true);
+	write.Set(false);
+	test.Update();
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, 22222, test.Out().Read(), verbosity);
 
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 3U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 22, test.Out().Addr().Read(), verbosity);
-	success &= TestState(i++, 2, test.Out().Data().Read(), verbosity);
+	success &= TestState(i++, 3333333, test.Out().Read(), verbosity);
 
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 0U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 33, test.Out().Addr().Read(), verbosity);
-	success &= TestState(i++, 3, test.Out().Data().Read(), verbosity);
+	success &= TestState(i++, 4444444, test.Out().Read(), verbosity);
 
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 1U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 44, test.Out().Addr().Read(), verbosity);
-	success &= TestState(i++, 9, test.Out().Data().Read(), verbosity);
-
-	test.Update();
-	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 1U, test.ReadIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 1U, test.WriteIndex().UnsignedRead(), verbosity);
-	success &= TestState(i++, 44, test.Out().Addr().Read(), verbosity);
-	success &= TestState(i++, 9, test.Out().Data().Read(), verbosity);
-
-	
+	success &= TestState(i++, 9876, test.Out().Read(), verbosity);
+		
 	return success;
 }
 
@@ -1314,7 +1283,7 @@ bool RunAllTests()
 	RUN_TEST(TestRegisterFile, SILENT);
 	RUN_TEST(TestCacheLine, SILENT);
 	RUN_TEST(TestMultiplier, SILENT);
-	RUN_TEST(TestWriteBuffer, VERBOSE);
+	RUN_TEST(TestCircularBuffer, FAIL_ONLY);
 	return success;
 }
 #endif
