@@ -1184,7 +1184,7 @@ bool RunAllTests()
 	RUN_TEST(TestALU, FAIL_ONLY);
 	RUN_TEST(TestRegisterFile, FAIL_ONLY);
 	RUN_TEST(TestCacheLine, FAIL_ONLY);
-	RUN_TEST(TestMultiplier, VERBOSE);
+	RUN_TEST(TestMultiplier, FAIL_ONLY);
 	return success;
 }
 #endif

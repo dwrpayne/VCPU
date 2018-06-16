@@ -125,7 +125,7 @@ void CPU::Stage2::Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, c
 
 	// Shift Amount
 	reg2ShiftMux.Connect({ regFile.Out2(), stage1.IR.Shamt().ZeroExtend<32>() },
-		opcodeControl.ShiftAmtOp());
+		opcodeControl.OutBundle().ShiftAmtOp());
 
 	// Immediate Operand
 	immExtender.Connect(stage1.IR.Immediate(), opcodeControl.OutBundle().MathOp());

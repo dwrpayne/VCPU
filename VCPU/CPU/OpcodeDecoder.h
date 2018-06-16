@@ -50,7 +50,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 21;
+	static const int OUT_WIDTH = 22;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -85,18 +85,9 @@ public:
 		const Wire& MemOpHalfWord() const { return Get(18); }
 		const Wire& LoadSigned() const { return Get(19); }
 		const Wire& JumpOrBranch() const { return Get(20); }
+		const Wire& MultOp() const { return Get(21); }		
 	};
 
-	const Wire& Branch() const { return out.Branch(); }
-	const Wire& LoadOp() const { return out.LoadOp(); }
-	const Wire& StoreOp() const { return out.StoreOp(); }
-	const Wire& RFormat() const { return out.RFormat(); }
-	const Wire& AluBFromImm() const { return out.AluBFromImm(); }
-	const Wire& RegWrite() const { return out.RegWrite(); }
-	const Wire& SltOp() const { return out.SltOp(); }
-	const Wire& ShiftOp() const { return out.ShiftOp(); }
-	const Wire& ShiftAmtOp() const { return out.ShiftAmtOp(); }
-	const Bundle<2> BranchSel() const { return out.BranchSel(); }
 	const OpcodeDecoderBundle& OutBundle() { return out; }
 
 	const Bundle<4>& AluControl() { return controlAll.Out(); }
@@ -132,6 +123,7 @@ private:
 	Inverter loadstoreInv;
 	AndGateN<5> sltop;
 	OrGateN<4> mathOp;
+	OrGateN<4> multOp;
 	OrGate addOr;
 	OrGate subOr;
 	AndGate addOp;
