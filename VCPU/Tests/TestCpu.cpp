@@ -431,6 +431,18 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	return success;
 }
 
+bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("teststrcpy.vasm", dverb);
+	debugger.Start();
+	success &= TestState(i++, std::string("Hello World!"), debugger.GetMemoryString(40), verbosity);
+
+	return success;
+}
+
 bool RunCPUTests()
 {
 	bool success = true;
@@ -441,6 +453,7 @@ bool RunCPUTests()
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
 
 	return success;
 }

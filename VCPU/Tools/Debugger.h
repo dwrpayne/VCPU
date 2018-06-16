@@ -26,6 +26,7 @@ public:
 	int GetRegisterVal(int reg);
 	unsigned char GetMemoryByte(int addr);
 	int GetMemoryWord(int addr);
+	std::string GetMemoryString(int addr);
 	int GetNextPCAddr();
 	
 private:

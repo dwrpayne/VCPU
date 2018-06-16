@@ -147,6 +147,16 @@ int Debugger::GetMemoryWord(int addr)
 	return word;
 }
 
+std::string Debugger::GetMemoryString(int addr)
+{
+	std::stringstream ss;
+	while (unsigned char c = GetMemoryByte(addr++))
+	{
+		ss << c;
+	}
+	return ss.str();
+}
+
 int Debugger::GetNextPCAddr()
 {
 	return pCPU->PC().UnsignedRead();
