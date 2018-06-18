@@ -1,6 +1,5 @@
 #pragma once
 #include <array>
-#include <mutex>
 
 #include "Component.h"
 #include "Bundle.h"
@@ -76,8 +75,6 @@ private:
 	RegisterReset<ADDR_LEN> readOut;
 	DFlipFlop poppedWrite;
 	DFlipFlop poppedRead;
-
-	std::mutex mMutex;
 };
 
 template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg, unsigned int POP_EVERY>

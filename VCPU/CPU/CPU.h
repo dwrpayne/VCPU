@@ -25,10 +25,12 @@ public:
 	static const int MAIN_CACHE_BYTES = 128;
 
 	static const int INS_MEM_BYTES = 1024;
-	static const int MAIN_MEM_BYTES = 2048;
+	static const int MAIN_MEM_BYTES = 1024;
 		
-	typedef Cache<WORD_SIZE, INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
-	typedef Cache<WORD_SIZE, MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
+	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
+	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
+	typedef Memory<INS_MEM_BYTES, CACHE_LINE_BITS> InsMemory;
+	typedef Memory<MAIN_MEM_BYTES, CACHE_LINE_BITS> MainMemory;
 	typedef RegisterFile<WORD_SIZE, NUM_REGISTERS> RegFile;
 
 	void Connect();

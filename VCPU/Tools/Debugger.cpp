@@ -303,6 +303,10 @@ void Debugger::PrintTiming()
 			{
 				std::cout << "CPU Stage " << i++ << " average " << us.count() << "us" << std::endl;
 			}
+			int imemcycle = pCPU->InstructionMem().mMemory.cycle;
+			int mmemcycle = pCPU->MainMem().mMemory.cycle;
+			std::cout << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (ratio: " << pCPU->cycles / imemcycle << ")" << std::endl;
+			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (ratio: " << pCPU->cycles / mmemcycle << ")" << std::endl;
 		}
 	}
 }

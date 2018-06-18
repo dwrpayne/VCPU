@@ -1,15 +1,17 @@
 #pragma once
 #include <array>
 #include <iostream>
+#include "Wire.h"
 // Base class for all VCPU components
 
 class Component
 {
 public:
-	Component() {}
+	Component(){}
 	~Component() {}
 
 	virtual void Update() = 0;
+	//int prewirecount;
 };
 
 constexpr unsigned int bits(unsigned int N)

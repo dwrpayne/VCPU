@@ -1423,8 +1423,7 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, 0, test.OutWrite().Addr().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutWrite().Action().Read(), verbosity);
 	success &= TestState(i++, 128, test.OutRead().Read(), verbosity);
-		
-		
+				
 	return success;
 }
 
@@ -1472,7 +1471,7 @@ bool RunAllTests()
 	RUN_TEST(TestMultiplier, SILENT);
 	RUN_TEST(TestCircularBuffer, SILENT);
 	RUN_TEST(TestCircularBuffer1, SILENT);
-	RUN_TEST(TestRequestBuffer, VERBOSE);
+	RUN_TEST(TestRequestBuffer, SILENT);
 	return success;
 }
 #endif

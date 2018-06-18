@@ -42,7 +42,7 @@ private:
 
 	LineBundle outLineBundle;
 #ifdef DEBUG
-	template <unsigned int WORD_SIZE, unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES> friend class Cache;
+	template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES> friend class Cache;
 #endif
 };
 

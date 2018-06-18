@@ -221,8 +221,8 @@ bool TestCache(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	Cache<32, 256, 256, 1024>* pCache = new Cache<32, 256, 256, 1024>();
-	Cache<32, 256, 256, 1024>& test = *pCache;
+	Cache<256, 256, 1024>* pCache = new Cache<256, 256, 1024>();
+	Cache<256, 256, 1024>& test = *pCache;
 
 	MagicBundle<32> data;
 	Wire write(true);
