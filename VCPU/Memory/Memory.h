@@ -14,38 +14,36 @@
 #include "RequestBuffer.h"
 #include "ThreadedComponent.h"
 
-// Memory is stored in bytes, read in cache lines.
-// We support byte writes, half word writes, and full word (32-bit) writes
+// Memory is stored in words
+// We write in words, and read in cache lines
 
-template <unsigned int BYTES, unsigned int NCacheLine=N*2>
+template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
 class Memory : public ThreadedComponent
 {
 public:
-	static const unsigned int N = 32;
-	static const unsigned int WORD_LEN = 4;
+	static const unsigned int WORD_BYTES = N / 8;
+	static const unsigned int CACHELINE_BYTES = CACHE_LINE_BITS / 8;
+	static const unsigned int CACHELINE_WORDS = CACHELINE_BYTES / WORD_BYTES;
 	static const unsigned int ADDR_BITS = bits(BYTES);
-	static const unsigned int ADDR_BYTE_LEN = 2;
-	static const unsigned int NUM_WORDS = BYTES / 4;
-	static const unsigned int ADDR_WORD_LEN = bits(NUM_WORDS);
-	static const unsigned int CACHELINE_WORDS = NCacheLine / 32;
-	static const unsigned int CACHELINE_BYTES = NCacheLine / 8;
+	static const unsigned int BYTE_INDEX_LEN = bits(WORD_BYTES);
+	static const unsigned int NUM_WORDS = BYTES / WORD_BYTES;
+	static const unsigned int WORD_INDEX_LEN = bits(NUM_WORDS);
 	static const unsigned int CACHELINE_ADDR_BITS = bits(CACHELINE_BYTES);
 	static const unsigned int NUM_LINES = BYTES / CACHELINE_BYTES;
 	static const unsigned int CACHELINE_INDEX_LEN = bits(NUM_LINES);
-	static const unsigned int OFFSET_BITS = bits(CACHELINE_WORDS);
 	static const unsigned int MEMORY_UPDATE_RATIO = 8;
 	static const unsigned int WRITE_BUFFER_LEN = 8;
 
 	typedef Bundle<ADDR_BITS> AddrBundle;
-	typedef Bundle<NCacheLine> CacheLineBundle;
+	typedef Bundle<CACHE_LINE_BITS> CacheLineBundle;
 	typedef RequestBuffer<N, ADDR_BITS, WRITE_BUFFER_LEN, MEMORY_UPDATE_RATIO> ReqBuffer;
-	
+
 	using ThreadedComponent::ThreadedComponent;
 
 	void Connect(ReqBuffer& reqbuf);
 	void Update();
 
-	const AddrBundle& ReadAddr() const { return addrReadOrNull.Out(); }
+	const AddrBundle& ReadAddr() const { return pReqBuffer->OutRead(); }
 	const Wire& ServicedRead() const { return servicedRead.Out(); }
 	const CacheLineBundle& OutLine() const { return outMux.Out(); }
 
@@ -53,64 +51,35 @@ private:
 
 	ReqBuffer* pReqBuffer;
 	MuxBundle<ADDR_BITS, 2> addrRWMux;
-	MultiGate<AndGate, ADDR_BITS> addrReadOrNull;
 	AndGate servicedRead;
-	
+
 	Decoder<NUM_WORDS> addrDecoder;
-	Decoder<WORD_LEN> byteDecoder;
-	Decoder<2> halfDecoder;
-	MuxBundle<WORD_LEN, 4> masker;
-	MultiGate<AndGate, WORD_LEN> writeEnabledMask;
-	MuxBundle<WORD_LEN, 2> writeEnableMaskOrReadMux;
-	LeftShifter<N> dataByteShifter;
-	
-	std::array<AndGate, BYTES> writeEnable;
-	std::array<Register<8>, BYTES> registers;
-	MuxBundle<NCacheLine, NUM_LINES> outMux;
+
+	std::array<Register<N>, NUM_WORDS> registers;
+	MuxBundle<CACHE_LINE_BITS, NUM_LINES> outMux;
 
 	int cycle;
 
-	friend class Debugger;	 
+	friend class Debugger;
 };
 
-
-template<unsigned int BYTES, unsigned int NCacheLine = N>
-inline void Memory<BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
+template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+inline void Memory<N, CACHE_LINE_BITS, BYTES>::Connect(ReqBuffer& reqbuf)
 {
 	pReqBuffer = &reqbuf;
 
 	servicedRead.Connect(Wire::ON, pReqBuffer->PoppedRead());
+	addrRWMux.Connect({ pReqBuffer->OutWrite().Addr(), pReqBuffer->OutRead()}, servicedRead.Out());
 
-	addrRWMux.Connect({ pReqBuffer->OutRead(), pReqBuffer->OutWrite().Addr() }, pReqBuffer->PoppedWrite());
-	addrReadOrNull.Connect(addrRWMux.Out(), Bundle<ADDR_BITS>(pReqBuffer->PoppedRead()));
-
-	auto byteAddr = addrRWMux.Out().Range<ADDR_BYTE_LEN>(0);
-	auto wordAddr = addrRWMux.Out().Range<ADDR_WORD_LEN>(ADDR_BYTE_LEN);
+	auto wordAddr = addrRWMux.Out().Range<WORD_INDEX_LEN>(BYTE_INDEX_LEN);
 	addrDecoder.Connect(wordAddr);
-	byteDecoder.Connect(byteAddr);
-	halfDecoder.Connect(Bundle<1>(byteAddr[1]));
-
-	Bundle<4> halfMaskBundle({ &halfDecoder.Out()[0], &halfDecoder.Out()[0], &halfDecoder.Out()[1], &halfDecoder.Out()[1] });
-	masker.Connect({ Bundle<4>::ON, byteDecoder.Out(), halfMaskBundle, Bundle<4>::ON },
-		{ &pReqBuffer->OutWrite().Action().WriteByte(), &pReqBuffer->OutWrite().Action().WriteHalf() });
-	writeEnabledMask.Connect(masker.Out(), Bundle<WORD_LEN>(pReqBuffer->OutWrite().Action().Write()));
-
-	writeEnableMaskOrReadMux.Connect({ Bundle<WORD_LEN>::OFF, writeEnabledMask.Out() }, pReqBuffer->PoppedWrite());
-
-	for (int i = 0; i < BYTES; ++i)
-	{
-		writeEnable[i].Connect(addrDecoder.Out()[i / 4], writeEnableMaskOrReadMux.Out()[i % 4]);
-	}
-
-	dataByteShifter.Connect(pReqBuffer->OutWrite().Data(), { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
-
+	
 	std::array<CacheLineBundle, NUM_LINES> lineOuts;
-	for (int i = 0; i < BYTES; ++i)
+	for (int i = 0; i < NUM_WORDS; ++i)
 	{
-		unsigned int bit_offset = (i % 4) * 8;
-		registers[i].Connect(dataByteShifter.Out().Range<8>(bit_offset), writeEnable[i].Out());
-		unsigned int cache_line = i / CACHELINE_BYTES;
-		unsigned int bit_line_offset = (i % CACHELINE_BYTES) * 8;
+		registers[i].Connect(pReqBuffer->OutWrite().Data(), pReqBuffer->PoppedWrite());
+		unsigned int cache_line = i / CACHELINE_WORDS;
+		unsigned int bit_line_offset = (i % CACHELINE_WORDS) * N;
 		lineOuts[cache_line].Connect(bit_line_offset, registers[i].Out());
 	}
 
@@ -118,27 +87,16 @@ inline void Memory<BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
 	outMux.Connect(lineOuts, cachelineAddr);
 }
 
-template<unsigned int BYTES, unsigned int NCacheLine = N>
-inline void Memory<BYTES, NCacheLine>::Update()
+template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+inline void Memory<N, CACHE_LINE_BITS, BYTES>::Update()
 {
 	cycle++;
 	servicedRead.Update();
 	addrRWMux.Update();
 	addrDecoder.Update();
-	byteDecoder.Update();
-	halfDecoder.Update();
-	masker.Update();
-	writeEnabledMask.Update();
-	writeEnableMaskOrReadMux.Update();
-	dataByteShifter.Update();
-	for (auto& i : writeEnable)
-	{
-		i.Update();
-	}
 	for (auto& reg : registers)
 	{
 		reg.Update();
 	}
 	outMux.Update();
-	addrReadOrNull.Update();
 }
