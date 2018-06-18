@@ -12,12 +12,13 @@
 #include "Shifter.h"
 #include "SelectBundle.h"
 #include "RequestBuffer.h"
+#include "ThreadedComponent.h"
 
 // Memory is stored in bytes, read in cache lines.
 // We support byte writes, half word writes, and full word (32-bit) writes
 
 template <unsigned int BYTES, unsigned int NCacheLine=N*2>
-class Memory : public Component
+class Memory : public ThreadedComponent
 {
 public:
 	static const unsigned int N = 32;
@@ -34,9 +35,10 @@ public:
 	static const unsigned int OFFSET_BITS = bits(CACHELINE_WORDS);
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<NCacheLine> CacheLineBundle;
-	typedef RequestBuffer<32, ADDR_BITS, 8, 4> ReqBuffer;
+	typedef RequestBuffer<32, ADDR_BITS, 8, 8> ReqBuffer;
+	
+	using ThreadedComponent::ThreadedComponent;
 
-	Memory();
 	void Connect(ReqBuffer& reqbuf);
 	void Update();
 
@@ -63,18 +65,11 @@ private:
 	std::array<Register<8>, BYTES> registers;
 	MuxBundle<NCacheLine, NUM_LINES> outMux;
 
-
 	int cycle;
 
-	friend class Debugger;
-	 
+	friend class Debugger;	 
 };
 
-template<unsigned int BYTES, unsigned int NCacheLine>
-inline Memory<BYTES, NCacheLine>::Memory()
-	: cycle(0)
-{
-}
 
 template<unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)

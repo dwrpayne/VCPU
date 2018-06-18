@@ -30,12 +30,17 @@ public:
 	static const int CACHE_OFFSET_BITS = bits(CACHE_WORDS);
 	static const int TAG_BITS = ADDR_BITS - CACHE_INDEX_BITS - CACHE_OFFSET_BITS - bits(WORD_BYTES);
 
+	static const int MEMORY_UPDATE_RATIO = 8;
+	static const int WRITE_BUFFER_LEN = 8;
+
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<WORD_SIZE> DataBundle;
 	typedef Bundle<CACHE_LINE_BITS> CacheLineDataBundle;
 	typedef Bundle<CACHE_OFFSET_BITS> CacheOffsetBundle;
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
+	typedef RequestBuffer<WORD_SIZE, ADDR_BITS, WRITE_BUFFER_LEN, MEMORY_UPDATE_RATIO> ReqBufferType;
+	typedef Memory<MAIN_MEMORY_BYTES, CACHE_LINE_BITS> MemoryType;
 
 	Cache();
 	virtual ~Cache();
@@ -48,12 +53,9 @@ public:
 	const Wire& NeedStall() { return needStall.Out(); }
 	const Wire& NoStall() { return needStallInv.Out(); }
 	
-private:
-	void UpdateCache();
-	void UpdateMemory();
-	
-	RequestBuffer<WORD_SIZE, ADDR_BITS, 8, 4> buffer;
-	Memory<MAIN_MEMORY_BYTES, CACHE_LINE_BITS> mMemory;
+private:	
+	ReqBufferType buffer;
+	MemoryType mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;	
@@ -70,8 +72,12 @@ private:
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
 
-	volatile int mCacheState;
+	bool exit;
+	std::condition_variable mCV;
+	std::mutex mMutex;
+	bool memoryReady;
 	std::thread memUpdateThread;
+	int cycles;
 
 #ifdef DEBUG
 	AddrBundle DEBUG_addr;
@@ -83,22 +89,24 @@ private:
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Cache()
-	: mCacheState(0)
-	, memUpdateThread(&Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory, this)
+	: exit(false)
+	, memoryReady(false)
+	, mMemory(mMutex, mCV, memoryReady, exit)
+	, memUpdateThread(&MemoryType::ThreadedUpdate, &mMemory)
 {
 }
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::~Cache()
 {
-	mCacheState = 2;
+	exit = true;
+	mCV.notify_all();
 	memUpdateThread.join();
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, 
-																					const Wire& write, const Wire& read,
-																					const Wire& bytewrite, const Wire& halfwrite)
+void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
+															const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
 {
 #ifdef DEBUG
 	DEBUG_addr.Connect(0, addr);
@@ -143,27 +151,10 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	}
 
 	outDataMux.Connect(dataWordBundles, offset);
-	mCacheState = 1;
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
-{
-	UpdateCache();
-}
-
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateUntilNoStall()
-{
-	UpdateCache();
-	while (NeedStall().On())
-	{
-		UpdateCache();
-	}
-}
-
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateCache()
 {
 	indexDecoder.Update();
 	addrReadMatcher.Update();
@@ -178,7 +169,7 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateC
 	if (gotResultFromMemory.Out().On())
 	{
 		std::cout << "Cache got ";
-		auto& line = cachelines[(DEBUG_addr.UnsignedRead()/8) % cachelines.size()];
+		auto& line = cachelines[(DEBUG_addr.UnsignedRead() / 8) % cachelines.size()];
 		for (auto& reg : line.words)
 		{
 			std::cout << reg.Out().Read() << ", ";
@@ -195,16 +186,22 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateC
 	outCacheLineMux.Update();
 	outDataMux.Update();
 	buffer.Update();
+
+	if (!(cycles % MEMORY_UPDATE_RATIO))
+	{
+		std::lock_guard<std::mutex> lk(mMutex);
+		memoryReady = true;
+	}
+	mCV.notify_all();
+	cycles++;
 }
 
-template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateMemory()
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateUntilNoStall()
 {
-	while (mCacheState < 2)
+	Update();
+	while (NeedStall().On())
 	{
-		if (mCacheState == 1)
-		{
-			mMemory.Update();
-		}
+		Update();
 	}
 }

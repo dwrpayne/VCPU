@@ -124,6 +124,7 @@
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Control\ThreadedComponent.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\SelectBundle.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
+    <ClInclude Include="Control\ThreadedComponent.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\BranchControl.h" />
     <ClInclude Include="CPU\Cache.h" />

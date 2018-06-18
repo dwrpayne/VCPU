@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.h"
+#include "ThreadedComponent.h"
 #include "RegisterFile.h"
 
 #include "OpcodeDecoder.h"
@@ -15,6 +16,7 @@ class CPU : public Component
 {
 public:
 	CPU();
+	virtual ~CPU();
 
 	int cycles;
 	static const int WORD_SIZE = 32;
@@ -37,29 +39,6 @@ public:
 	void Update();
 
 private:
-	class PipelineStage : public Component
-	{
-	public:
-		PipelineStage(std::mutex& mutex, std::condition_variable& cv, bool& ready)
-		: mMutex(mutex)
-		, mCV(cv)
-		, mReady(ready)
-		, numBeforeWires(Wire::WireCount())
-		{}
-
-		void ThreadedUpdate();
-		virtual void Update() = 0;
-		virtual void PostUpdate() = 0;
-		std::chrono::microseconds GetElapsedTime() { return mElapsedTime; }
-
-	private:
-		std::condition_variable& mCV;
-		std::mutex& mMutex;
-		bool& mReady;
-		int numBeforeWires;
-
-		std::chrono::microseconds mElapsedTime;
-	};
 
 	const Bundle<32>& PC();
 	InsCache& InstructionMem();
@@ -98,9 +77,8 @@ private:
 	HazardUnit hazardIFID;
 	Interlock interlock;
 
-	int numBeforeWires;
+	bool exit;
 
 	friend class ProgramLoader;
 	friend class Debugger;
-	friend class PipelineStage;
 };

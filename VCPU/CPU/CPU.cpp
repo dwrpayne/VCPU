@@ -10,10 +10,10 @@
 #include <future>
 
 
-class CPU::Stage1 : public PipelineStage
+class CPU::Stage1 : public ThreadedComponent
 {
 public:
-	using PipelineStage::PipelineStage;
+	using ThreadedComponent::ThreadedComponent;
 	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed);
 	void Update();
 	void PostUpdate();
@@ -29,10 +29,10 @@ private:
 	friend class CPU;
 };
 
-class CPU::Stage2 : public PipelineStage
+class CPU::Stage2 : public ThreadedComponent
 {
 public:
-	using PipelineStage::PipelineStage;
+	using ThreadedComponent::ThreadedComponent;
 	void Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const HazardUnit& hazard, const Wire& proceed, const Wire& flush);
 	void Update();
 	void PostUpdate();
@@ -54,10 +54,10 @@ private:
 	friend class CPU;
 };
 
-class CPU::Stage3 : public PipelineStage
+class CPU::Stage3 : public ThreadedComponent
 {
 public:
-	using PipelineStage::PipelineStage;
+	using ThreadedComponent::ThreadedComponent;
 	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed, const Wire& flush);
 	void Update();
 	void PostUpdate();
@@ -79,10 +79,10 @@ private:
 	friend class CPU;
 };
 
-class CPU::Stage4 : public PipelineStage
+class CPU::Stage4 : public ThreadedComponent
 {
 public:
-	using PipelineStage::PipelineStage;
+	using ThreadedComponent::ThreadedComponent;
 	void Connect(const BufferEXMEM& stage3, const Wire& proceed);
 	void Update();
 	void PostUpdate();
@@ -110,7 +110,7 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 	pcIncrementer.Connect(pc.Out(), Bundle<32>(4), Wire::OFF);
 
 	// Instruction memory
-	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::OFF, Wire::ON, Wire::OFF, Wire::OFF);
+	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF);
 
 	// Out Buffer
 	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
@@ -192,9 +192,8 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 {
 	// Main Memory
 	const auto& memAddr = stage3.aluOut.Out();
-	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(),
-		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().LoadOp(),
-		stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
+	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), stage3.OpcodeControl().LoadOp(), 
+		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
 	// Byte/Half/Word Selection
 	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned());
@@ -279,16 +278,16 @@ void CPU::Stage4::PostUpdate()
 
 
 CPU::CPU()
-	: stage1(new Stage1(mMutex, mCV, stage1Ready))
-	, stage2(new Stage2(mMutex, mCV, stage2Ready))
-	, stage3(new Stage3(mMutex, mCV, stage3Ready))
-	, stage4(new Stage4(mMutex, mCV, stage4Ready))
+	: exit(false)
+	, stage1(new Stage1(mMutex, mCV, stage1Ready, exit))
+	, stage2(new Stage2(mMutex, mCV, stage2Ready, exit))
+	, stage3(new Stage3(mMutex, mCV, stage3Ready, exit))
+	, stage4(new Stage4(mMutex, mCV, stage4Ready, exit))
 	, stage1Thread(&CPU::Stage1::ThreadedUpdate, stage1)
 	, stage2Thread(&CPU::Stage2::ThreadedUpdate, stage2)
 	, stage3Thread(&CPU::Stage3::ThreadedUpdate, stage3)
 	, stage4Thread(&CPU::Stage4::ThreadedUpdate, stage4)
 	, cycles(0)
-	, numBeforeWires(Wire::WireCount())
 {
 	hazardIFID.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
@@ -300,11 +299,16 @@ CPU::CPU()
 	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), 
 		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
+}
 
-	stage1Thread.detach();
-	stage2Thread.detach();
-	stage3Thread.detach();
-	stage4Thread.detach();
+CPU::~CPU()
+{
+	exit = true;
+	mCV.notify_all();
+	stage1Thread.join();
+	stage2Thread.join();
+	stage3Thread.join();
+	stage4Thread.join();
 }
 
 void CPU::Connect()
@@ -363,6 +367,7 @@ bool CPU::Halt()
 	// woken up by an interrupt. We are hijacking this to stop the debugger.
 	return stage2->Out().OpcodeControl().Halt().On();
 }
+
 std::array<std::chrono::microseconds, 4> CPU::GetStageTiming()
 {
 	return {stage1->GetElapsedTime() / cycles,
@@ -370,24 +375,4 @@ std::array<std::chrono::microseconds, 4> CPU::GetStageTiming()
 		stage3->GetElapsedTime() / cycles,
 		stage4->GetElapsedTime() / cycles
 		};
-}
-void CPU::PipelineStage::ThreadedUpdate()
-{
-	while (true)
-	{
-		{
-			std::unique_lock<std::mutex> lk(mMutex);
-			mCV.wait(lk, [this] {return mReady; });
-		}
-		auto t1 = std::chrono::high_resolution_clock::now();
-		Update();
-		auto t2 = std::chrono::high_resolution_clock::now();
-		mElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-		{
-			std::unique_lock<std::mutex> lk(mMutex);
-			mReady = false;
-			lk.unlock();
-			mCV.notify_all();
-		}
-	}
 }

@@ -228,7 +228,7 @@ bool TestCache(Verbosity verbosity)
 	Wire write(true);
 	Wire read(false);
 	MagicBundle<10> addr;
-	test.Connect(addr, data, write, read, Wire::OFF, Wire::OFF);
+	test.Connect(addr, data, read, write, Wire::OFF, Wire::OFF);
 
 	for (int a = 0; a < 8; a++)
 	{
