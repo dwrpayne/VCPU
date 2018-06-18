@@ -87,18 +87,21 @@ template <>
 class Multiplexer<1> : public Component
 {
 public:
-	void Connect(const Bundle<1>& in, const Wire& sel);
+	void Connect(const Bundle<1>& in, const Bundle<0>& sel);
 	void Update();
 
-	const Wire& Out() const { return Wire::OFF; }
+	const Wire& Out() const { return buffer.Out(); }
 
 private:
+	AndGate buffer;
 };
 
-inline void Multiplexer<1>::Connect(const Bundle<1>& in, const Wire& sel)
+inline void Multiplexer<1>::Connect(const Bundle<1>& in, const Bundle<0>& sel)
 {
+	buffer.Connect(in[0], Wire::ON);
 }
 
 inline void Multiplexer<1>::Update()
 {
+	buffer.Update();
 }

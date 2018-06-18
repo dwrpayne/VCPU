@@ -79,18 +79,36 @@ public:
 	void Connect(const Bundle<1>& a, const Bundle<1>& b);
 	void Update();
 
-	const Wire& Out() const { return and.Out(); }
+	const Wire& Out() const { return match.Out(); }
 
 private:
-	AndGate and;
+	XNorGate match;
 };
 
 inline void Matcher<1>::Connect(const Bundle<1>& a, const Bundle<1>& b)
 {
-	and.Connect(a[0], b[0]);
+	match.Connect(a[0], b[0]);
 }
 
 inline void Matcher<1>::Update()
 {
-	and.Update();
+	match.Update();
+}
+
+template <>
+class Matcher<0> : public Component
+{
+public:
+	void Connect(const Bundle<0>& a, const Bundle<0>& b);
+	void Update();
+
+	const Wire& Out() const { return Wire::ON; }
+};
+
+inline void Matcher<0>::Connect(const Bundle<0>& a, const Bundle<0>& b)
+{
+}
+
+inline void Matcher<0>::Update()
+{
 }

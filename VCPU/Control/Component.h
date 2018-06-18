@@ -14,6 +14,7 @@ public:
 
 constexpr unsigned int bits(unsigned int N)
 {
+	if (N == 1) return 0;
 	return N <= 2 ? 1 : 1 + bits(N / 2);
 }
 

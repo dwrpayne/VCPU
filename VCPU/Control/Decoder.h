@@ -96,20 +96,17 @@ class Decoder<1> : public Component
 {
 public:
 	Decoder();
-	void Connect(const Bundle<1>& in);
+	void Connect(const Bundle<0>& in);
 	void Update();
 
-	const Bundle<1>& Out() const { return Bundle<1>::OFF; }
-
-
-private:
+	const Bundle<1>& Out() const { return Bundle<1>::ON; }
 };
 
 inline Decoder<1>::Decoder()
 {
 }
 
-inline void Decoder<1>::Connect(const Bundle<1>& in)
+inline void Decoder<1>::Connect(const Bundle<0>& in)
 {
 }
 

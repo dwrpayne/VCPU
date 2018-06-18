@@ -44,7 +44,7 @@ public:
 		int val = n < pow2(N) / 2 ? n : n - pow2(N);
 		InitNumber(val);
 	}
-
+	
 	void InitNumber(int n)
 	{
 		bool negative = n < 0;
@@ -150,13 +150,12 @@ public:
 		return Get(n);
 	}
 
-	template <unsigned int U=N, typename = typename std::enable_if<N==1, const >::type>
+	template <typename = typename std::enable_if<N==1, const >::type>
 	operator const Wire&() const
 	{
 		return Get(0);
 	}
-
-
+	
 	int Read() const
 	{
 		int n = 0;
@@ -181,12 +180,11 @@ public:
 protected:
 	std::array<const Wire*, N> wires;
 
-private:
 	// Creates a Bundle from another one, optionally shifting the original. 
 	// Optional fill wire for wires not contained in the shifted original.
 	// Private because it's not very readable. Clients should use the helper functions.	
 	template <unsigned int M>
-	Bundle(const Bundle<M>& other, int shiftby = 0, const Wire& fill = Wire::OFF)
+	explicit Bundle(const Bundle<M>& other, int shiftby = 0, const Wire& fill = Wire::OFF)
 	{
 		for (int i = 0; i < N; ++i)
 		{

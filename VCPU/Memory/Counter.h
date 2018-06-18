@@ -28,35 +28,6 @@ private:
 	Bundle<N> out;
 };
 
-template <>
-class Counter<1> : public Component
-{
-public:
-	void Connect(const Wire& clear, const Wire& enable)
-	{
-		clearInv.Connect(clear);
-		jInput.Connect(enable, clearInv.Out());
-		kInput.Connect(enable, clear);
-		bit.Connect(jInput.Out(), kInput.Out());
-	}
-	void Update()
-	{
-		clearInv.Update();
-		jInput.Update();
-		kInput.Update();
-		bit.Update();
-	}
-
-	const Bundle<1> Out() const { return { &bit.Q() }; }
-
-
-private:
-	JKFlipFlop bit;
-	Inverter clearInv;
-	OrGate kInput;
-	AndGate jInput;
-};
-
 template<unsigned int N>
 inline Counter<N>::Counter()
 {
@@ -109,3 +80,33 @@ inline void Counter<N>::Update()
 		bits[i].Update();
 	}
 }
+
+
+template <>
+class Counter<1> : public Component
+{
+public:
+	void Connect(const Wire& clear, const Wire& enable)
+	{
+		clearInv.Connect(clear);
+		jInput.Connect(enable, clearInv.Out());
+		kInput.Connect(enable, clear);
+		bit.Connect(jInput.Out(), kInput.Out());
+	}
+	void Update()
+	{
+		clearInv.Update();
+		jInput.Update();
+		kInput.Update();
+		bit.Update();
+	}
+
+	const Bundle<1> Out() const { return { &bit.Q() }; }
+
+
+private:
+	JKFlipFlop bit;
+	Inverter clearInv;
+	OrGate kInput;
+	AndGate jInput;
+};
