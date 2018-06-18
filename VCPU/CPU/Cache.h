@@ -187,12 +187,15 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	outDataMux.Update();
 	buffer.Update();
 
+
 	if (!(cycles % MEMORY_UPDATE_RATIO))
 	{
-		std::lock_guard<std::mutex> lk(mMutex);
+		std::unique_lock<std::mutex> lk(mMutex);
+		mCV.wait(lk, [this] {return !memoryReady; });
 		memoryReady = true;
+		lk.unlock();
+		mCV.notify_all();
 	}
-	mCV.notify_all();
 	cycles++;
 }
 
