@@ -34,6 +34,7 @@
 #include "CacheLine.h"
 #include "Multiplier.h"
 #include "CircularBuffer.h"
+#include "RequestBuffer.h"
 
 #ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -1242,6 +1243,148 @@ bool TestCircularBuffer(Verbosity verbosity)
 	return success;
 }
 
+bool TestCircularBuffer1(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	CircularBuffer<32, 1> test;
+
+	MagicBundle<32> reg;
+	Wire read(false);
+	Wire write(false);
+
+	test.Connect(reg, read, write);
+
+	reg.Write(123456);
+	test.Update();
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+
+	write.Set(true);
+	test.Update();
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+
+	reg.Write(11);
+	test.Update();
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+
+	read.Set(true);
+	write.Set(false);
+	test.Update();
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
+		
+	test.Update();
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
+		
+	return success;
+}
+
+bool TestRequestBuffer(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	RequestBuffer<32, 10, 2> test;
+
+	MagicBundle<32> data;
+	MagicBundle<10> addr;
+	MagicBundle<3> write;
+	Wire read(false);	
+
+	test.Connect(addr, data, write, read);
+
+	data.Write(11);
+	addr.Write(10);
+	write.Write(0);
+
+	test.Update();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+
+	write.Write(1);
+	test.Update();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+
+	data.Write(2222);
+	addr.Write(31);
+	test.Update();
+	success &= TestState(i++, true, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+
+	data.Write(3333333);
+	addr.Write(64);
+	test.UpdatePop();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
+	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
+	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
+
+	write.Write(0);
+	read.Set(true);
+	addr.Write(128);
+	test.Update();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
+	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
+	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
+
+	addr.Write(3);
+	test.Update();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
+	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
+	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
+
+	test.UpdatePop();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+	success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
+	success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
+	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
+
+	test.UpdatePop();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, true, test.PoppedRead().On(), verbosity);
+	success &= TestState(i++, 0, test.OutWrite().Data().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutWrite().Addr().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutWrite().Action().Read(), verbosity);
+	success &= TestState(i++, 128, test.OutRead().Read(), verbosity);
+		
+		
+	return success;
+}
+
 bool RunAllTests()
 {
 	bool success = true;
@@ -1284,6 +1427,8 @@ bool RunAllTests()
 	RUN_TEST(TestCacheLine, SILENT);
 	RUN_TEST(TestMultiplier, SILENT);
 	RUN_TEST(TestCircularBuffer, SILENT);
+	RUN_TEST(TestCircularBuffer1, SILENT);
+	RUN_TEST(TestRequestBuffer, VERBOSE);
 	return success;
 }
 #endif
