@@ -30,8 +30,6 @@ public:
 	static const int CACHE_OFFSET_BITS = bits(CACHE_WORDS);
 	static const int TAG_BITS = ADDR_BITS - CACHE_INDEX_BITS - CACHE_OFFSET_BITS - bits(WORD_BYTES);
 
-	static const int MEMORY_UPDATE_RATIO = 8;
-	static const int WRITE_BUFFER_LEN = 8;
 
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<WORD_SIZE> DataBundle;
@@ -39,7 +37,6 @@ public:
 	typedef Bundle<CACHE_OFFSET_BITS> CacheOffsetBundle;
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
-	typedef RequestBuffer<WORD_SIZE, ADDR_BITS, WRITE_BUFFER_LEN, MEMORY_UPDATE_RATIO> ReqBufferType;
 	typedef Memory<MAIN_MEMORY_BYTES, CACHE_LINE_BITS> MemoryType;
 
 	Cache();
@@ -54,7 +51,7 @@ public:
 	const Wire& NoStall() { return needStallInv.Out(); }
 	
 private:	
-	ReqBufferType buffer;
+	typename MemoryType::ReqBuffer buffer;
 	MemoryType mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
@@ -188,7 +185,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	buffer.Update();
 
 
-	if (!(cycles % MEMORY_UPDATE_RATIO))
+	if (!(cycles % mMemory.MEMORY_UPDATE_RATIO))
 	{
 		std::unique_lock<std::mutex> lk(mMutex);
 		mCV.wait(lk, [this] {return !memoryReady; });

@@ -33,9 +33,12 @@ public:
 	static const unsigned int NUM_LINES = BYTES / CACHELINE_BYTES;
 	static const unsigned int CACHELINE_INDEX_LEN = bits(NUM_LINES);
 	static const unsigned int OFFSET_BITS = bits(CACHELINE_WORDS);
+	static const unsigned int MEMORY_UPDATE_RATIO = 8;
+	static const unsigned int WRITE_BUFFER_LEN = 8;
+
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<NCacheLine> CacheLineBundle;
-	typedef RequestBuffer<32, ADDR_BITS, 8, 8> ReqBuffer;
+	typedef RequestBuffer<N, ADDR_BITS, WRITE_BUFFER_LEN, MEMORY_UPDATE_RATIO> ReqBuffer;
 	
 	using ThreadedComponent::ThreadedComponent;
 

@@ -287,7 +287,7 @@ CPU::CPU()
 	, stage2Thread(&CPU::Stage2::ThreadedUpdate, stage2)
 	, stage3Thread(&CPU::Stage3::ThreadedUpdate, stage3)
 	, stage4Thread(&CPU::Stage4::ThreadedUpdate, stage4)
-	, cycles(0)
+	, cycles(1)
 {
 	hazardIFID.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
@@ -317,7 +317,6 @@ void CPU::Connect()
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
 	stage4->Connect(stage3->Out(), interlock.ProceedMEM());
-	cycles = 0;
 }
 
 void CPU::Update()
@@ -338,7 +337,11 @@ void CPU::Update()
 	stage1->PostUpdate();
 	hazardIFID.Update();
 	hazardIDEX.Update();
-	cycles++;
+
+	if (!PipelineFreeze() && !PipelineBubbleID() && !PipelineBubbleEX())
+	{
+		cycles++;
+	}
 }
 
 const Bundle<32>& CPU::PC()

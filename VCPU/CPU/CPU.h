@@ -31,8 +31,8 @@ public:
 		
 	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
 	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
-	typedef Memory<INS_MEM_BYTES, CACHE_LINE_BITS> InsMemory;
-	typedef Memory<MAIN_MEM_BYTES, CACHE_LINE_BITS> MainMemory;
+	typedef InsCache::MemoryType InsMemory;
+	typedef MainCache::MemoryType MainMemory;
 	typedef RegisterFile<WORD_SIZE, NUM_REGISTERS> RegFile;
 
 	void Connect();

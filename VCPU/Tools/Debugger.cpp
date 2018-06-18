@@ -305,8 +305,10 @@ void Debugger::PrintTiming()
 			}
 			int imemcycle = pCPU->InstructionMem().mMemory.cycle;
 			int mmemcycle = pCPU->MainMem().mMemory.cycle;
-			std::cout << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (ratio: " << pCPU->cycles / imemcycle << ")" << std::endl;
-			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (ratio: " << pCPU->cycles / mmemcycle << ")" << std::endl;
+			long long imemus = pCPU->InstructionMem().mMemory.GetElapsedTime().count();
+			long long mmemus = pCPU->MainMem().mMemory.GetElapsedTime().count();
+			std::cout << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (avg time spent: " << imemus / imemcycle << "us)" << std::endl;
+			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (avg time spent: " << mmemus / mmemcycle << "us)" << std::endl;
 		}
 	}
 }
