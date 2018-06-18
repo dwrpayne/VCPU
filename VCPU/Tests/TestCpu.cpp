@@ -216,15 +216,6 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 	return success;
 }
 
-void TestUpdateCache(Cache<32, 256, 256, 1024>* cache)
-{
-	cache->Update();
-	while (cache->NeedStall().On())
-	{
-		cache->Update();
-	}
-}
-
 bool TestCache(Verbosity verbosity)
 {
 	bool success = true;
@@ -243,14 +234,14 @@ bool TestCache(Verbosity verbosity)
 	{
 		addr.Write(0 + 4 * a);
 		data.Write(100000000 + 1111111 * a);
-		TestUpdateCache(pCache);
+		test.UpdateUntilNoStall();
 	}
 
 	for (int a = 0; a < 8; ++a)
 	{
 		addr.Write(64 + 4*a );
 		data.Write(200000000 + 1111111 * a);
-		TestUpdateCache(pCache);
+		test.UpdateUntilNoStall();
 	}
 	write.Set(false);
 	read.Set(true);
@@ -259,24 +250,24 @@ bool TestCache(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	TestUpdateCache(pCache);
+	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 101111111, test.Out().Read(), verbosity);
 	for (int a = 1; a < 8; a++)
 	{
 		addr.Write(4*a);
-		TestUpdateCache(pCache);
+		test.UpdateUntilNoStall();
 		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 		success &= TestState(i++, 100000000 + 1111111 * a, test.Out().Read(), verbosity);
 	}
 	addr.Write(88);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	TestUpdateCache(pCache);
+	test.UpdateUntilNoStall();
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(64 + 4*a);
-		TestUpdateCache(pCache);
+		test.UpdateUntilNoStall();
 		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 		success &= TestState(i++, 200000000 + 1111111 * a, test.Out().Read(), verbosity);
 	}
@@ -285,10 +276,10 @@ bool TestCache(Verbosity verbosity)
 	addr.Write(4);
 	write.Set(true);
 	read.Set(false);
-	TestUpdateCache(pCache);
+	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 4444, test.Out().Read(), verbosity);
-	TestUpdateCache(pCache);
+	test.UpdateUntilNoStall();
 
 	data.Write(525252);
 	addr.Write(52);
@@ -304,7 +295,7 @@ bool TestCache(Verbosity verbosity)
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
 	addr.Write(52);
-	TestUpdateCache(pCache);
+	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 525252, test.Out().Read(), verbosity);
 
@@ -455,7 +446,7 @@ bool RunCPUTests()
 	bool success = true;
 	auto default_verb = Debugger::VERBOSE;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
-	RUN_TEST(TestCache, FAIL_ONLY);
+	RUN_TEST(TestCache, VERBOSE);
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
