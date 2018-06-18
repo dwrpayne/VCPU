@@ -110,3 +110,37 @@ private:
 	OrGate kInput;
 	AndGate jInput;
 };
+
+// Provides a way to downscale a clock frequency by updating every N cycles
+template <unsigned int N>
+class ClockFreqSwitcher : public Component
+{
+public:
+	static const int LEN = bits(N);
+	void Connect();
+	void Update();
+
+	const Wire& Pulse() { return allOn.Out(); }
+	const Wire& NotPulse() { return notAllOn.Out(); }
+
+private:
+	Counter<LEN> counter;
+	AndGateN<LEN> allOn;
+	Inverter notAllOn;
+};
+
+template<unsigned int N>
+inline void ClockFreqSwitcher<N>::Connect()
+{
+	counter.Connect(Wire::OFF, Wire::ON);
+	allOn.Connect(counter.Out());
+	notAllOn.Connect(allOn.Out());
+}
+
+template<unsigned int N>
+inline void ClockFreqSwitcher<N>::Update()
+{
+	counter.Update();
+	allOn.Update();
+	notAllOn.Update();
+}

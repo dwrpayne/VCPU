@@ -589,6 +589,21 @@ bool TestCounter(Verbosity verbosity)
 	return success;
 }
 
+bool TestFreqSwitcher(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+	ClockFreqSwitcher<8> test;
+	test.Connect();
+	for (int cycle = 1; cycle < 50; cycle++)
+	{
+		test.Update();
+		success &= TestState(i++, !(cycle % 8), test.Pulse().On(), verbosity);
+		success &= TestState(i++, (bool)(cycle % 8), test.NotPulse().On(), verbosity);
+	}
+	return success;
+}
+
 bool TestMultiplexer2(const Wire& a)
 {
 	Multiplexer<2> test;
@@ -1408,6 +1423,7 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, SILENT);
 	RUN_TEST(TestRegister, SILENT);
 	RUN_TEST(TestCounter, SILENT);
+	RUN_TEST(TestFreqSwitcher, SILENT);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, SILENT);
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, SILENT);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, SILENT);

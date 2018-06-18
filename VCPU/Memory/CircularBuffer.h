@@ -30,7 +30,6 @@ private:
 	public:
 		void Connect(const Wire& read, const Wire& write);
 		void Update();
-		void UpdateCounters();
 		const AddrBundle WriteIndex() { return writeCounter.Out().Range<ADDR_LEN>(); }
 		const AddrBundle ReadIndex() { return readCounter.Out().Range<ADDR_LEN>(); }
 		const Wire& Full() { return queueFull.Out(); }
@@ -92,7 +91,6 @@ inline void CircularBuffer<N, Nreg>::Update()
 		buffers[i].Update();
 	}
 	outMux.Update();
-	counters.UpdateCounters();
 }
 
 template<unsigned int N, unsigned int Nreg>
@@ -121,9 +119,4 @@ inline void CircularBuffer<N, Nreg>::CounterPair::Update()
 	queueNotFull.Update();
 	queueEmpty.Update();
 	queueNotEmpty.Update();
-}
-
-template<unsigned int N, unsigned int Nreg>
-inline void CircularBuffer<N, Nreg>::CounterPair::UpdateCounters()
-{
 }
