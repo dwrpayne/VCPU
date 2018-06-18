@@ -4,6 +4,9 @@
     <DisplayString Condition="!state">{{0 ! {id}}}</DisplayString>
     <DisplayString Condition="state">{{1 ! {id}}}</DisplayString>
   </Type>
+  <Type Name="Inverter">
+    <DisplayString>{{in={(int)in->state}, out={(int)out.state}}}</DisplayString>
+  </Type>
   <Type Name="AndGate">
     <DisplayString>{{A={(int)in1->state}, B={(int)in2->state}, out={(int)out.state}}}</DisplayString>
   </Type>
@@ -15,6 +18,12 @@
   </Type>
   <Type Name="NorGate">
     <DisplayString>{{A={(int)or.in1->state}, B={(int)or.in2->state}, out={(int)inv.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="XNorGate">
+    <DisplayString>{{A={(int)and.in1->state}, B={(int)and.in2->state}, out={(int)orGate.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="XorGate">
+    <DisplayString>{{A={(int)and.in1->state}, B={(int)and.in2->state}, out={(int)and.out.state}}}</DisplayString>
   </Type>
   <Type Name="JKFlipFlop">
     <DisplayString>{{J={(int)andj.in1->state}, K={(int)andk.in2->state}, Q={(int)latch.norr.inv.out.state}}}</DisplayString>
@@ -41,6 +50,24 @@
 {(int)bits[5].nandR.inv.out.state}
 {(int)bits[6].nandR.inv.out.state}
 {(int)bits[7].nandR.inv.out.state}}}</DisplayString>
+  </Type>
+  <Type Name="Counter&lt;1&gt;">
+    <DisplayString>
+      {{enable={(int)jInput.in2->state}, bit={(int)bit.latch.norr.inv.out.state}}}
+    </DisplayString>
+  </Type>
+  <Type Name="Counter&lt;*&gt;">
+    <DisplayString>
+      {{enable={(int)enables[0].in2->state}, bits=
+{(int)bits[0].latch.norr.inv.out.state}
+{(int)bits[1].latch.norr.inv.out.state}
+{(int)bits[2].latch.norr.inv.out.state}
+{(int)bits[3].latch.norr.inv.out.state}
+{(int)bits[4].latch.norr.inv.out.state}
+{(int)bits[5].latch.norr.inv.out.state}
+{(int)bits[6].latch.norr.inv.out.state}
+{(int)bits[7].latch.norr.inv.out.state}}}
+    </DisplayString>
   </Type>
   <Type Name="InverterN&lt;*&gt;">
     <DisplayString>{{out={out}}}</DisplayString>
