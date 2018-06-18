@@ -59,6 +59,7 @@ public:
 	const Wire& PoppedRead() { return poppedRead.Q(); }
 	
 	const Wire& WriteFull() { return writebuffer.Full(); }
+	const Wire& WritePending() { return writebuffer.NonEmpty(); }
 	const Wire& ReadPending() { return readbuffer.Full(); }
 	
 private:

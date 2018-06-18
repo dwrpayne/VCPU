@@ -19,4 +19,6 @@ void ProgramLoader::Load(const Program * program)
 		insMemory.UpdateUntilNoStall();
 		cur_addr += 4;
 	}
+	insMemory.Connect(Bundle<CPU::InsCache::ADDR_BITS>::OFF, ins_bundle, Wire::OFF, Wire::OFF, Wire::OFF, Wire::OFF);
+	insMemory.UpdateUntilNoStall(true);
 }
