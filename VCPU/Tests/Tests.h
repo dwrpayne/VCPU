@@ -1332,7 +1332,7 @@ bool TestRequestBuffer(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	RequestBuffer<32, 10, 2> test;
+	RequestBuffer<32, 10, 2, 4> test;
 
 	MagicBundle<32> data;
 	MagicBundle<10> addr;
@@ -1366,22 +1366,11 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
 	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 
-	data.Write(3333333);
-	addr.Write(64);
-	test.UpdatePop();
-	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
-	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
-	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
-	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
-	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
-	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
-	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
-	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-
 	write.Write(0);
 	read.Set(true);
 	addr.Write(128);
-	test.Update();
+	data.Write(3333333);
+	test.Update(); // 4th one, will pop as well as add this read
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
 	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
 	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
@@ -1390,19 +1379,21 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
 	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-
+	
 	addr.Write(3);
+	for (int wait = 0; wait < 3; wait++)
+	{
+		test.Update(); // Attempt another read, does nothing
+		success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+		success &= TestState(i++, true, test.ReadPending().On(), verbosity);
+		success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+		success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+		success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
+		success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
+		success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
+		success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
+	}
 	test.Update();
-	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
-	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
-	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
-	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
-	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
-	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
-	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
-	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-
-	test.UpdatePop();
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
 	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
 	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
@@ -1411,8 +1402,19 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
 	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-
-	test.UpdatePop();
+	for (int wait = 0; wait < 3; wait++)
+	{
+		test.Update();
+		success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+		success &= TestState(i++, true, test.ReadPending().On(), verbosity);
+		success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+		success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+		success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
+		success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
+		success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
+		success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
+	}
+	test.Update();
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
 	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
 	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
@@ -1470,7 +1472,7 @@ bool RunAllTests()
 	RUN_TEST(TestMultiplier, SILENT);
 	RUN_TEST(TestCircularBuffer, SILENT);
 	RUN_TEST(TestCircularBuffer1, SILENT);
-	RUN_TEST(TestRequestBuffer, SILENT);
+	RUN_TEST(TestRequestBuffer, VERBOSE);
 	return success;
 }
 #endif

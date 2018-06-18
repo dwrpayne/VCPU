@@ -51,7 +51,7 @@ private:
 	void UpdateCache();
 	void UpdateMemory();
 	
-	RequestBuffer<WORD_SIZE, ADDR_BITS, 8> buffer;
+	RequestBuffer<WORD_SIZE, ADDR_BITS, 8, 4> buffer;
 	Memory<WORD_SIZE, MAIN_MEMORY_BYTES, CACHE_LINE_BITS> mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
@@ -131,7 +131,7 @@ void Cache<WORD_SIZE, CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Con
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
 	readMiss.Connect(read, cacheMiss.Out());
-	writeBufferFull.Connect({ &cacheMiss.Out(), &write, &buffer.Full() });
+	writeBufferFull.Connect({ &cacheMiss.Out(), &write, &buffer.WriteFull() });
 	needStall.Connect(readMiss.Out(), writeBufferFull.Out());
 	needStallInv.Connect(readMiss.Out());
 

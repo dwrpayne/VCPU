@@ -30,7 +30,7 @@ public:
 	static const unsigned int COUNTER_LEN = 3;
 	typedef Bundle<ADDR_BITS> AddrBundle;
 	typedef Bundle<N> DataBundle;
-	typedef RequestBuffer<N, ADDR_BITS, 8> ReqBuffer;
+	typedef RequestBuffer<N, ADDR_BITS, 8, 4> ReqBuffer;
 
 	Memory();
 	void Connect(ReqBuffer& reqbuf);
@@ -132,7 +132,6 @@ inline void Memory<N, BYTES, NCacheLine>::Connect(ReqBuffer& reqbuf)
 template<unsigned int N, unsigned int BYTES, unsigned int NCacheLine = N>
 inline void Memory<N, BYTES, NCacheLine>::Update()
 {
-	pReqBuffer->UpdatePop();
 	servicedRead.Update();
 	addrRWMux.Update();
 	addrDecoder.Update();
