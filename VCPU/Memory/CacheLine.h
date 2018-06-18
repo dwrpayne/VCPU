@@ -10,11 +10,13 @@ class CacheLine : public Component
 {
 public:
 	static const int LINE_BITS = N * Nwords;
+	static const int OFFSET_BITS = bits(Nwords);
 	typedef Bundle<N> WordBundle;
+	typedef Bundle<OFFSET_BITS> OffsetBundle;
 	typedef Bundle<LINE_BITS> LineBundle;
 
 	CacheLine();
-	void Connect(Bundle<NTag> tagin, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline);
+	void Connect(Bundle<NTag> tagin, const OffsetBundle& offset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline);
 	void Update();
 
 	const WordBundle& OutWord() { return outWordMux.Out(); }
@@ -24,6 +26,7 @@ public:
 private:
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
+	Decoder<Nwords> offsetDecoder;
 	std::array<RegisterMasked<N>, Nwords> words;
 	std::array<MuxBundle<N, 2>, Nwords> writeDataMux;
 
@@ -43,14 +46,15 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
-void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline)
+void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const OffsetBundle& offset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline)
 {
 	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
+	offsetDecoder.Connect(offset);
 	for (int i = 0; i < Nwords; i++)
 	{
 		writeDataMux[i].Connect({ dataword, dataline.Range<N>(i*N) }, writeline);
-		words[i].Connect(writeDataMux[i].Out(), writewordmask.Out()[i]);
+		words[i].Connect(writeDataMux[i].Out(), writewordmask.Out(), offsetDecoder.Out()[i]);
 	}	
 }
 
@@ -59,6 +63,7 @@ inline void CacheLine<N, Nwords, NTag>::Update()
 {
 	tag.Update();
 	tagMatcher.Update();
+	offsetDecoder.Update();
 	for (int i = 0; i < Nwords; i++)
 	{
 		writeDataMux[i].Update();
