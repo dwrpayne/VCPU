@@ -29,7 +29,7 @@ public:
 	static const unsigned int ADDR_WORD_LEN = bits(NUM_WORDS);
 	static const unsigned int CACHELINE_WORDS = NCacheLine / 32;
 	static const unsigned int CACHELINE_BYTES = NCacheLine / 8;
-	static const unsigned int CACHELINE_ADDR_BITS = bits(NCacheLine);
+	static const unsigned int CACHELINE_ADDR_BITS = bits(CACHELINE_BYTES);
 	static const unsigned int NUM_LINES = BYTES / CACHELINE_BYTES;
 	static const unsigned int CACHELINE_INDEX_LEN = bits(NUM_LINES);
 	static const unsigned int OFFSET_BITS = bits(CACHELINE_WORDS);

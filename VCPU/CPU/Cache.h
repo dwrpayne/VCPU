@@ -169,7 +169,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	if (gotResultFromMemory.Out().On())
 	{
 		std::cout << "Cache got ";
-		auto& line = cachelines[(DEBUG_addr.UnsignedRead() / 8) % cachelines.size()];
+		auto& line = cachelines[(DEBUG_addr.UnsignedRead() / 32) % cachelines.size()];
 		for (auto& reg : line.words)
 		{
 			std::cout << reg.Out().Read() << ", ";

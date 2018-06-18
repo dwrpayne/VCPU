@@ -38,7 +38,7 @@ void Debugger::Start(int cycles)
 		Step();
 		if (bPrintInstruction)
 		{
-			//__debugbreak();
+			__debugbreak();
 		}
  		if (pCPU->Halt())
 		{

@@ -446,7 +446,7 @@ bool RunCPUTests()
 	bool success = true;
 	auto default_verb = Debugger::VERBOSE;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
-	RUN_TEST(TestCache, VERBOSE);
+	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
