@@ -144,3 +144,32 @@ inline void ClockFreqSwitcher<N>::Update()
 	allOn.Update();
 	notAllOn.Update();
 }
+
+// Provides a way to downscale a clock frequency by updating every N cycles
+template <>
+class ClockFreqSwitcher<2> : public Component
+{
+public:
+	static const int LEN = 1;
+	void Connect();
+	void Update();
+
+	const Wire& Pulse() { return counter.Out(); }
+	const Wire& NotPulse() { return notAllOn.Out(); }
+
+private:
+	Counter<LEN> counter;
+	Inverter notAllOn;
+};
+
+inline void ClockFreqSwitcher<2>::Connect()
+{
+	counter.Connect(Wire::OFF, Wire::ON);
+	notAllOn.Connect(counter.Out());
+}
+
+inline void ClockFreqSwitcher<2>::Update()
+{
+	counter.Update();
+	notAllOn.Update();
+}
