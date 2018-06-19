@@ -1102,22 +1102,22 @@ bool TestCacheLine(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	CacheLine<8, 4, 20> test;
+	CacheLine<16, 4, 20> test;
 	MagicBundle<2> offset;
-	MagicBundle<8> dataword;
-	MagicBundle<32> dataline;
+	MagicBundle<16> dataword;
+	MagicBundle<64> dataline;
 	MagicBundle<20> tag;
-	MagicBundle<8> writemask;
+	MagicBundle<16> writemask;
 	Wire writeline(false);
 
 	test.Connect(tag, offset, writemask, dataword, writeline, dataline);
 
-	dataline.Write(185999660);
+	dataline.Write(0x1122334455667788);
 	tag.Write(987);
 	writemask.Write(0);
 	writeline.Set(true);
 	test.Update();
-	success &= TestState(i++, 185999660, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, 0x1122334455667788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	dataline.Write(100000);
@@ -1128,33 +1128,36 @@ bool TestCacheLine(Verbosity verbosity)
 
 	tag.Write(987);
 	test.Update();
-	success &= TestState(i++, 185999660, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, 0x1122334455667788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
-	dataword.Write(1);
-	writemask.Write(0xff);
+	dataword.Write(0xbabeU);
+	writemask.Write(0xffffU);
 	writeline.Set(false);
-	offset.Write(0U);
-	test.Update();
-	success &= TestState(i++, 185999617, test.OutLine().Read(), verbosity);
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-
-	dataword.Write(2);
 	offset.Write(1U);
 	test.Update();
-	success &= TestState(i++, 185991681, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, 0x11223344babe7788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
-	dataword.Write(3);
+	dataword.Write(0xcafeU);
 	offset.Write(2U);
+	writemask.Write(0xff00U);
 	test.Update();
-	success &= TestState(i++, 184746497, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, 0x1122ca44babe7788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
-	dataword.Write(4);
+	dataword.Write(0xbeefU);
 	offset.Write(3U);
+	writemask.Write(0x00ffU);
 	test.Update();
-	success &= TestState(i++, 67305985, test.OutLine().Read(), verbosity);
+	success &= TestState(i++, 0x11efca44babe7788, test.OutLine().ReadLong(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+
+	dataword.Write(0xaaaaU);
+	offset.Write(0U);
+	writemask.Write(0x0fffU);
+	test.Update();
+	success &= TestState(i++, 0x11efca44babe7aaa, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	return success;

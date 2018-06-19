@@ -56,7 +56,9 @@ bool TestState(int i, T val1, T val2, Verbosity verbosity)
 	bool pass = val1 == val2;
 	if (verbosity == VERBOSE || (!pass))
 	{
+		if (std::is_same<T, long long>::value) std::cout << std::hex;
 		std::cout << i << ".\t" << (pass ? "PASS: " : "FAIL: ") << "Expecting " << val1 << ", got " << val2 << std::endl;
+		if (std::is_same<T, long long>::value) std::cout << std::dec;
 	}
 	return pass;
 }

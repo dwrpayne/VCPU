@@ -16,7 +16,7 @@ public:
 	typedef Bundle<LINE_BITS> LineBundle;
 
 	CacheLine();
-	void Connect(Bundle<NTag> tagin, const OffsetBundle& offset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline);
+	void Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline);
 	void Update();
 
 	const LineBundle& OutLine() { return outLineBundle; }
@@ -47,11 +47,11 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
-void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const OffsetBundle& offset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline)
+void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline)
 {
 	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
-	offsetDecoder.Connect(offset, Wire::ON);
+	offsetDecoder.Connect(wordoffset, Wire::ON);
 	wordwriteOr.Connect(offsetDecoder.Out(), Bundle<Nwords>(writeline));
 	writeBitmask.Connect(writewordmask, Bundle<N>(writeline));
 	for (int i = 0; i < Nwords; i++)
