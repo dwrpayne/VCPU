@@ -340,8 +340,10 @@ bool TestCache(Verbosity verbosity)
 	MagicBundle<32> data;
 	Wire write(true);
 	Wire read(false);
+	Wire writebyte(false);
+	Wire writehalf(false);
 	MagicBundle<10> addr;
-	test.Connect(addr, data, read, write, Wire::OFF, Wire::OFF);
+	test.Connect(addr, data, read, write, writebyte, writehalf);
 
 	for (int a = 0; a < 8; a++)
 	{
@@ -353,7 +355,7 @@ bool TestCache(Verbosity verbosity)
 	for (int a = 0; a < 8; ++a)
 	{
 		addr.Write(64 + 4*a );
-		data.Write(0x20000000 + 0x222222 * a);
+		data.Write(0x70000000 + 0x222222 * a);
 		test.UpdateUntilNoStall();
 	}
 	write.Set(false);
@@ -361,9 +363,6 @@ bool TestCache(Verbosity verbosity)
 		
 	addr.Write(4);
 	test.Update();
-	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 	success &= TestState(i++, 0x10111111, test.Out().Read(), verbosity);
 	for (int a = 1; a < 8; a++)
@@ -375,43 +374,62 @@ bool TestCache(Verbosity verbosity)
 	}
 	addr.Write(88);
 	test.Update();
-	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	test.UpdateUntilNoStall();
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(64 + 4*a);
 		test.UpdateUntilNoStall();
 		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-		success &= TestState(i++, 0x20000000 + 0x111111 * a, test.Out().Read(), verbosity);
+		success &= TestState(i++, 0x70000000 + 0x222222 * a, test.Out().Read(), verbosity);
 	}
 
-	data.Write(4444);
-	addr.Write(4);
+	data.Write(0xaaaaaaaaU);
+	addr.Write(264);
 	write.Set(true);
 	read.Set(false);
 	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 4444, test.Out().Read(), verbosity);
-	test.UpdateUntilNoStall();
+	success &= TestState(i++, 0xaaaaaaaaU, test.Out().UnsignedRead(), verbosity);
 
-	data.Write(525252);
-	addr.Write(52);
-	test.Update();
-	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-
-	data.Write(123);
-	write.Set(false);
+	addr.Write(268);
 	read.Set(true);
-	addr.Write(32);
+	write.Set(false);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+
+	addr.Write(16);
 	test.Update();
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0, test.Out().Read(), verbosity);
-	addr.Write(52);
+	success &= TestState(i++, true, test.NeedStall().On(), verbosity);
 	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 525252, test.Out().Read(), verbosity);
+	success &= TestState(i++, 0x10444444, test.Out().Read(), verbosity);
 
+	addr.Write(24);
+	test.Update();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0x10666666, test.Out().Read(), verbosity);
+
+	addr.Write(90);
+	write.Set(true);
+	read.Set(false);
+	writehalf.Set(true);
+	data.Write(0xbeefU);
+	test.UpdateUntilNoStall();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0x70ccbeefU, test.Out().UnsignedRead(), verbosity);
+	
+	addr.Write(265);
+	writehalf.Set(false);
+	writebyte.Set(true);
+	data.Write(0xbeefU);
+	test.Update();
+	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.NeedStall().On(), verbosity);
+	test.UpdateUntilNoStall();
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, 0xaaaaefaaU, test.Out().UnsignedRead(), verbosity);
+	
 	delete pCache;
 
 	return success;

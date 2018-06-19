@@ -1141,7 +1141,7 @@ bool TestCacheLine(Verbosity verbosity)
 	MagicBundle<16> writemask;
 	Wire writeline(false);
 
-	test.Connect(tag, offset, writemask, dataword, writeline, dataline);
+	test.Connect(tag, offset, writemask, dataword, writeline, dataline, Wire::ON);
 
 	dataline.Write(0x1122334455667788);
 	tag.Write(987);

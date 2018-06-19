@@ -43,9 +43,9 @@ public:
 	void Connect(ReqBuffer& reqbuf);
 	void Update();
 
-	const AddrBundle& ReadAddr() const { return pReqBuffer->OutRead(); }
-	const Wire& ServicedRead() const { return servicedRead.Out(); }
-	const CacheLineBundle& OutLine() const { return outMux.Out(); }
+	const AddrBundle& ReadAddr() const { return outAddr.Out(); }
+	const Wire& ServicedRead() const { return outServicedRead.Out(); }
+	const CacheLineBundle& OutLine() const { return outData.Out(); }
 
 private:
 
@@ -59,6 +59,12 @@ private:
 	MuxBundle<CACHE_LINE_BITS, NUM_LINES> outMux;
 
 	int cycle;
+
+	Register<CACHE_LINE_BITS> outData;
+	Register<1> outServicedRead;
+	Register<ADDR_BITS> outAddr;
+
+	std::mutex mMutex;
 
 	friend class Debugger;
 };
@@ -85,6 +91,10 @@ inline void Memory<N, CACHE_LINE_BITS, BYTES>::Connect(ReqBuffer& reqbuf)
 
 	auto cachelineAddr = addrRWMux.Out().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 	outMux.Connect(lineOuts, cachelineAddr);
+
+	outData.Connect(outMux, Wire::ON);
+	outServicedRead.Connect(servicedRead.Out(), Wire::ON);
+	outAddr.Connect(addrRWMux.Out(), Wire::ON);
 }
 
 template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
@@ -99,4 +109,11 @@ inline void Memory<N, CACHE_LINE_BITS, BYTES>::Update()
 		reg.Update();
 	}
 	outMux.Update();
+
+	// TODO: This doesn't solve the race condition where this data is accessed
+	// by the Cache asyncronously. We need a similar situation to the RequestBuffer
+	// or the CPU PipelineBuffers.
+	outData.Update();
+	outServicedRead.Update();
+	outAddr.Update();
 }

@@ -157,6 +157,7 @@ private:
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
 
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
+	AndGate writeHit;
 	Inverter cacheMiss;
 	AndGate writeBufferFull;
 	OrGate needStall;
@@ -205,7 +206,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 #ifdef DEBUG
 	DEBUG_addr = address;
 #endif
-	buffer.Connect(addr, outDataMux.Out(), write, read);
 	mMemory.Connect(buffer);
 
 	CacheIndexBundle index = address.CacheLineIndex();
@@ -213,7 +213,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	// Did we get data from memory. Mask it in with the data we want to write.
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
 	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &cacheMiss.Out(), &mMemory.ServicedRead() });
-	indexDecoder.Connect(index, gotResultFromMemory.Out());
+	indexDecoder.Connect(index, write);
 	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, mMemory.OutLine(), bytewrite, halfwrite, write);
 
 	// Temp Bundles for the cache line array
@@ -224,13 +224,14 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
 		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), lineWriteMasker.WordMask(),
-			lineWriteMasker.Word(), read, lineWriteMasker.Line(), indexDecoder.Out()[i]);
+			lineWriteMasker.Word(), gotResultFromMemory.Out(), lineWriteMasker.Line(), indexDecoder.Out()[i]);
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 	}
 
 	// Status Flags
 	cacheHitMux.Connect(cacheHitCollector, index);
+	writeHit.Connect(write, cacheHitMux.Out());
 	cacheMiss.Connect(cacheHitMux.Out());
 	writeBufferFull.Connect(write, buffer.WriteFull());
 	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
@@ -244,6 +245,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 		dataWordBundles[i] = outCacheLineMux.Out().Range<WORD_SIZE>(i*WORD_SIZE);
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
+	
+	buffer.Connect(addr, outDataMux.Out(), writeHit.Out(), cacheMiss.Out());
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
@@ -271,6 +274,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	}
 #endif
 	cacheHitMux.Update();
+	writeHit.Update();
 	cacheMiss.Update();
 	writeBufferFull.Update();
 	needStall.Update();
@@ -294,9 +298,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateUntilNoStall(bool flush)
 {
-	Update();
-	while (NeedStall().On() || (flush && buffer.WritePending().On()))
+	do
 	{
 		Update();
-	}
+	} while (NeedStall().On() || (flush && buffer.WritePending().On()));
 }

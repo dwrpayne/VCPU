@@ -83,6 +83,21 @@
       {{enable={(int)enables[0].in2->state}, {out}}}
     </DisplayString>
   </Type>
+  <Type Name="AndGateN&lt;*&gt;">
+    <DisplayString>
+      {{out={ands[$T1-2].out.state}}}
+    </DisplayString>
+  </Type>
+  <Type Name="OrGateN&lt;*&gt;">
+    <DisplayString>
+      {{out={ors[$T1-2].out.state}}}
+    </DisplayString>
+  </Type>
+  <Type Name="Matcher&lt;*&gt;">
+    <DisplayString>
+      {{{equalAnd}}}
+    </DisplayString>
+  </Type>
   <Type Name="InverterN&lt;*&gt;">
     <DisplayString>{{out={out}}}</DisplayString>
   </Type>
@@ -93,7 +108,7 @@
     <DisplayString>{{out={muxOut.orOut.out}}}</DisplayString>
   </Type>
   <Type Name="Multiplexer&lt;8&gt;">
-    <DisplayString>{{out={muxOut.muxOut.orOut.out}}}</DisplayString>
+    <DisplayString>{{out={muxOut.orOut.out}}}</DisplayString>
   </Type>
   <Type Name="Multiplexer&lt;16&gt;">
     <DisplayString>{{out={muxOut.muxOut.smuxOut.orOut.out}}}</DisplayString>
