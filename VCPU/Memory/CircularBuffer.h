@@ -23,6 +23,7 @@ public:
 	const Wire& Full() { return counters.Full(); }
 	const Wire& NonEmpty() { return counters.NonEmpty(); }
 	const Wire& Empty() { return counters.Empty(); }
+	const Wire& DidPush() { return pushEnable.Out(); }
 
 private:
 	class CounterPair : public Component

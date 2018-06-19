@@ -14,10 +14,12 @@ public:
 	void Update();
 
 	const Wire& Out() const { return equalAnd.Out(); }
+	const Wire& NoMatch() const { return notEqual.Out(); }
 	
 private:
 	MultiGate<XNorGate, N> bitsxnor;
 	AndGateN<N> equalAnd;
+	Inverter notEqual;
 };
 
 template<unsigned int N>
@@ -25,6 +27,7 @@ inline void Matcher<N>::Connect(const Bundle<N>& a, const Bundle<N>& b)
 {
 	bitsxnor.Connect(a, b);
 	equalAnd.Connect(bitsxnor.Out());
+	notEqual.Connect(equalAnd.Out());
 }
 
 template<unsigned int N>
@@ -32,6 +35,7 @@ inline void Matcher<N>::Update()
 {
 	bitsxnor.Update();
 	equalAnd.Update();
+	notEqual.Update();
 }
 
 

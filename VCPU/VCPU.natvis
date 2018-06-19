@@ -70,7 +70,7 @@
 </Type>
 <Type Name="RequestBuffer&lt;*,*,*,*&gt;">
   <DisplayString>
-    {{Wfull={writebuffer.counters.queueFull.out.state}, popW={popWrite.out.state}, popR={popRead.out.state}}}
+    {{Wfull={writebuffer.counters.queueFull.out.state}, Rfull={readbuffer.counters.queueFull.out.state}, popW={popWrite.out.state}, popR={popRead.out.state}}}
   </DisplayString>
 </Type>
   <Type Name="Counter&lt;1&gt;">

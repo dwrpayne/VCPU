@@ -44,6 +44,8 @@ void PrintComponentCosts()
 	PRINT_COST(Multiplier<32>);
 	PRINT_COST(Comparator<32>);
 	PRINT_COST(Matcher<32>);
+	PRINT_COST(LeftShifter<32>);
+	PRINT_COST(Masker<32>);
 	PRINT_COST(OverflowDetector);
 	PRINT_COST(Adder<32>);
 	PRINT_COST(Shifter<32>);
@@ -60,11 +62,9 @@ void PrintComponentCosts()
 	PRINT_COST(RegisterFile3232);
 	PRINT_COST(CacheLine32813);
 	PRINT_COST(OpcodeDecoder);
-
 	PRINT_COST_NEW(CPU::InsCache);
 	PRINT_COST_NEW(CPU::MainCache);
 	PRINT_COST_NEW(CPU::RegFile);
-	PRINT_COST_NEW(CPU);
-	
+	PRINT_COST_NEW(CPU);	
 	PRINT_COST_NEW(CPU::MainMemory::ReqBuffer);
 }

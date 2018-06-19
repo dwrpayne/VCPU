@@ -50,10 +50,26 @@ public:
 	const Wire& ReadPending() { return readbuffer.Full(); }
 	
 private:
+	class BufferBundle : public Bundle<BUF_WIDTH + 2>
+	{
+	public:
+		BufferBundle(const AddrBundle & addr, const DataBundle & data, const Wire& writereq, const Wire& readreq)
+		{
+			Connect(0, addr);
+			Connect(ADDR_LEN, data);
+			Connect(BUF_WIDTH, writereq);
+			Connect(BUF_WIDTH + 1, readreq);
+		}
+	};
 	ClockFreqSwitcher<POP_EVERY> popCycleCounter;
+	Matcher<BUF_WIDTH + 2> prevRequestMatch;
+	Register<BUF_WIDTH + 2> prevRequest;
 
+	AndGate pushWrite;
+	AndGate pushRead;
 	AndGate popWrite;
 	AndGate popRead;
+	OrGate didPush;
 	CircularBuffer<BUF_WIDTH, Nreg> writebuffer;
 	CircularBuffer<ADDR_LEN, 1> readbuffer;
 
@@ -68,11 +84,19 @@ inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Connect(const AddrBundl
 {
 	popCycleCounter.Connect();
 
+	auto request = BufferBundle(addr, data, writereq, readreq);
+	prevRequestMatch.Connect(prevRequest.Out(), request);
+
+	pushRead.Connect(prevRequestMatch.NoMatch(), readreq);
+	pushWrite.Connect(prevRequestMatch.NoMatch(), writereq);
 	popRead.Connect(popCycleCounter.Pulse(), readbuffer.NonEmpty());
 	popWrite.Connect(popCycleCounter.Pulse(), readbuffer.Empty());
 
-	writebuffer.Connect(WriteReqBundle(addr, data), popWrite.Out(), writereq);
-	readbuffer.Connect(addr, popRead.Out(), readreq);
+	writebuffer.Connect(WriteReqBundle(addr, data), popWrite.Out(), pushWrite.Out());
+	readbuffer.Connect(addr, popRead.Out(), pushRead.Out());
+	
+	didPush.Connect(writebuffer.DidPush(), readbuffer.DidPush());
+	prevRequest.Connect(request, didPush.Out());
 
 	writeOut.Connect(writebuffer.Out(), popWrite.Out(), popRead.Out());
 	readOut.Connect(readbuffer.Out(), popRead.Out(), popWrite.Out());
@@ -84,11 +108,18 @@ template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg, unsigned int
 inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Update()
 {
 	popCycleCounter.Update();
+	prevRequestMatch.Update();
+
+	pushRead.Update();
+	pushWrite.Update();
 	popWrite.Update();
 	popRead.Update();
 	 
 	writebuffer.Update();
 	readbuffer.Update();
+
+	didPush.Update();
+	prevRequest.Update();
 	
 	writeOut.Update();
 	readOut.Update();

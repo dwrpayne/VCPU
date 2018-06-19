@@ -1339,6 +1339,7 @@ bool TestCircularBuffer1(Verbosity verbosity)
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, true, test.Full().On(), verbosity);
 
+	reg.Write(123456);
 	reg.Write(11);
 	test.Update();
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
@@ -1364,9 +1365,9 @@ bool TestRequestBuffer(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	RequestBuffer<32, 10, 2, 4> test;
+	RequestBuffer<22, 10, 2, 4> test;
 
-	MagicBundle<32> data;
+	MagicBundle<22> data;
 	MagicBundle<10> addr;
 	Wire write(false);	
 	Wire read(false);	
@@ -1401,7 +1402,7 @@ bool TestRequestBuffer(Verbosity verbosity)
 	write.Set(false);
 	read.Set(true);
 	addr.Write(128);
-	data.Write(3333333);
+	data.Write(33333);
 	test.Update(); // 4th one, will pop as well as add this read
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
 	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
@@ -1410,8 +1411,8 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
 	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-	
-	addr.Write(3);
+
+	addr.Write(128);
 	for (int wait = 0; wait < 3; wait++)
 	{
 		test.Update(); // Attempt another read, does nothing
@@ -1425,31 +1426,33 @@ bool TestRequestBuffer(Verbosity verbosity)
 	}
 	test.Update();
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
-	success &= TestState(i++, true, test.ReadPending().On(), verbosity);
-	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
-	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
-	success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
-	success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
-	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-	for (int wait = 0; wait < 3; wait++)
-	{
-		test.Update();
-		success &= TestState(i++, false, test.WriteFull().On(), verbosity);
-		success &= TestState(i++, true, test.ReadPending().On(), verbosity);
-		success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
-		success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
-		success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
-		success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
-		success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
-	}
-	test.Update();
-	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
 	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
 	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
 	success &= TestState(i++, true, test.PoppedRead().On(), verbosity);
 	success &= TestState(i++, 0, test.OutWrite().Data().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutWrite().Addr().Read(), verbosity);
 	success &= TestState(i++, 128, test.OutRead().Read(), verbosity);
+
+	read.Set(false);
+	for (int wait = 0; wait < 3; wait++)
+	{
+		test.Update();
+		success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+		success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+		success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
+		success &= TestState(i++, true, test.PoppedRead().On(), verbosity);
+		success &= TestState(i++, 0, test.OutWrite().Data().Read(), verbosity);
+		success &= TestState(i++, 0, test.OutWrite().Addr().Read(), verbosity);
+		success &= TestState(i++, 128, test.OutRead().Read(), verbosity);
+	}
+	test.Update();
+	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
+	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
+	success &= TestState(i++, true, test.PoppedWrite().On(), verbosity);
+	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
+	success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
+	success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
+	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
 				
 	return success;
 }
