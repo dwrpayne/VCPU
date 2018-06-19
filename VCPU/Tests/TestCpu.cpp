@@ -216,6 +216,119 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 	return success;
 }
 
+bool TestByteMask(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	ByteMask test;
+	MagicBundle<2> index;
+	Wire wb, wh, ww;
+
+	test.Connect(index, wb, wh, ww);
+	for (unsigned int a = 0; a < 4; a++)
+	{
+		index.Write(a);
+		wb.Set(false);
+		wh.Set(false);
+		ww.Set(false);
+		test.Update();
+		success &= TestState(i++, 0U, test.Mask().UnsignedRead(), verbosity);
+		wb.Set(false);
+		wh.Set(false);
+		ww.Set(true);
+		test.Update();
+		success &= TestState(i++, 0xffffffffU, test.Mask().UnsignedRead(), verbosity);
+		wb.Set(false);
+		wh.Set(true);
+		ww.Set(false);
+		test.Update();
+		success &= TestState(i++, 0U, test.Mask().UnsignedRead(), verbosity);
+		wb.Set(false);
+		wh.Set(true);
+		ww.Set(true);
+		test.Update();
+		success &= TestState(i++, 0xffffU << ((int)index[1].On() * 16), test.Mask().UnsignedRead(), verbosity);
+		wb.Set(true);
+		wh.Set(false);
+		ww.Set(false);
+		test.Update();
+		success &= TestState(i++, 0U, test.Mask().UnsignedRead(), verbosity);
+		wb.Set(true);
+		wh.Set(false);
+		ww.Set(true);
+		test.Update();
+		success &= TestState(i++, 0xffU << (index.Read() * 8), test.Mask().UnsignedRead(), verbosity);
+	}
+
+	return success;
+}
+
+bool TestCacheLineMasker(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	CacheLineMasker<64> test;
+	MagicBundle<2> index;
+	MagicBundle<32> dataword;
+	MagicBundle<64> dataline;
+	MagicBundle<1> offset;
+	Wire wb, wh, ww;
+
+	test.Connect(index, offset, dataword, dataline, wb, wh, ww);
+	ww.Set(false);
+	wh.Set(false);
+	wb.Set(false);
+	offset.Write(0);
+	index.Write(0);
+
+	dataword.Write(0x6eadbeefU);
+	dataline.Write(0x123456789abcdef);
+	test.Update();
+	success &= TestState(i++, 0, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
+
+	ww.Set(true);
+	test.Update();
+	success &= TestState(i++, 0x6eadbeef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x012345676eadbeef, test.Line().ReadLong(), verbosity);
+
+	offset.Write(1U);
+	test.Update();
+	success &= TestState(i++, 0x6eadbeef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x6eadbeef89abcdef, test.Line().ReadLong(), verbosity);
+
+	wb.Set(true);
+	test.Update();
+	success &= TestState(i++, 0xef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x012345ef89abcdef, test.Line().ReadLong(), verbosity);
+
+	index.Write(2U);
+	test.Update();
+	success &= TestState(i++, 0xef0000, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x01ef456789abcdef, test.Line().ReadLong(), verbosity);
+
+	offset.Write(0);
+	test.Update();
+	success &= TestState(i++, 0xef0000, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x0123456789efcdef, test.Line().ReadLong(), verbosity);
+
+	wh.Set(true);
+	wb.Set(false);
+	test.Update();
+	success &= TestState(i++, 0x6ead0000U, test.Word().UnsignedRead(), verbosity);
+	success &= TestState(i++, 0x01234567beefcdef, test.Line().ReadLong(), verbosity);
+
+	wh.Set(false);
+	ww.Set(false);
+	success &= TestState(i++, 0, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
+
+	
+	return success;
+}
+
 bool TestCache(Verbosity verbosity)
 {
 	bool success = true;
@@ -446,6 +559,8 @@ bool RunCPUTests()
 	bool success = true;
 	auto default_verb = Debugger::TIMING;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
+	RUN_TEST(TestByteMask, FAIL_ONLY);
+	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
