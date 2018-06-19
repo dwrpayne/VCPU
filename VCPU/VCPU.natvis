@@ -58,6 +58,16 @@
     {{{out}}}
   </DisplayString>
 </Type>
+<Type Name="Decoder&lt;*&gt;">
+  <DisplayString>
+    {{out={ands.out}}}
+  </DisplayString>
+</Type>
+<Type Name="MultiGate&lt;*,*&gt;">
+  <DisplayString>
+    {{out={out}}}
+  </DisplayString>
+</Type>
 <Type Name="RequestBuffer&lt;*,*,*,*&gt;">
   <DisplayString>
     {{Wfull={writebuffer.counters.queueFull.out.state}, popW={popWrite.out.state}, popR={popRead.out.state}}}
@@ -87,6 +97,9 @@
   </Type>
   <Type Name="Multiplexer&lt;16&gt;">
     <DisplayString>{{out={muxOut.muxOut.smuxOut.orOut.out}}}</DisplayString>
+  </Type>
+  <Type Name="MuxBundle&lt;*&gt;">
+    <DisplayString>{{out={out},sel={select}}}</DisplayString>
   </Type>
   <Type Name="Bundle&lt;2&gt;">
     <DisplayString>
