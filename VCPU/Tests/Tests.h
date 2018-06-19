@@ -657,22 +657,22 @@ bool TestSelectBundle(Verbosity verbosity)
 	return success;
 }
 
-bool TestEncoder4(const Wire& a, const Wire& b)
+bool TestEncoder4(const Wire& a, const Wire& b, const Wire& c)
 {
 	Decoder<4> dec;
-	dec.Connect({ &a, &b });
+	dec.Connect({ &a, &b }, c);
 	Encoder<4> test;
 	test.Connect(dec.Out());
 	dec.Update();
 	test.Update();
-	return dec.Out().UnsignedRead() == 1 << test.Out().UnsignedRead();
+	return c.On() ? (dec.Out().UnsignedRead() == 1 << test.Out().UnsignedRead()) : (test.Out().Read() == 0);
 }
 
 
 bool TestEncoder8(const Wire& a, const Wire& b, const Wire& c)
 {
 	Decoder<8> dec;
-	dec.Connect({ &a, &b, &c });
+	dec.Connect({ &a, &b, &c }, Wire::ON);
 	Encoder<8> test;
 	test.Connect(dec.Out());
 	dec.Update();
@@ -781,18 +781,18 @@ bool TestShifter(Verbosity verbosity)
 	return success;
 }
 
-bool TestDecoder4(const Wire& a, const Wire& b)
+bool TestDecoder4(const Wire& a, const Wire& b, const Wire& c)
 {
 	Decoder<4> test;
-	test.Connect({ &a, &b });
+	test.Connect({ &a, &b }, c);
 	test.Update();
-	return test.Out().UnsignedRead() == pow2(Bundle<2>({ &a, &b }).UnsignedRead());
+	return c.On() ? (test.Out().UnsignedRead() == pow2(Bundle<2>({ &a, &b }).UnsignedRead())) : test.Out().Read() == 0;
 }
 
 bool TestDecoder8(const Bundle<3>& in)
 {
 	Decoder<8> test;
-	test.Connect(in);
+	test.Connect(in, Wire::ON);
 	test.Update();
 	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
 }
@@ -800,7 +800,7 @@ bool TestDecoder8(const Bundle<3>& in)
 bool TestDecoder32(const Bundle<5>& in)
 {
 	Decoder<32> test;
-	test.Connect(in);
+	test.Connect(in, Wire::ON);
 	test.Update();
 	return test.Out().UnsignedRead() == pow2(in.UnsignedRead());
 }
@@ -1107,16 +1107,14 @@ bool TestCacheLine(Verbosity verbosity)
 	MagicBundle<8> dataword;
 	MagicBundle<32> dataline;
 	MagicBundle<20> tag;
-	Wire writeword(false);
+	MagicBundle<8> writemask;
 	Wire writeline(false);
 
-	test.Connect(tag, offset, writeword, dataword, writeline, dataline);
-	test.Update();
-	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
+	test.Connect(tag, offset, writemask, dataword, writeline, dataline);
 
 	dataline.Write(185999660);
 	tag.Write(987);
-	writeword.Set(false);
+	writemask.Write(0);
 	writeline.Set(true);
 	test.Update();
 	success &= TestState(i++, 185999660, test.OutLine().Read(), verbosity);
@@ -1134,7 +1132,7 @@ bool TestCacheLine(Verbosity verbosity)
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
 
 	dataword.Write(1);
-	writeword.Set(true);
+	writemask.Write(0xff);
 	writeline.Set(false);
 	offset.Write(0U);
 	test.Update();
@@ -1336,14 +1334,14 @@ bool TestRequestBuffer(Verbosity verbosity)
 
 	MagicBundle<32> data;
 	MagicBundle<10> addr;
-	MagicBundle<3> write;
+	Wire write(false);	
 	Wire read(false);	
 
 	test.Connect(addr, data, write, read);
 
 	data.Write(11);
 	addr.Write(10);
-	write.Write(0);
+	write.Set(false);
 
 	test.Update();
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
@@ -1351,7 +1349,7 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
 	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 
-	write.Write(1);
+	write.Set(true);
 	test.Update();
 	success &= TestState(i++, false, test.WriteFull().On(), verbosity);
 	success &= TestState(i++, false, test.ReadPending().On(), verbosity);
@@ -1366,7 +1364,7 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, false, test.PoppedWrite().On(), verbosity);
 	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 
-	write.Write(0);
+	write.Set(false);
 	read.Set(true);
 	addr.Write(128);
 	data.Write(3333333);
@@ -1377,7 +1375,6 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 	success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
 	success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
-	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
 	
 	addr.Write(3);
@@ -1390,7 +1387,6 @@ bool TestRequestBuffer(Verbosity verbosity)
 		success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 		success &= TestState(i++, 11, test.OutWrite().Data().Read(), verbosity);
 		success &= TestState(i++, 10, test.OutWrite().Addr().Read(), verbosity);
-		success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
 		success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
 	}
 	test.Update();
@@ -1400,7 +1396,6 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 	success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
 	success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
-	success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
 	for (int wait = 0; wait < 3; wait++)
 	{
@@ -1411,7 +1406,6 @@ bool TestRequestBuffer(Verbosity verbosity)
 		success &= TestState(i++, false, test.PoppedRead().On(), verbosity);
 		success &= TestState(i++, 2222, test.OutWrite().Data().Read(), verbosity);
 		success &= TestState(i++, 31, test.OutWrite().Addr().Read(), verbosity);
-		success &= TestState(i++, 1, test.OutWrite().Action().Read(), verbosity);
 		success &= TestState(i++, 0, test.OutRead().Read(), verbosity);
 	}
 	test.Update();
@@ -1421,7 +1415,6 @@ bool TestRequestBuffer(Verbosity verbosity)
 	success &= TestState(i++, true, test.PoppedRead().On(), verbosity);
 	success &= TestState(i++, 0, test.OutWrite().Data().Read(), verbosity);
 	success &= TestState(i++, 0, test.OutWrite().Addr().Read(), verbosity);
-	success &= TestState(i++, 0, test.OutWrite().Action().Read(), verbosity);
 	success &= TestState(i++, 128, test.OutRead().Read(), verbosity);
 				
 	return success;
@@ -1430,48 +1423,49 @@ bool TestRequestBuffer(Verbosity verbosity)
 bool RunAllTests()
 {
 	bool success = true;
-	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, SILENT);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, SILENT);
-	RUN_AUTO_TEST(TestBundleComponent, TestAndGate4, SILENT);
-	RUN_AUTO_TEST(TestBundleComponent, TestOrGate4, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestXNorGate, SILENT);
-	RUN_TEST(TestMultiGate, SILENT);
-	RUN_TEST(TestMultiGateN, SILENT);
-	RUN_TEST(TestMultiGateNBitwise, SILENT);
-	RUN_TEST(TestSRLatch, SILENT);
-	RUN_TEST(TestJKFlipFlop, SILENT);
-	RUN_TEST(TestDFlipFlop, SILENT);
-	RUN_TEST(TestDFlipFlopReset, SILENT);
-	RUN_TEST(TestBundle, SILENT);
-	RUN_TEST(TestRegister, SILENT);
-	RUN_TEST(TestCounter, SILENT);
-	RUN_TEST(TestFreqSwitcher, SILENT);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, SILENT);
-	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, SILENT);
-	RUN_TEST(TestMuxBundle, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestEncoder4, SILENT);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder8, SILENT);
-	RUN_TEST(TestSelectBundle, SILENT);
-	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, SILENT);
-	RUN_TEST(TestComparator, SILENT);
-	RUN_TEST(TestShifter, SILENT);
-	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, SILENT);
-	RUN_AUTO_TEST(TestTwoWireComponent, TestDecoder4, SILENT);
-	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, SILENT);
-	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, SILENT);
-	RUN_TEST(TestALU, SILENT);
-	RUN_TEST(TestRegisterFile, SILENT);
-	RUN_TEST(TestCacheLine, SILENT);
-	RUN_TEST(TestMultiplier, SILENT);
-	RUN_TEST(TestCircularBuffer, SILENT);
-	RUN_TEST(TestCircularBuffer1, SILENT);
-	RUN_TEST(TestRequestBuffer, SILENT);
+
+	RUN_AUTO_TEST(TestOneWireComponent, TestInverter, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestInverter3, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestAndGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestAndGate4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestOrGate4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestNandGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestOrGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestNorGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestXorGate, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestXNorGate, FAIL_ONLY);
+	RUN_TEST(TestMultiGate, FAIL_ONLY);
+	RUN_TEST(TestMultiGateN, FAIL_ONLY);
+	RUN_TEST(TestMultiGateNBitwise, FAIL_ONLY);
+	RUN_TEST(TestSRLatch, FAIL_ONLY);
+	RUN_TEST(TestJKFlipFlop, FAIL_ONLY);
+	RUN_TEST(TestDFlipFlop, FAIL_ONLY);
+	RUN_TEST(TestDFlipFlopReset, FAIL_ONLY);
+	RUN_TEST(TestBundle, FAIL_ONLY);
+	RUN_TEST(TestRegister, FAIL_ONLY);
+	RUN_TEST(TestCounter, FAIL_ONLY);
+	RUN_TEST(TestFreqSwitcher, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
+	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
+	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
+	RUN_TEST(TestMuxBundle, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder8, FAIL_ONLY);
+	RUN_TEST(TestSelectBundle, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
+	RUN_TEST(TestComparator, FAIL_ONLY);
+	RUN_TEST(TestShifter, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, FAIL_ONLY);
+	RUN_AUTO_TEST(TestThreeWireComponent, TestDecoder4, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestDecoder32, FAIL_ONLY);
+	RUN_TEST(TestALU, FAIL_ONLY);
+	RUN_TEST(TestRegisterFile, FAIL_ONLY);
+	RUN_TEST(TestCacheLine, FAIL_ONLY);
+	RUN_TEST(TestMultiplier, FAIL_ONLY);
+	RUN_TEST(TestCircularBuffer, FAIL_ONLY);
+	RUN_TEST(TestCircularBuffer1, FAIL_ONLY);
+	RUN_TEST(TestRequestBuffer, FAIL_ONLY);
 	return success;
 }
 #endif

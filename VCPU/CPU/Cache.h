@@ -13,7 +13,7 @@
 #include "CacheLine.h"
 #include "Memory.h"
 
-template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES=2048>
+template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
 class Cache : public Component
 {
 public:
@@ -37,7 +37,7 @@ public:
 	typedef Bundle<CACHE_OFFSET_BITS> CacheOffsetBundle;
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
-	typedef Memory<MAIN_MEMORY_BYTES, CACHE_LINE_BITS> MemoryType;
+	typedef Memory<WORD_SIZE, CACHE_LINE_BITS, MAIN_MEMORY_BYTES> MemoryType;
 
 	Cache();
 	virtual ~Cache();
@@ -49,16 +49,21 @@ public:
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
 	const Wire& NeedStall() { return needStall.Out(); }
 	const Wire& NoStall() { return needStallInv.Out(); }
-	
-private:	
+
+private:
 	typename MemoryType::ReqBuffer buffer;
 	MemoryType mMemory;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
-	Decoder<NUM_CACHE_LINES> indexDecoder;	
 	Matcher<ADDR_BITS> addrReadMatcher;
 	AndGateN<3> gotResultFromMemory;
-	MultiGate<AndGate, NUM_CACHE_LINES> writeEnable;
+	Decoder<NUM_CACHE_LINES> indexDecoder;
+
+	MuxBundle<WORD_SIZE, 4> bytemasker;
+	MuxBundle<WORD_SIZE, 2> halfmasker;
+	MuxBundle<WORD_SIZE, 4> masker;
+	LeftShifter<WORD_SIZE> dataByteShifter;
+
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
 	AndGate readMiss;
@@ -79,7 +84,7 @@ private:
 #ifdef DEBUG
 	AddrBundle DEBUG_addr;
 #endif
-	
+
 	friend class Debugger;
 };
 
@@ -103,12 +108,12 @@ inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::~Cache()
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
-															const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
+	const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
 {
 #ifdef DEBUG
 	DEBUG_addr.Connect(0, addr);
 #endif
-	buffer.Connect(addr, data, { &write, &bytewrite, &halfwrite }, read);
+	buffer.Connect(addr, data, write, read);
 	mMemory.Connect(buffer);
 
 	auto byteAddr = addr.Range<bits(WORD_BYTES)>(0);
@@ -118,17 +123,22 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	CacheIndexBundle index = wordAddr.Range<CACHE_INDEX_BITS>(CACHE_OFFSET_BITS);
 	TagBundle tag = wordAddr.Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);
 
-	indexDecoder.Connect(index);
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
-	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &readMiss.Out(), &mMemory.ServicedRead() });
-	writeEnable.Connect(indexDecoder.Out(), Bundle<NUM_CACHE_LINES>(gotResultFromMemory.Out()));
-	
+	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &cacheMiss.Out(), &mMemory.ServicedRead() });
+	indexDecoder.Connect(index, gotResultFromMemory.Out());
+
+	bytemasker.Connect({ Bundle<WORD_SIZE>(0xff), Bundle<WORD_SIZE>(0xff00), Bundle<WORD_SIZE>(0xff0000), Bundle<WORD_SIZE>(0xff0000) }, byteAddr);
+	halfmasker.Connect({ Bundle<WORD_SIZE>(0xffff), Bundle<WORD_SIZE>(0xffff0000) }, byteAddr[1]);
+	masker.Connect({ Bundle<WORD_SIZE>::ON, bytemasker.Out(), halfmasker.Out(), Bundle<WORD_SIZE>::ON }, { &bytewrite, &halfwrite });
+
+	dataByteShifter.Connect(data, { &Wire::OFF, &Wire::OFF, &Wire::OFF, &byteAddr[0], &byteAddr[1] });
+
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
 
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(tag, offset, write, data, writeEnable.Out()[i], mMemory.OutLine());
+		cachelines[i].Connect(tag, offset, masker.Out(), dataByteShifter.Out(), indexDecoder.Out()[i], mMemory.OutLine());
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 	}
@@ -153,10 +163,14 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
-	indexDecoder.Update();
 	addrReadMatcher.Update();
 	gotResultFromMemory.Update();
-	writeEnable.Update();
+	indexDecoder.Update();
+
+	bytemasker.Update();
+	halfmasker.Update();
+	masker.Update();
+	dataByteShifter.Update();
 
 	for (auto& line : cachelines)
 	{

@@ -16,7 +16,7 @@ public:
 	static const unsigned int N1 = pow2(BITS1);		//N1 and N2 and the widths of the two sub-decoders
 	static const unsigned int N2 = pow2(BITS2);
 
-	void Connect(const Bundle<BITS>& in);
+	void Connect(const Bundle<BITS>& in, const Wire& enable);
 	void Update();
 
 	const Bundle<N>& Out() const { return ands.Out(); }
@@ -29,10 +29,10 @@ private:
 };
 
 template<unsigned int N>
-inline void Decoder<N>::Connect(const Bundle<BITS>& in)
+inline void Decoder<N>::Connect(const Bundle<BITS>& in, const Wire& enable)
 {
-	dec1.Connect(in.Range<BITS1>(0));
-	dec2.Connect(in.Range<BITS2>(BITS1));
+	dec1.Connect(in.Range<BITS1>(0), enable);
+	dec2.Connect(in.Range<BITS2>(BITS1), enable);
 
 	Bundle<N> a, b;
 	for (int i = 0; i < N; i+=N1)
@@ -62,7 +62,7 @@ class Decoder<2> : public Component
 {
 public:
 	Decoder();
-	void Connect(const Bundle<1>& in);
+	void Connect(const Bundle<1>& in, const Wire& enable);
 	void Update();
 
 	const Bundle<2>& Out() const { return out; }
@@ -70,46 +70,49 @@ public:
 
 private:
 	Inverter inv;
-	Inverter buffer;
+	AndGate bit0;
+	AndGate bit1;
 	Bundle<2> out;
 };
 
 inline Decoder<2>::Decoder()
 {
-	out.Connect({ &inv.Out(), &buffer.Out() });
+	out.Connect({ &bit0.Out(), &bit1.Out() });
 }
 
-inline void Decoder<2>::Connect(const Bundle<1>& in)
+inline void Decoder<2>::Connect(const Bundle<1>& in, const Wire& enable)
 {
 	inv.Connect(in);
-	buffer.Connect(inv.Out());
+	bit0.Connect(inv.Out(), enable);
+	bit1.Connect(in, enable);
 }
 
 inline void Decoder<2>::Update()
 {
 	inv.Update();
-	buffer.Update();
+	bit0.Update();
+	bit1.Update();
 }
 
 template <>
 class Decoder<1> : public Component
 {
 public:
-	Decoder();
-	void Connect(const Bundle<0>& in);
+	void Connect(const Bundle<0>& in, const Wire& enable);
 	void Update();
 
-	const Bundle<1>& Out() const { return Bundle<1>::ON; }
+	const Bundle<1> Out() const { return Bundle<1>(out.Out()); }
+	
+private:
+	AndGate out;
 };
 
-inline Decoder<1>::Decoder()
+inline void Decoder<1>::Connect(const Bundle<0>& in, const Wire& enable)
 {
-}
-
-inline void Decoder<1>::Connect(const Bundle<0>& in)
-{
+	out.Connect(enable, enable);
 }
 
 inline void Decoder<1>::Update()
 {
+	out.Update();
 }

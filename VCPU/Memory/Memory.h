@@ -72,12 +72,12 @@ inline void Memory<N, CACHE_LINE_BITS, BYTES>::Connect(ReqBuffer& reqbuf)
 	addrRWMux.Connect({ pReqBuffer->OutWrite().Addr(), pReqBuffer->OutRead()}, servicedRead.Out());
 
 	auto wordAddr = addrRWMux.Out().Range<WORD_INDEX_LEN>(BYTE_INDEX_LEN);
-	addrDecoder.Connect(wordAddr);
+	addrDecoder.Connect(wordAddr, pReqBuffer->PoppedWrite());
 	
 	std::array<CacheLineBundle, NUM_LINES> lineOuts;
 	for (int i = 0; i < NUM_WORDS; ++i)
 	{
-		registers[i].Connect(pReqBuffer->OutWrite().Data(), pReqBuffer->PoppedWrite());
+		registers[i].Connect(pReqBuffer->OutWrite().Data(), addrDecoder.Out()[i]);
 		unsigned int cache_line = i / CACHELINE_WORDS;
 		unsigned int bit_line_offset = (i % CACHELINE_WORDS) * N;
 		lineOuts[cache_line].Connect(bit_line_offset, registers[i].Out());
