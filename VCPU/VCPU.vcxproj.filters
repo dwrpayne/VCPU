@@ -269,5 +269,8 @@
     <ClInclude Include="Control\ThreadedComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Functional\Masker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

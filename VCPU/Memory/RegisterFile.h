@@ -25,7 +25,6 @@ public:
 
 private:
 	Decoder<NReg> addrwDecoder;
-	MultiGate<AndGate, NReg> writeEnable;
 	std::array<Register<N>, NReg> registers; // Make space for R0
 
 	MuxBundle<N, NReg> out1Mux, out2Mux;
@@ -36,15 +35,14 @@ private:
 template<unsigned int N, unsigned int NReg>
 inline void RegisterFile<N, NReg>::Connect(const AddrBundle & addr1, const AddrBundle & addr2, const AddrBundle& addrw, const DataBundle & data, const Wire& write)
 {
-	addrwDecoder.Connect(addrw);
-	writeEnable.Connect(addrwDecoder.Out(), Bundle<NReg>(write));
+	addrwDecoder.Connect(addrw, write);
 
 	std::array<DataBundle, NReg> regOuts;
 	registers[0].Connect(DataBundle::OFF, Wire::OFF);
 	regOuts[0] = registers[0].Out();
 	for (int i = 1; i < NReg; ++i)
 	{
-		registers[i].Connect(data, writeEnable.Out()[i]);
+		registers[i].Connect(data, addrwDecoder.Out()[i]);
 		regOuts[i] = registers[i].Out();
 	}
 	out1Mux.Connect(regOuts, addr1);
@@ -55,7 +53,6 @@ template<unsigned int N, unsigned int NReg>
 inline void RegisterFile<N, NReg>::Update()
 {
 	addrwDecoder.Update();
-	writeEnable.Update();
 	for (auto& reg : registers)
 	{
 		reg.Update();

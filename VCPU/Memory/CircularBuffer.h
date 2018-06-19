@@ -53,7 +53,6 @@ private:
 	AndGate pushEnable;
 	AndGate popEnable;
 	Decoder<Nreg> writeDecoder;
-	MultiGate<AndGate, Nreg> bufferWriteEnable;
 	std::array<Register<N>, Nreg> buffers;
 	MuxBundle<N, Nreg> outMux;
 };
@@ -64,12 +63,11 @@ inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & p
 	pushEnable.Connect(push, counters.HasRoom());
 	popEnable.Connect(pop, counters.NonEmpty());
 	counters.Connect(popEnable.Out(), pushEnable.Out());
-	writeDecoder.Connect(counters.WriteIndex());
-	bufferWriteEnable.Connect(writeDecoder.Out(), Bundle<Nreg>(pushEnable.Out()));
+	writeDecoder.Connect(counters.WriteIndex(), pushEnable.Out());
 	std::array<Bundle<N>, Nreg> regOuts;
 	for (int i = 0; i < Nreg; i++)
 	{
-		buffers[i].Connect(in, bufferWriteEnable.Out()[i]);
+		buffers[i].Connect(in, writeDecoder.Out()[i]);
 		regOuts[i].Connect(0, buffers[i].Out());
 	}
 	outMux.Connect(regOuts, counters.ReadIndex());
@@ -85,7 +83,6 @@ inline void CircularBuffer<N, Nreg>::Update()
 	counters.Update();
 
 	writeDecoder.Update();
-	bufferWriteEnable.Update();
 	for (int i = 0; i < Nreg; i++)
 	{
 		buffers[i].Update();

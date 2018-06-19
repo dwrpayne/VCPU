@@ -42,7 +42,7 @@ public:
 		Write(n);
 	}
 
-	void Write(int n)
+	void Write(long long n)
 	{
 		value = n;
 		Bundle<N> b(n);
@@ -50,6 +50,11 @@ public:
 		{
 			magicwires[i].Set(b[i].On());
 		}
+	}
+
+	void Write(int n)
+	{
+		Write((long long)n);
 	}
 
 	void Write(unsigned int n)
@@ -60,5 +65,5 @@ public:
 
 private:
 	std::array<Wire, N> magicwires;
-	int value;
+	long long value;
 };

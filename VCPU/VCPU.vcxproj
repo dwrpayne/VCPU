@@ -175,6 +175,7 @@
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\Comparator.h" />
     <ClInclude Include="Functional\FullAdder.h" />
+    <ClInclude Include="Functional\Masker.h" />
     <ClInclude Include="Functional\Matcher.h" />
     <ClInclude Include="Functional\Multiplier.h" />
     <ClInclude Include="Functional\OverflowDetector.h" />

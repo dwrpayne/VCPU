@@ -41,16 +41,38 @@
     <DisplayString>{{Z={wires[0]->state}, C={wires[1]->state}, O={wires[2]->state}, N={wires[3]->state}}}</DisplayString>
   </Type>
   <Type Name="Register&lt;8&gt;">
-    <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits=
-{(int)bits[0].nandR.inv.out.state}
-{(int)bits[1].nandR.inv.out.state}
-{(int)bits[2].nandR.inv.out.state}
-{(int)bits[3].nandR.inv.out.state}
-{(int)bits[4].nandR.inv.out.state}
-{(int)bits[5].nandR.inv.out.state}
-{(int)bits[6].nandR.inv.out.state}
-{(int)bits[7].nandR.inv.out.state}}}</DisplayString>
+    <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits={out}}}</DisplayString>
   </Type>
+<Type Name="Register&lt;*&gt;">
+  <DisplayString>
+    {{{out}}}
+  </DisplayString>
+</Type>
+<Type Name="RegisterMasked&lt;*&gt;">
+  <DisplayString>
+    {{{out}}}
+  </DisplayString>
+</Type>
+<Type Name="RegisterReset&lt;*&gt;">
+  <DisplayString>
+    {{{out}}}
+  </DisplayString>
+</Type>
+<Type Name="Decoder&lt;*&gt;">
+  <DisplayString>
+    {{out={ands.out}}}
+  </DisplayString>
+</Type>
+<Type Name="MultiGate&lt;*,*&gt;">
+  <DisplayString>
+    {{out={out}}}
+  </DisplayString>
+</Type>
+<Type Name="RequestBuffer&lt;*,*,*,*&gt;">
+  <DisplayString>
+    {{Wfull={writebuffer.counters.queueFull.out.state}, popW={popWrite.out.state}, popR={popRead.out.state}}}
+  </DisplayString>
+</Type>
   <Type Name="Counter&lt;1&gt;">
     <DisplayString>
       {{enable={(int)jInput.in2->state}, bit={(int)bit.latch.norr.inv.out.state}}}
@@ -58,15 +80,22 @@
   </Type>
   <Type Name="Counter&lt;*&gt;">
     <DisplayString>
-      {{enable={(int)enables[0].in2->state}, bits=
-{(int)bits[0].latch.norr.inv.out.state}
-{(int)bits[1].latch.norr.inv.out.state}
-{(int)bits[2].latch.norr.inv.out.state}
-{(int)bits[3].latch.norr.inv.out.state}
-{(int)bits[4].latch.norr.inv.out.state}
-{(int)bits[5].latch.norr.inv.out.state}
-{(int)bits[6].latch.norr.inv.out.state}
-{(int)bits[7].latch.norr.inv.out.state}}}
+      {{enable={(int)enables[0].in2->state}, {out}}}
+    </DisplayString>
+  </Type>
+  <Type Name="AndGateN&lt;*&gt;">
+    <DisplayString>
+      {{out={ands[$T1-2].out.state}}}
+    </DisplayString>
+  </Type>
+  <Type Name="OrGateN&lt;*&gt;">
+    <DisplayString>
+      {{out={ors[$T1-2].out.state}}}
+    </DisplayString>
+  </Type>
+  <Type Name="Matcher&lt;*&gt;">
+    <DisplayString>
+      {{{equalAnd}}}
     </DisplayString>
   </Type>
   <Type Name="InverterN&lt;*&gt;">
@@ -79,20 +108,54 @@
     <DisplayString>{{out={muxOut.orOut.out}}}</DisplayString>
   </Type>
   <Type Name="Multiplexer&lt;8&gt;">
-    <DisplayString>{{out={muxOut.muxOut.orOut.out}}}</DisplayString>
+    <DisplayString>{{out={muxOut.orOut.out}}}</DisplayString>
   </Type>
   <Type Name="Multiplexer&lt;16&gt;">
     <DisplayString>{{out={muxOut.muxOut.smuxOut.orOut.out}}}</DisplayString>
   </Type>
+  <Type Name="MuxBundle&lt;*&gt;">
+    <DisplayString>{{out={out},sel={select}}}</DisplayString>
+  </Type>
+  <Type Name="Bundle&lt;2&gt;">
+    <DisplayString>
+      {{bits={(int)wires[0]->state}{(int)wires[1]->state}, val={(int)wires[0]->state + 2*(int)wires[1]->state,x}}}
+    </DisplayString>
+  </Type>
+  <Type Name="Bundle&lt;4&gt;">
+    <DisplayString>
+      {{bits={(int)wires[0]->state}{(int)wires[1]->state}{(int)wires[2]->state}{(int)wires[3]->state},val={(int)wires[0]->state + 2*(int)wires[1]->state + 4*(int)wires[2]->state + 8*(int)wires[3]->state}}}
+    </DisplayString>
+  </Type>
+  <Type Name="Bundle&lt;8&gt;">
+    <DisplayString>
+      {{bits={(int)wires[0]->state}{(int)wires[1]->state}{(int)wires[2]->state}{(int)wires[3]->state}{(int)wires[4]->state}{(int)wires[5]->state}{(int)wires[6]->state}{(int)wires[7]->state},
+  val={(int)wires[0]->state + 2*(int)wires[1]->state + 4*(int)wires[2]->state + 8*(int)wires[3]->state + 16*(int)wires[4]->state + 32*(int)wires[5]->state + 64*(int)wires[6]->state + 128*(int)wires[7]->state}}}</DisplayString>
+  </Type>
   <Type Name="Bundle&lt;*&gt;">
-    <DisplayString>{{bits={(int)wires[0]->state}{(int)wires[1]->state}{(int)wires[2]->state}{(int)wires[3]->state}{(int)wires[4]->state}{(int)wires[5]->state}{(int)wires[6]->state}{(int)wires[7]->state}}}</DisplayString>
+    <DisplayString>
+      {{bits={(int)wires[0]->state}{(int)wires[1]->state}{(int)wires[2]->state}{(int)wires[3]->state}{(int)wires[4]->state}{(int)wires[5]->state}{(int)wires[6]->state}{(int)wires[7]->state}
+  {(int)wires[8]->state}{(int)wires[9]->state}{(int)wires[10]->state}{(int)wires[11]->state}{(int)wires[12]->state}{(int)wires[13]->state}{(int)wires[14]->state}{(int)wires[15]->state}
+  {(int)wires[16]->state}{(int)wires[17]->state}{(int)wires[18]->state}{(int)wires[19]->state}{(int)wires[20]->state}{(int)wires[21]->state}{(int)wires[22]->state}{(int)wires[23]->state}
+  {(int)wires[24]->state}{(int)wires[25]->state}{(int)wires[26]->state}{(int)wires[27]->state}{(int)wires[28]->state}{(int)wires[29]->state}{(int)wires[30]->state}{(int)wires[31]->state}}}
+    </DisplayString>
   </Type>
   <Type Name="Bundle&lt;32&gt;">
     <DisplayString>
       {{bits={(int)wires[0]->state}{(int)wires[1]->state}{(int)wires[2]->state}{(int)wires[3]->state}{(int)wires[4]->state}{(int)wires[5]->state}{(int)wires[6]->state}{(int)wires[7]->state}
-{(int)wires[8]->state}{(int)wires[9]->state}{(int)wires[10]->state}{(int)wires[11]->state}{(int)wires[12]->state}{(int)wires[13]->state}{(int)wires[14]->state}{(int)wires[15]->state}
-{(int)wires[16]->state}{(int)wires[17]->state}{(int)wires[18]->state}{(int)wires[19]->state}{(int)wires[20]->state}{(int)wires[21]->state}{(int)wires[22]->state}{(int)wires[23]->state}
-{(int)wires[24]->state}{(int)wires[25]->state}{(int)wires[26]->state}{(int)wires[27]->state}{(int)wires[28]->state}{(int)wires[29]->state}{(int)wires[30]->state}{(int)wires[31]->state}}}
+  {(int)wires[8]->state}{(int)wires[9]->state}{(int)wires[10]->state}{(int)wires[11]->state}{(int)wires[12]->state}{(int)wires[13]->state}{(int)wires[14]->state}{(int)wires[15]->state}
+  {(int)wires[16]->state}{(int)wires[17]->state}{(int)wires[18]->state}{(int)wires[19]->state}{(int)wires[20]->state}{(int)wires[21]->state}{(int)wires[22]->state}{(int)wires[23]->state}
+  {(int)wires[24]->state}{(int)wires[25]->state}{(int)wires[26]->state}{(int)wires[27]->state}{(int)wires[28]->state}{(int)wires[29]->state}{(int)wires[30]->state}{(int)wires[31]->state},
+  val={1*(long long)wires[0]->state + 2*(long long)wires[1]->state + 4*(long long)wires[2]->state + 8*(long long)wires[3]->state + 16*(long long)wires[4]->state + 32*(long long)wires[5]->state + 64*(long long)wires[6]->state + 128*(long long)wires[7]->state + 256*(long long)wires[8]->state + 512*(long long)wires[9]->state + 1024*(long long)wires[10]->state + 2048*(long long)wires[11]->state + 4096*(long long)wires[12]->state + 8192*(long long)wires[13]->state + 16384*(long long)wires[14]->state + 32768*(long long)wires[15]->state + 65536*(long long)wires[16]->state + 131072*(long long)wires[17]->state + 262144*(long long)wires[18]->state + 524288*(long long)wires[19]->state + 1048576*(long long)wires[20]->state + 2097152*(long long)wires[21]->state + 4194304*(long long)wires[22]->state + 8388608*(long long)wires[23]->state + 16777216*(long long)wires[24]->state + 33554432*(long long)wires[25]->state + 67108864*(long long)wires[26]->state + 134217728*(long long)wires[27]->state + 268435456*(long long)wires[28]->state + 536870912*(long long)wires[29]->state + 1073741824*(long long)wires[30]->state + 2147483648*(long long)wires[31]->state,x}}}
+    </DisplayString>
+  </Type>
+  <Type Name="Bundle&lt;16&gt;">
+    <DisplayString>
+      {{bits={(int)wires[0]->state}{(int)wires[1]->state}{(int)wires[2]->state}{(int)wires[3]->state}{(int)wires[4]->state}{(int)wires[5]->state}{(int)wires[6]->state}{(int)wires[7]->state}
+{(int)wires[8]->state}{(int)wires[9]->state}{(int)wires[10]->state}{(int)wires[11]->state}{(int)wires[12]->state}{(int)wires[13]->state}{(int)wires[14]->state}{(int)wires[15]->state},
+   val={(int)wires[0]->state + 2*(int)wires[1]->state + 4*(int)wires[2]->state + 8*(int)wires[3]->state + 16*(int)wires[4]->state + 32*(int)wires[5]->state + 64*(int)wires[6]->state + 128*(int)wires[7]->state
++ 256*(int)wires[8]->state + 512*(int)wires[9]->state + 1024*(int)wires[10]->state + 2048*(int)wires[11]->state + 4096*(int)wires[12]->state + 
+8192*(int)wires[13]->state + 16384*(int)wires[14]->state + 32768*(int)wires[15]->state,x}
+      }}}
     </DisplayString>
   </Type>
 </AutoVisualizer>

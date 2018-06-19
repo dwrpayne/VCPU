@@ -34,6 +34,11 @@ public:
 	}
 
 	// Creates a const Bundle (of Wire::OFF and Wire::ON) representing a number
+	explicit Bundle(long long n)
+	{
+		InitNumber(n);
+	}
+
 	explicit Bundle(int n)
 	{
 		InitNumber(n);
@@ -45,7 +50,7 @@ public:
 		InitNumber(val);
 	}
 	
-	void InitNumber(int n)
+	void InitNumber(long long n)
 	{
 		bool negative = n < 0;
 		n = abs(n) - (int)negative;
@@ -172,6 +177,18 @@ public:
 	{
 		int val = Read();
 		return val >= 0 ? val : pow2(N) + val;
+	}
+
+	long long ReadLong() const
+	{
+		long long n = 0;
+		bool negative = Get(N - 1).On();
+		for (int i = N - 2; i >= 0; --i)
+		{
+			n *= 2;
+			n += (negative ^ Get(i).On()) ? 1 : 0;
+		}
+		return (negative ? -1 : 1) * n - (int)negative;
 	}
 
 	template <unsigned int N>
