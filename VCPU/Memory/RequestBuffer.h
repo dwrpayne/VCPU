@@ -68,8 +68,8 @@ inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Connect(const AddrBundl
 {
 	popCycleCounter.Connect();
 
-	popRead.Connect(popCycleCounter.Pulse(), writebuffer.Empty());
-	popWrite.Connect(popCycleCounter.Pulse(), writebuffer.NonEmpty());
+	popRead.Connect(popCycleCounter.Pulse(), readbuffer.NonEmpty());
+	popWrite.Connect(popCycleCounter.Pulse(), readbuffer.Empty());
 
 	writebuffer.Connect(WriteReqBundle(addr, data), popWrite.Out(), writereq);
 	readbuffer.Connect(addr, popRead.Out(), readreq);
