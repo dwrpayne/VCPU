@@ -16,7 +16,8 @@ public:
 	typedef Bundle<LINE_BITS> LineBundle;
 
 	CacheLine();
-	void Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline);
+	void Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, 
+		const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable);
 	void Update();
 
 	const LineBundle& OutLine() { return outLineBundle; }
@@ -27,6 +28,7 @@ private:
 	Matcher<NTag> tagMatcher;
 	Decoder<Nwords> offsetDecoder;
 	MultiGate<OrGate, Nwords> wordwriteOr;
+	MultiGate<AndGate, Nwords> writeEnable;
 	MultiGate<OrGate, N> writeBitmask;
 	std::array<RegisterMasked<N>, Nwords> words;
 	std::array<MuxBundle<N, 2>, Nwords> writeDataMux;
@@ -48,17 +50,18 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
 void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, 
-										const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline)
+										const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable)
 {
 	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
 	offsetDecoder.Connect(wordoffset, Wire::ON);
 	wordwriteOr.Connect(offsetDecoder.Out(), Bundle<Nwords>(writeline));
+	writeEnable.Connect(wordwriteOr.Out(), Bundle<Nwords>(enable));
 	writeBitmask.Connect(writewordmask, Bundle<N>(writeline));
 	for (int i = 0; i < Nwords; i++)
 	{
 		writeDataMux[i].Connect({ dataword, dataline.Range<N>(i*N) }, writeline);
-		words[i].Connect(writeDataMux[i].Out(), writeBitmask.Out(), wordwriteOr.Out()[i]);
+		words[i].Connect(writeDataMux[i].Out(), writeBitmask.Out(), writeEnable.Out()[i]);
 	}	
 }
 
@@ -69,6 +72,7 @@ inline void CacheLine<N, Nwords, NTag>::Update()
 	tagMatcher.Update();
 	offsetDecoder.Update();
 	wordwriteOr.Update();
+	writeEnable.Update();
 	writeBitmask.Update();
 	for (int i = 0; i < Nwords; i++)
 	{

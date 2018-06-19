@@ -125,6 +125,7 @@ private:
 		CacheAddrBundle() {}
 		CacheAddrBundle(const AddrBundle& other)
 		{
+			Connect(0, other);
 			byteIndex = Range<BYTE_INDEX_BITS>(0);
 			wordIndex = Range<ADDR_BITS - BYTE_INDEX_BITS>(BYTE_INDEX_BITS);
 			wordOffsetInLine = wordIndex.Range<CACHE_OFFSET_BITS>(0);
@@ -200,10 +201,9 @@ template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned 
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
 																			const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
 {
-	CacheAddrBundle address;
-	address.Connect(0,addr);
+	CacheAddrBundle address(addr);
 #ifdef DEBUG
-	DEBUG_addr.Connect(0, address);
+	DEBUG_addr = address;
 #endif
 	buffer.Connect(addr, outDataMux.Out(), write, read);
 	mMemory.Connect(buffer);
@@ -223,8 +223,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	// Cache Lines
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), lineWriteMasker.WordMask(), 
-			lineWriteMasker.Word(), indexDecoder.Out()[i], lineWriteMasker.Line());
+		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), lineWriteMasker.WordMask(),
+			lineWriteMasker.Word(), read, lineWriteMasker.Line(), indexDecoder.Out()[i]);
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 	}
