@@ -25,6 +25,7 @@
 #include "Encoder.h"
 #include "Matcher.h"
 #include "Shifter.h"
+#include "Masker.h"
 #include "Comparator.h"
 #include "MuxBundle.h"
 #include "SelectBundle.h"
@@ -1072,6 +1073,36 @@ bool TestRegisterFile(Verbosity verbosity)
 	return success;
 }
 
+bool TestMasker(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	Masker<32> test;
+	MagicBundle<32> maskee, base, mask;
+	test.Connect(maskee, base, mask);
+
+	maskee.Write(0x12345678);
+	base.Write(0xaaaaaaaaU);
+	mask.Write(0);
+	test.Update();
+	success &= TestState(i++, 0xaaaaaaaaU, test.Out().UnsignedRead(), verbosity);
+
+	mask.Write(0x00ffff00);
+	test.Update();
+	success &= TestState(i++, 0xaa3456aaU, test.Out().UnsignedRead(), verbosity);
+
+	mask.Write(0xff0000f0U);
+	test.Update();
+	success &= TestState(i++, 0x12aaaa7aU, test.Out().UnsignedRead(), verbosity);
+
+	mask.Write(0xffffffffU);
+	test.Update();
+	success &= TestState(i++, 0x12345678U, test.Out().UnsignedRead(), verbosity);
+
+	return success;
+}
+
 bool TestMultiplier(Verbosity verbosity)
 {
 	bool success = true;
@@ -1458,6 +1489,7 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);
 	RUN_TEST(TestComparator, FAIL_ONLY);
 	RUN_TEST(TestShifter, FAIL_ONLY);
+	RUN_TEST(TestMasker, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestMatcher, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestDecoder4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestDecoder8, FAIL_ONLY);
