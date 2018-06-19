@@ -92,8 +92,8 @@ inline void Memory<N, CACHE_LINE_BITS, BYTES>::Connect(ReqBuffer& reqbuf)
 	auto cachelineAddr = addrRWMux.Out().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 	outMux.Connect(lineOuts, cachelineAddr);
 
-	outData.Connect(outMux, Wire::ON);
-	outServicedRead.Connect(servicedRead.Out(), Wire::ON);
+	outData.Connect(outMux.Out(), Wire::ON);
+	outServicedRead.Connect(Bundle<1>(servicedRead.Out()), Wire::ON);
 	outAddr.Connect(addrRWMux.Out(), Wire::ON);
 }
 

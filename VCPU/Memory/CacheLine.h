@@ -26,6 +26,7 @@ public:
 private:
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
+	AndGate cacheHitEnabled;
 	Decoder<Nwords> offsetDecoder;
 	MultiGate<OrGate, Nwords> wordwriteOr;
 	MultiGate<AndGate, Nwords> writeEnable;
@@ -54,9 +55,10 @@ void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const OffsetBundle&
 {
 	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
+	cacheHitEnabled.Connect(tagMatcher.Out(), enable);
 	offsetDecoder.Connect(wordoffset, Wire::ON);
 	wordwriteOr.Connect(offsetDecoder.Out(), Bundle<Nwords>(writeline));
-	writeEnable.Connect(wordwriteOr.Out(), Bundle<Nwords>(enable));
+	writeEnable.Connect(wordwriteOr.Out(), Bundle<Nwords>(cacheHitEnabled.Out()));
 	writeBitmask.Connect(writewordmask, Bundle<N>(writeline));
 	for (int i = 0; i < Nwords; i++)
 	{
@@ -70,6 +72,7 @@ inline void CacheLine<N, Nwords, NTag>::Update()
 {
 	tag.Update();
 	tagMatcher.Update();
+	cacheHitEnabled.Update();
 	offsetDecoder.Update();
 	wordwriteOr.Update();
 	writeEnable.Update();
