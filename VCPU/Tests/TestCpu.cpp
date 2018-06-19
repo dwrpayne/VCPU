@@ -7,7 +7,7 @@
 #include "Instructions.h"
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
-
+ 
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
 	int i = 0;
@@ -317,15 +317,15 @@ bool TestCacheLineMasker(Verbosity verbosity)
 	wh.Set(true);
 	wb.Set(false);
 	test.Update();
-	success &= TestState(i++, 0x6ead0000U, test.Word().UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xbeef0000U, test.Word().UnsignedRead(), verbosity);
 	success &= TestState(i++, 0x01234567beefcdef, test.Line().ReadLong(), verbosity);
 
 	wh.Set(false);
 	ww.Set(false);
+	test.Update();
 	success &= TestState(i++, 0, test.Word().Read(), verbosity);
 	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
-
-	
+		
 	return success;
 }
 
@@ -346,14 +346,14 @@ bool TestCache(Verbosity verbosity)
 	for (int a = 0; a < 8; a++)
 	{
 		addr.Write(0 + 4 * a);
-		data.Write(100000000 + 1111111 * a);
+		data.Write(0x10000000 + 0x111111 * a);
 		test.UpdateUntilNoStall();
 	}
 
 	for (int a = 0; a < 8; ++a)
 	{
 		addr.Write(64 + 4*a );
-		data.Write(200000000 + 1111111 * a);
+		data.Write(0x20000000 + 0x222222 * a);
 		test.UpdateUntilNoStall();
 	}
 	write.Set(false);
@@ -365,13 +365,13 @@ bool TestCache(Verbosity verbosity)
 	success &= TestState(i++, 0, test.Out().Read(), verbosity);
 	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 101111111, test.Out().Read(), verbosity);
+	success &= TestState(i++, 0x10111111, test.Out().Read(), verbosity);
 	for (int a = 1; a < 8; a++)
 	{
 		addr.Write(4*a);
 		test.UpdateUntilNoStall();
 		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-		success &= TestState(i++, 100000000 + 1111111 * a, test.Out().Read(), verbosity);
+		success &= TestState(i++, 0x10000000 + 0x111111 * a, test.Out().Read(), verbosity);
 	}
 	addr.Write(88);
 	test.Update();
@@ -382,7 +382,7 @@ bool TestCache(Verbosity verbosity)
 		addr.Write(64 + 4*a);
 		test.UpdateUntilNoStall();
 		success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-		success &= TestState(i++, 200000000 + 1111111 * a, test.Out().Read(), verbosity);
+		success &= TestState(i++, 0x20000000 + 0x111111 * a, test.Out().Read(), verbosity);
 	}
 
 	data.Write(4444);

@@ -66,6 +66,7 @@ public:
 		lineMaskShifter.Update();
 		maskedCacheLine.Update();
 	}
+	const Bundle<32>& WordMask() const { return mask.Mask(); }
 	const Bundle<32>& Word() const { return maskedDataWord.Out(); }
 	const CacheLine& Line() const { return maskedCacheLine.Out(); }
 
@@ -77,8 +78,6 @@ private:
 	LeftShifter<N> lineMaskShifter;
 	Masker<N> maskedCacheLine;
 };
-
-
 
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
@@ -123,12 +122,27 @@ private:
 	class CacheAddrBundle : public AddrBundle
 	{
 	public:
-		using AddrBundle::AddrBundle;
-		Bundle<BYTE_INDEX_BITS> ByteIndex() { return Range<BYTE_INDEX_BITS>(0); }
-		Bundle<ADDR_BITS - BYTE_INDEX_BITS> WordIndex() { return Range<ADDR_BITS - BYTE_INDEX_BITS>(BYTE_INDEX_BITS); }
-		CacheOffsetBundle WordOffsetInLine() { return WordIndex().Range<CACHE_OFFSET_BITS>(0); }
-		CacheIndexBundle CacheLineIndex() { return WordIndex().Range<CACHE_INDEX_BITS>(CACHE_OFFSET_BITS); }
-		TagBundle Tag() { return WordIndex().Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);}
+		CacheAddrBundle() {}
+		CacheAddrBundle(const AddrBundle& other)
+		{
+			byteIndex = Range<BYTE_INDEX_BITS>(0);
+			wordIndex = Range<ADDR_BITS - BYTE_INDEX_BITS>(BYTE_INDEX_BITS);
+			wordOffsetInLine = wordIndex.Range<CACHE_OFFSET_BITS>(0);
+			cacheLineIndex = wordIndex.Range<CACHE_INDEX_BITS>(CACHE_OFFSET_BITS);
+			tag = wordIndex.Range<TAG_BITS>(CACHE_OFFSET_BITS + CACHE_INDEX_BITS);
+		}
+		Bundle<BYTE_INDEX_BITS> ByteIndex() { return byteIndex; }
+		Bundle<ADDR_BITS - BYTE_INDEX_BITS> WordIndex() { return wordIndex; }
+		CacheOffsetBundle WordOffsetInLine() { return wordOffsetInLine; }
+		CacheIndexBundle CacheLineIndex() { return cacheLineIndex; }
+		TagBundle Tag() { return tag; }
+
+	private:
+		Bundle<BYTE_INDEX_BITS> byteIndex; 
+		Bundle<ADDR_BITS - BYTE_INDEX_BITS> wordIndex;
+		CacheOffsetBundle wordOffsetInLine;
+		CacheIndexBundle cacheLineIndex;
+		TagBundle tag;
 	};
 
 	typename MemoryType::ReqBuffer buffer;
@@ -139,13 +153,11 @@ private:
 	AndGateN<3> gotResultFromMemory;
 	Decoder<NUM_CACHE_LINES> indexDecoder;
 
-	ByteMask masker;
-	CacheLineMasker<CACHE_LINE_BITS> dataShifter;
+	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
 
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Inverter cacheMiss;
-	AndGate readMiss;
-	AndGateN<3> writeBufferFull;
+	AndGate writeBufferFull;
 	OrGate needStall;
 	Inverter needStallInv;
 
@@ -193,43 +205,44 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 #ifdef DEBUG
 	DEBUG_addr.Connect(0, address);
 #endif
-	buffer.Connect(addr, data, write, read);
+	buffer.Connect(addr, outDataMux.Out(), write, read);
 	mMemory.Connect(buffer);
 
 	CacheIndexBundle index = address.CacheLineIndex();
-
+	
+	// Did we get data from memory. Mask it in with the data we want to write.
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
 	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &cacheMiss.Out(), &mMemory.ServicedRead() });
 	indexDecoder.Connect(index, gotResultFromMemory.Out());
+	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, mMemory.OutLine(), bytewrite, halfwrite, write);
 
-	masker.Connect(address.ByteIndex(), bytewrite, halfwrite, write);
-	//dataShifter.Connect(address.ByteIndex(), data, address.WordOffsetInLine());
-
+	// Temp Bundles for the cache line array
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
 
+	// Cache Lines
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), masker.Mask(), 
-					dataShifter.Word(), indexDecoder.Out()[i], mMemory.OutLine());
+		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), lineWriteMasker.WordMask(), 
+			lineWriteMasker.Word(), indexDecoder.Out()[i], lineWriteMasker.Line());
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 	}
+
+	// Status Flags
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
-	readMiss.Connect(read, cacheMiss.Out());
-	writeBufferFull.Connect({ &cacheMiss.Out(), &write, &buffer.WriteFull() });
-	needStall.Connect(readMiss.Out(), writeBufferFull.Out());
-	needStallInv.Connect(readMiss.Out());
+	writeBufferFull.Connect(write, buffer.WriteFull());
+	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
+	needStallInv.Connect(needStall.Out());
 
+	// Output 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
-
 	std::array<DataBundle, CACHE_WORDS> dataWordBundles;
 	for (int i = 0; i < CACHE_WORDS; i++)
 	{
 		dataWordBundles[i] = outCacheLineMux.Out().Range<WORD_SIZE>(i*WORD_SIZE);
 	}
-
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 }
 
@@ -239,9 +252,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	addrReadMatcher.Update();
 	gotResultFromMemory.Update();
 	indexDecoder.Update();
-
-	masker.Update();
-	dataShifter.Update();
+	lineWriteMasker.Update();
 
 	for (auto& line : cachelines)
 	{
@@ -261,14 +272,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 #endif
 	cacheHitMux.Update();
 	cacheMiss.Update();
-	readMiss.Update();
 	writeBufferFull.Update();
 	needStall.Update();
 	needStallInv.Update();
+
 	outCacheLineMux.Update();
 	outDataMux.Update();
 	buffer.Update();
-
 
 	if (!(cycles % mMemory.MEMORY_UPDATE_RATIO))
 	{

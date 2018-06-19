@@ -41,16 +41,28 @@
     <DisplayString>{{Z={wires[0]->state}, C={wires[1]->state}, O={wires[2]->state}, N={wires[3]->state}}}</DisplayString>
   </Type>
   <Type Name="Register&lt;8&gt;">
-    <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits=
-{(int)bits[0].nandR.inv.out.state}
-{(int)bits[1].nandR.inv.out.state}
-{(int)bits[2].nandR.inv.out.state}
-{(int)bits[3].nandR.inv.out.state}
-{(int)bits[4].nandR.inv.out.state}
-{(int)bits[5].nandR.inv.out.state}
-{(int)bits[6].nandR.inv.out.state}
-{(int)bits[7].nandR.inv.out.state}}}</DisplayString>
+    <DisplayString>{{load={(int)bits[0].nandD.and.in2->state}, bits={out}}}</DisplayString>
   </Type>
+<Type Name="Register&lt;*&gt;">
+  <DisplayString>
+    {{{out}}}
+  </DisplayString>
+</Type>
+<Type Name="RegisterMasked&lt;*&gt;">
+  <DisplayString>
+    {{{out}}}
+  </DisplayString>
+</Type>
+<Type Name="RegisterReset&lt;*&gt;">
+  <DisplayString>
+    {{{out}}}
+  </DisplayString>
+</Type>
+<Type Name="RequestBuffer&lt;*,*,*,*&gt;">
+  <DisplayString>
+    {{Wfull={writebuffer.counters.queueFull.out.state}, popW={popWrite.out.state}, popR={popRead.out.state}}}
+  </DisplayString>
+</Type>
   <Type Name="Counter&lt;1&gt;">
     <DisplayString>
       {{enable={(int)jInput.in2->state}, bit={(int)bit.latch.norr.inv.out.state}}}
@@ -58,15 +70,7 @@
   </Type>
   <Type Name="Counter&lt;*&gt;">
     <DisplayString>
-      {{enable={(int)enables[0].in2->state}, bits=
-{(int)bits[0].latch.norr.inv.out.state}
-{(int)bits[1].latch.norr.inv.out.state}
-{(int)bits[2].latch.norr.inv.out.state}
-{(int)bits[3].latch.norr.inv.out.state}
-{(int)bits[4].latch.norr.inv.out.state}
-{(int)bits[5].latch.norr.inv.out.state}
-{(int)bits[6].latch.norr.inv.out.state}
-{(int)bits[7].latch.norr.inv.out.state}}}
+      {{enable={(int)enables[0].in2->state}, {out}}}
     </DisplayString>
   </Type>
   <Type Name="InverterN&lt;*&gt;">
