@@ -152,9 +152,11 @@ private:
 
 	Matcher<ADDR_BITS> addrReadMatcher;
 	AndGateN<3> gotResultFromMemory;
-	Decoder<NUM_CACHE_LINES> indexDecoder;
+
+  Decoder<NUM_CACHE_LINES> indexDecoder;
 
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
+
 
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	AndGate writeHit;
@@ -206,9 +208,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 #ifdef DEBUG
 	DEBUG_addr = address;
 #endif
+
 	mMemory.Connect(buffer);
 
 	CacheIndexBundle index = address.CacheLineIndex();
+
 	
 	// Did we get data from memory. Mask it in with the data we want to write.
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
