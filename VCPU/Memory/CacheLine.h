@@ -27,6 +27,7 @@ public:
 	const Wire& Dirty() { return dirtyFlag.Q(); }
 
 private:
+	AndGate writeTag;
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
 	AndGate cacheHitEnabled;
@@ -59,7 +60,8 @@ template<unsigned int N, unsigned int Nwords, unsigned int NTag>
 void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask,
 										const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable, const Wire& dirty)
 {
-	tag.Connect(tagin, writeline);
+	writeTag.Connect(writeline, enable);
+	tag.Connect(tagin, writeTag.Out());
 	tagMatcher.Connect(tag.Out(), tagin);
 	cacheHitEnabled.Connect(tagMatcher.Out(), enable);
 	writing.Connect(writeline, dirty);
@@ -79,6 +81,7 @@ void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBun
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
 inline void CacheLine<N, Nwords, NTag>::Update()
 {
+	writeTag.Update();
 	tag.Update();
 	tagMatcher.Update();
 	cacheHitEnabled.Update();
