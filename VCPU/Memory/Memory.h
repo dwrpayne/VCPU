@@ -42,6 +42,7 @@ public:
 
 	void Connect(ReqBuffer& reqbuf);
 	void Update();
+	void PostUpdate();
 
 	const AddrBundle& ReadAddr() const { return outAddr.Out(); }
 	const Wire& ServicedRead() const { return outServicedRead.Out(); }
@@ -109,10 +110,11 @@ inline void Memory<N, CACHE_LINE_BITS, BYTES>::Update()
 		reg.Update();
 	}
 	outMux.Update();
+}
 
-	// TODO: This doesn't solve the race condition where this data is accessed
-	// by the Cache asyncronously. We need a similar situation to the RequestBuffer
-	// or the CPU PipelineBuffers.
+template<unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+inline void Memory<N, CACHE_LINE_BITS, BYTES>::PostUpdate()
+{
 	outData.Update();
 	outServicedRead.Update();
 	outAddr.Update();

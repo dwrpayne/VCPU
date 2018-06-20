@@ -153,7 +153,7 @@ private:
 	Matcher<ADDR_BITS> addrReadMatcher;
 	AndGateN<3> gotResultFromMemory;
 
-  Decoder<NUM_CACHE_LINES> indexDecoder;
+	Decoder<NUM_CACHE_LINES> indexDecoder;
 
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
 
@@ -217,7 +217,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	// Did we get data from memory. Mask it in with the data we want to write.
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
 	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &cacheMiss.Out(), &mMemory.ServicedRead() });
-	indexDecoder.Connect(index, write);
+	indexDecoder.Connect(index, Wire::ON);
 	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, mMemory.OutLine(), bytewrite, halfwrite, write);
 
 	// Temp Bundles for the cache line array
@@ -265,18 +265,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	{
 		line.Update();
 	}
-#ifdef DEBUG
-	if (gotResultFromMemory.Out().On())
-	{
-		std::cout << "Cache got ";
-		auto& line = cachelines[(DEBUG_addr.UnsignedRead() / 32) % cachelines.size()];
-		for (auto& reg : line.words)
-		{
-			std::cout << reg.Out().Read() << ", ";
-		}
-		std::cout << " on " << DEBUG_addr.UnsignedRead() << std::endl;
-	}
-#endif
 	cacheHitMux.Update();
 	writeHit.Update();
 	cacheMiss.Update();
@@ -292,6 +280,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	{
 		std::unique_lock<std::mutex> lk(mMutex);
 		mCV.wait(lk, [this] {return !memoryReady; });
+		mMemory.PostUpdate();
 		memoryReady = true;
 		lk.unlock();
 		mCV.notify_all();

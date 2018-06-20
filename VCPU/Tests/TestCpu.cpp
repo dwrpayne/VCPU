@@ -417,7 +417,7 @@ bool TestCache(Verbosity verbosity)
 	data.Write(0xbeefU);
 	test.UpdateUntilNoStall();
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-	success &= TestState(i++, 0x70ccbeefU, test.Out().UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xbeefccccU, test.Out().UnsignedRead(), verbosity);
 	
 	addr.Write(265);
 	writehalf.Set(false);
