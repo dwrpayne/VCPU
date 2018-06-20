@@ -161,7 +161,9 @@ private:
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Multiplexer<NUM_CACHE_LINES> cacheDirtyMux;
 	AndGate evictedDirty;
-	Inverter cacheMiss;
+	Inverter cacheMissInternal;
+	OrGate readOrWrite;
+	AndGate cacheMiss;
 	AndGate writeBufferFull;
 	OrGate needStall;
 	Inverter needStallInv;
@@ -249,9 +251,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	// Status Flags
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheDirtyMux.Connect(cacheDirtyCollector, index);
-	cacheMiss.Connect(cacheHitMux.Out());
+	cacheMissInternal.Connect(cacheHitMux.Out());
+	readOrWrite.Connect(read, write);
+	cacheMiss.Connect(cacheMissInternal.Out(), readOrWrite.Out());
 	evictedDirty.Connect(cacheMiss.Out(), cacheDirtyMux.Out());
-	writeBufferFull.Connect(write, buffer.WriteFull());
+	writeBufferFull.Connect(evictedDirty.Out(), buffer.WriteFull());
 	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
 	needStallInv.Connect(needStall.Out());
 
@@ -285,6 +289,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	}
 	cacheHitMux.Update();
 	cacheDirtyMux.Update();
+	cacheMissInternal.Update();
+	readOrWrite.Update();
 	cacheMiss.Update();
 	evictedDirty.Update();
 	writeBufferFull.Update();
