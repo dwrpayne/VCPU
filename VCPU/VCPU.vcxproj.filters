@@ -272,5 +272,8 @@
     <ClInclude Include="Functional\Masker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Memory\MemoryWordWrite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

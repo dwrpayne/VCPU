@@ -1140,8 +1140,9 @@ bool TestCacheLine(Verbosity verbosity)
 	MagicBundle<20> tag;
 	MagicBundle<16> writemask;
 	Wire writeline(false);
+	Wire writeword(false);
 
-	test.Connect(tag, offset, writemask, dataword, writeline, dataline, Wire::ON);
+	test.Connect(tag, offset, writemask, dataword, writeline, dataline, Wire::ON, writeword);
 
 	dataline.Write(0x1122334455667788);
 	tag.Write(987);
@@ -1150,6 +1151,7 @@ bool TestCacheLine(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, 0x1122334455667788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, false, test.Dirty().On(), verbosity);
 
 	dataline.Write(100000);
 	tag.Write(123);
@@ -1158,17 +1160,22 @@ bool TestCacheLine(Verbosity verbosity)
 	success &= TestState(i++, false, test.CacheHit().On(), verbosity);
 
 	tag.Write(987);
-	test.Update();
-	success &= TestState(i++, 0x1122334455667788, test.OutLine().ReadLong(), verbosity);
-	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
-
 	dataword.Write(0xbabeU);
 	writemask.Write(0xffffU);
+	writeword.Set(true);
 	writeline.Set(false);
 	offset.Write(1U);
 	test.Update();
 	success &= TestState(i++, 0x11223344babe7788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Dirty().On(), verbosity);
+
+	writemask.Write(0);
+	writeword.Set(false);
+	test.Update();
+	success &= TestState(i++, 0x11223344babe7788, test.OutLine().ReadLong(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Dirty().On(), verbosity);
 
 	dataword.Write(0xcafeU);
 	offset.Write(2U);
@@ -1176,6 +1183,7 @@ bool TestCacheLine(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, 0x1122ca44babe7788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Dirty().On(), verbosity);
 
 	dataword.Write(0xbeefU);
 	offset.Write(3U);
@@ -1183,6 +1191,7 @@ bool TestCacheLine(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, 0x11efca44babe7788, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Dirty().On(), verbosity);
 
 	dataword.Write(0xaaaaU);
 	offset.Write(0U);
@@ -1190,6 +1199,17 @@ bool TestCacheLine(Verbosity verbosity)
 	test.Update();
 	success &= TestState(i++, 0x11efca44babe7aaa, test.OutLine().ReadLong(), verbosity);
 	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, true, test.Dirty().On(), verbosity);
+
+	dataline.Write(0x1357135713571357);
+	tag.Write(226);
+	writemask.Write(0);
+	writeword.Set(false);
+	writeline.Set(true);
+	test.Update();
+	success &= TestState(i++, 0x1357135713571357, test.OutLine().ReadLong(), verbosity);
+	success &= TestState(i++, true, test.CacheHit().On(), verbosity);
+	success &= TestState(i++, false, test.Dirty().On(), verbosity);
 
 	return success;
 }
@@ -1360,6 +1380,120 @@ bool TestCircularBuffer1(Verbosity verbosity)
 	return success;
 }
 
+bool TestPulsedPopBuffer(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	PulsedPopBuffer<32, 2, 2> test;
+
+	MagicBundle<32> reg;
+	Wire push(false);
+
+	test.Connect(reg, push, Wire::ON);
+	reg.Write(123456);
+	test.Update();
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+
+	test.Update(); // test no pop when empty
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+
+	test.Update();
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+
+	push.Set(true); // push and also pop in same cycle
+	test.Update();
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, true, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
+
+	reg.Write(1111); // push, no pop
+	test.Update();
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
+
+	reg.Write(2222); // push, pop earlier one
+	test.Update();
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, true, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 1111, test.Out().Read(), verbosity);
+
+	reg.Write(3333); // push, no pop so full
+	test.Update();
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, true, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 1111, test.Out().Read(), verbosity);
+
+	reg.Write(4444); // full so no push, pop earlier one
+	test.Update();
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 2222, test.Out().Read(), verbosity);
+
+	push.Set(false); // wait, nop
+	test.Update();
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 2222, test.Out().Read(), verbosity);
+
+	test.Update(); // pop, now empty
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 3333, test.Out().Read(), verbosity);
+
+	push.Set(true); // push 4444
+	test.Update(); // 
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, true, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 3333, test.Out().Read(), verbosity);
+
+	test.Update(); // try pushing 4444 again, pop, empty
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Popped().On(), verbosity);
+	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+	success &= TestState(i++, 4444, test.Out().Read(), verbosity);
+			
+	return success;
+}
+
 bool TestRequestBuffer(Verbosity verbosity)
 {
 	bool success = true;
@@ -1372,7 +1506,7 @@ bool TestRequestBuffer(Verbosity verbosity)
 	Wire write(false);	
 	Wire read(false);	
 
-	test.Connect(addr, data, write, read);
+	test.Connect(addr, addr, data, write, read);
 
 	data.Write(11);
 	addr.Write(10);
@@ -1503,6 +1637,7 @@ bool RunAllTests()
 	RUN_TEST(TestMultiplier, FAIL_ONLY);
 	RUN_TEST(TestCircularBuffer, FAIL_ONLY);
 	RUN_TEST(TestCircularBuffer1, FAIL_ONLY);
+	RUN_TEST(TestPulsedPopBuffer, FAIL_ONLY);
 	RUN_TEST(TestRequestBuffer, FAIL_ONLY);
 	return success;
 }

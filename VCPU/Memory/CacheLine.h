@@ -14,19 +14,25 @@ public:
 	typedef Bundle<N> WordBundle;
 	typedef Bundle<OFFSET_BITS> OffsetBundle;
 	typedef Bundle<LINE_BITS> LineBundle;
+	typedef Bundle<NTag> TagBundle;
 
 	CacheLine();
-	void Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, 
-		const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable);
+	void Connect(const TagBundle& tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask,
+		const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable, const Wire& dirty);
 	void Update();
 
+	const TagBundle& Tag() { return tag.Out(); }
 	const LineBundle& OutLine() { return outLineBundle; }
-	const Wire& CacheHit() { return tagMatcher.Out(); }
+	const Wire& CacheHit() { return tagMatcher.Out(); } 
+	const Wire& Dirty() { return dirtyFlag.Q(); }
 
 private:
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
 	AndGate cacheHitEnabled;
+	OrGate writing;
+	AndGate updateDirtyFlag;
+	DFlipFlop dirtyFlag;
 	Decoder<Nwords> offsetDecoder;
 	MultiGate<OrGate, Nwords> wordwriteOr;
 	MultiGate<AndGate, Nwords> writeEnable;
@@ -50,12 +56,15 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
-void CacheLine<N, Nwords, NTag>::Connect(Bundle<NTag> tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask, 
-										const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable)
+void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask,
+										const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable, const Wire& dirty)
 {
 	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
 	cacheHitEnabled.Connect(tagMatcher.Out(), enable);
+	writing.Connect(writeline, dirty);
+	updateDirtyFlag.Connect(writing.Out(), cacheHitEnabled.Out());
+	dirtyFlag.Connect(dirty, updateDirtyFlag.Out());
 	offsetDecoder.Connect(wordoffset, Wire::ON);
 	wordwriteOr.Connect(offsetDecoder.Out(), Bundle<Nwords>(writeline));
 	writeEnable.Connect(wordwriteOr.Out(), Bundle<Nwords>(cacheHitEnabled.Out()));
@@ -73,6 +82,9 @@ inline void CacheLine<N, Nwords, NTag>::Update()
 	tag.Update();
 	tagMatcher.Update();
 	cacheHitEnabled.Update();
+	writing.Update();
+	updateDirtyFlag.Update();
+	dirtyFlag.Update();
 	offsetDecoder.Update();
 	wordwriteOr.Update();
 	writeEnable.Update();

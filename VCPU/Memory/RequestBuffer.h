@@ -10,12 +10,67 @@
 #include "MultiGate.h"
 #include "CircularBuffer.h"
 
+template <unsigned int N, unsigned int Nreg, unsigned int POP_EVERY>
+class PulsedPopBuffer : Component
+{
+public:
+	typedef Bundle<N> DataBundle;
+	
+	void Connect(const DataBundle& data, const Wire& trypush, const Wire& enablepop);
+	void Update();
+	const DataBundle Out() { return out.Out(); }
+	const Wire& Popped() { return popped.Q(); }
+	const Wire& Pushed() { return buffer.DidPush(); }
+
+	const Wire& Full() { return buffer.Full(); }
+	const Wire& NonEmpty() { return buffer.NonEmpty(); }
+	const Wire& Empty() { return buffer.Empty(); }
+
+private:
+	ClockFreqSwitcher<POP_EVERY> popCycleCounter;
+	Matcher<N> prevMatch;
+	Register<N> previous;
+	AndGate push;
+	AndGate pop;
+	CircularBuffer<N, Nreg> buffer;
+
+	Register<N> out;
+	DFlipFlop popped;
+};
+
+template <unsigned int N, unsigned int Nreg, unsigned int POP_EVERY>
+inline void PulsedPopBuffer<N, Nreg, POP_EVERY>::Connect(const DataBundle & data, const Wire & trypush, const Wire& enablepop)
+{
+	popCycleCounter.Connect();
+	prevMatch.Connect(previous.Out(), data);
+	push.Connect(prevMatch.NoMatch(), trypush);
+	pop.Connect(popCycleCounter.Pulse(), enablepop);
+	buffer.Connect(data, pop.Out(), push.Out());
+
+	previous.Connect(data, buffer.DidPush());
+	out.Connect(buffer.Out(), buffer.DidPop());
+	popped.Connect(buffer.DidPop(), popCycleCounter.Pulse());
+}
+
+template <unsigned int N, unsigned int Nreg, unsigned int POP_EVERY>
+inline void PulsedPopBuffer<N, Nreg, POP_EVERY>::Update()
+{ 
+	popCycleCounter.Update();
+	prevMatch.Update();
+	push.Update();
+	pop.Update();
+	buffer.Update();
+
+	previous.Update();
+	out.Update();
+	popped.Update();
+}
+
 template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg, unsigned int POP_EVERY>
 class RequestBuffer : Component
 {
 public:
 	static const int BUF_WIDTH = N + ADDR_LEN;
-	static const int REG_INDEX_BITS = bits(Nreg);
 	typedef Bundle<ADDR_LEN> AddrBundle;
 	typedef Bundle<N> DataBundle;
 	typedef Bundle<BUF_WIDTH> WriteBufBundle;
@@ -23,12 +78,12 @@ public:
 	class WriteReqBundle : public WriteBufBundle
 	{
 	public:
-		using Bundle<BUF_WIDTH>::Bundle;
+		using WriteBufBundle::Bundle;
 		WriteReqBundle(const WriteBufBundle& other)
-			: Bundle<BUF_WIDTH>(other)
+			: WriteBufBundle(other)
 		{}
 		WriteReqBundle(const AddrBundle& addr, const DataBundle& data)
-			: Bundle<BUF_WIDTH>()
+			: WriteBufBundle()
 		{
 			Connect(0, addr);
 			Connect(AddrBundle::N, data);
@@ -38,91 +93,41 @@ public:
 		const DataBundle Data() const { return Range<DataBundle::N>(ADDR_LEN); }
 	};
 
-	void Connect(const AddrBundle & addr, const DataBundle & data, const Wire& writereq, const Wire& readreq);
+	void Connect(const AddrBundle & readaddr, const AddrBundle & writeaddr, const DataBundle & data, const Wire& writereq, const Wire& readreq);
 	void Update();
 	const WriteReqBundle OutWrite() { return writeOut.Out(); }
 	const AddrBundle& OutRead() { return readOut.Out(); }
-	const Wire& PoppedWrite() { return poppedWrite.Q(); }
-	const Wire& PoppedRead() { return poppedRead.Q(); }
+	const Wire& PoppedWrite() { return writebuffer.Popped(); }
+	const Wire& PoppedRead() { return readbuffer.Popped(); }
 	
 	const Wire& WriteFull() { return writebuffer.Full(); }
 	const Wire& WritePending() { return writebuffer.NonEmpty(); }
 	const Wire& ReadPending() { return readbuffer.Full(); }
 	
 private:
-	class BufferBundle : public Bundle<BUF_WIDTH + 2>
-	{
-	public:
-		BufferBundle(const AddrBundle & addr, const DataBundle & data, const Wire& writereq, const Wire& readreq)
-		{
-			Connect(0, addr);
-			Connect(ADDR_LEN, data);
-			Connect(BUF_WIDTH, writereq);
-			Connect(BUF_WIDTH + 1, readreq);
-		}
-	};
-	ClockFreqSwitcher<POP_EVERY> popCycleCounter;
-	Matcher<BUF_WIDTH + 2> prevRequestMatch;
-	Register<BUF_WIDTH + 2> prevRequest;
+	PulsedPopBuffer<BUF_WIDTH, Nreg, POP_EVERY> writebuffer;
+	PulsedPopBuffer<ADDR_LEN, 1, POP_EVERY> readbuffer;
 
-	AndGate pushWrite;
-	AndGate pushRead;
-	AndGate popWrite;
-	AndGate popRead;
-	OrGate didPush;
-	CircularBuffer<BUF_WIDTH, Nreg> writebuffer;
-	CircularBuffer<ADDR_LEN, 1> readbuffer;
-
-	RegisterReset<BUF_WIDTH> writeOut;
-	RegisterReset<ADDR_LEN> readOut;
-	DFlipFlop poppedWrite;
-	DFlipFlop poppedRead;
+	MultiGate<AndGate,BUF_WIDTH> writeOut;
+	MultiGate<AndGate, ADDR_LEN> readOut;
 };
 
 template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg, unsigned int POP_EVERY>
-inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Connect(const AddrBundle & addr, const DataBundle & data, const Wire& writereq, const Wire& readreq)
-{
-	popCycleCounter.Connect();
-
-	auto request = BufferBundle(addr, data, writereq, readreq);
-	prevRequestMatch.Connect(prevRequest.Out(), request);
-
-	pushRead.Connect(prevRequestMatch.NoMatch(), readreq);
-	pushWrite.Connect(prevRequestMatch.NoMatch(), writereq);
-	popRead.Connect(popCycleCounter.Pulse(), writebuffer.Empty());
-	popWrite.Connect(popCycleCounter.Pulse(), writebuffer.NonEmpty());
-
-	writebuffer.Connect(WriteReqBundle(addr, data), popWrite.Out(), pushWrite.Out());
-	readbuffer.Connect(addr, popRead.Out(), pushRead.Out());
+inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Connect(const AddrBundle & readaddr, const AddrBundle & writeaddr, const DataBundle & data, const Wire& writereq, const Wire& readreq)
+{	
+	writebuffer.Connect(WriteReqBundle(writeaddr, data), writereq, readbuffer.Empty());
+	readbuffer.Connect(readaddr, readreq, readbuffer.NonEmpty());
 	
-	didPush.Connect(writebuffer.DidPush(), readbuffer.DidPush());
-	prevRequest.Connect(request, didPush.Out());
-
-	writeOut.Connect(writebuffer.Out(), popWrite.Out(), popRead.Out());
-	readOut.Connect(readbuffer.Out(), popRead.Out(), popWrite.Out());
-	poppedWrite.Connect(popWrite.Out(), popCycleCounter.Pulse());
-	poppedRead.Connect(popRead.Out(), popCycleCounter.Pulse());
+	writeOut.Connect(writebuffer.Out(), WriteBufBundle(writebuffer.Popped()));
+	readOut.Connect(readbuffer.Out(), AddrBundle(readbuffer.Popped()));
 }
 
 template <unsigned int N, unsigned int ADDR_LEN, unsigned int Nreg, unsigned int POP_EVERY>
 inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Update()
-{
-	popCycleCounter.Update();
-	prevRequestMatch.Update();
-
-	pushRead.Update();
-	pushWrite.Update();
-	popWrite.Update();
-	popRead.Update();
-	 
+{ 
 	writebuffer.Update();
 	readbuffer.Update();
-
-	didPush.Update();
-	prevRequest.Update();
-	
+		
 	writeOut.Update();
 	readOut.Update();
-	poppedWrite.Update();
-	poppedRead.Update();
 }

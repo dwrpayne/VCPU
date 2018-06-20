@@ -105,7 +105,7 @@ public:
 	typedef Bundle<CACHE_OFFSET_BITS> CacheOffsetBundle;
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
-	typedef Memory<WORD_SIZE, CACHE_LINE_BITS, MAIN_MEMORY_BYTES> MemoryType;
+	typedef Memory<CACHE_LINE_BITS, MAIN_MEMORY_BYTES> MemoryType;
 
 	Cache();
 	virtual ~Cache();
@@ -137,6 +137,7 @@ private:
 		CacheOffsetBundle WordOffsetInLine() { return wordOffsetInLine; }
 		CacheIndexBundle CacheLineIndex() { return cacheLineIndex; }
 		TagBundle Tag() { return tag; }
+		void SetTag(const TagBundle& t) { tag.Connect(0, t); Connect(ADDR_BITS - TAG_BITS, t); }
 
 	private:
 		Bundle<BYTE_INDEX_BITS> byteIndex; 
@@ -156,10 +157,10 @@ private:
 	Decoder<NUM_CACHE_LINES> indexDecoder;
 
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
-
-
+	
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
-	AndGate writeHit;
+	Multiplexer<NUM_CACHE_LINES> cacheDirtyMux;
+	AndGate evictedDirty;
 	Inverter cacheMiss;
 	AndGate writeBufferFull;
 	OrGate needStall;
@@ -167,6 +168,9 @@ private:
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
+
+	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
+	MuxBundle<ADDR_BITS, 2> memWriteAddrMux;
 
 	bool exit;
 	std::condition_variable mCV;
@@ -212,8 +216,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	mMemory.Connect(buffer);
 
 	CacheIndexBundle index = address.CacheLineIndex();
-
-	
+		
 	// Did we get data from memory. Mask it in with the data we want to write.
 	addrReadMatcher.Connect(addr, mMemory.ReadAddr());
 	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &cacheMiss.Out(), &mMemory.ServicedRead() });
@@ -222,21 +225,32 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 
 	// Temp Bundles for the cache line array
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
+	std::array<TagBundle, NUM_CACHE_LINES> cacheLineTagOuts;
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
+	Bundle<NUM_CACHE_LINES> cacheDirtyCollector;
 
 	// Cache Lines
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), lineWriteMasker.WordMask(),
-			lineWriteMasker.Word(), gotResultFromMemory.Out(), lineWriteMasker.Line(), indexDecoder.Out()[i]);
+		cachelines[i].Connect(address.Tag(), address.WordOffsetInLine(), lineWriteMasker.WordMask(), lineWriteMasker.Word(), 
+			gotResultFromMemory.Out(), lineWriteMasker.Line(), indexDecoder.Out()[i], write);
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
+		cacheLineTagOuts[i] = cachelines[i].Tag();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
+		cacheDirtyCollector.Connect(i, cachelines[i].Dirty());
 	}
+
+	// Evicted tag collector and addr calculation
+	lineTagMux.Connect(cacheLineTagOuts, index);
+	CacheAddrBundle evictedCacheAddr(addr);
+	evictedCacheAddr.SetTag(lineTagMux.Out());
+	memWriteAddrMux.Connect({ addr, evictedCacheAddr }, evictedDirty.Out());
 
 	// Status Flags
 	cacheHitMux.Connect(cacheHitCollector, index);
-	writeHit.Connect(write, cacheHitMux.Out());
+	cacheDirtyMux.Connect(cacheDirtyCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
+	evictedDirty.Connect(cacheMiss.Out(), &cacheDirtyMux.Out());
 	writeBufferFull.Connect(write, buffer.WriteFull());
 	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
 	needStallInv.Connect(needStall.Out());
@@ -249,8 +263,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 		dataWordBundles[i] = outCacheLineMux.Out().Range<WORD_SIZE>(i*WORD_SIZE);
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
+
 	
-	buffer.Connect(addr, outDataMux.Out(), writeHit.Out(), cacheMiss.Out());
+	buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
@@ -260,20 +275,25 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	gotResultFromMemory.Update();
 	indexDecoder.Update();
 	lineWriteMasker.Update();
+	
+	// Must update the line tag mux *before* the registers, as their tags get stomped on write
+	lineTagMux.Update();
 
 	for (auto& line : cachelines)
 	{
 		line.Update();
 	}
 	cacheHitMux.Update();
-	writeHit.Update();
+	cacheDirtyMux.Update();
 	cacheMiss.Update();
+	evictedDirty.Update();
 	writeBufferFull.Update();
 	needStall.Update();
 	needStallInv.Update();
 
 	outCacheLineMux.Update();
 	outDataMux.Update();
+	memWriteAddrMux.Update();
 	buffer.Update();
 
 	if (!(cycles % mMemory.MEMORY_UPDATE_RATIO))

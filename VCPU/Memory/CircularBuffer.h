@@ -24,6 +24,7 @@ public:
 	const Wire& NonEmpty() { return counters.NonEmpty(); }
 	const Wire& Empty() { return counters.Empty(); }
 	const Wire& DidPush() { return pushEnable.Out(); }
+	const Wire& DidPop() { return popEnable.Out(); }
 
 private:
 	class CounterPair : public Component
@@ -52,6 +53,7 @@ private:
 
 	CounterPair counters;
 	AndGate pushEnable;
+	OrGate couldPop;
 	AndGate popEnable;
 	Decoder<Nreg> writeDecoder;
 	std::array<Register<N>, Nreg> buffers;
@@ -62,7 +64,8 @@ template<unsigned int N, unsigned int Nreg>
 inline void CircularBuffer<N, Nreg>::Connect(const Bundle<N>& in, const Wire & pop, const Wire& push)
 {
 	pushEnable.Connect(push, counters.HasRoom());
-	popEnable.Connect(pop, counters.NonEmpty());
+	couldPop.Connect(pushEnable.Out(), counters.NonEmpty());
+	popEnable.Connect(pop, couldPop.Out());
 	counters.Connect(popEnable.Out(), pushEnable.Out());
 	writeDecoder.Connect(counters.WriteIndex(), pushEnable.Out());
 	std::array<Bundle<N>, Nreg> regOuts;
@@ -80,6 +83,7 @@ template<unsigned int N, unsigned int Nreg>
 inline void CircularBuffer<N, Nreg>::Update()
 {
 	pushEnable.Update();
+	couldPop.Update();
 	popEnable.Update();
 	counters.Update();
 

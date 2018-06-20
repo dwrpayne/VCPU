@@ -14,21 +14,28 @@
 #include "RequestBuffer.h"
 #include "ThreadedComponent.h"
 
-// Memory is read and written in cache lines
-template <unsigned int N, unsigned int BYTES>
-class Memory : public ThreadedComponent
+// Memory is stored in words
+// We write in words, and read in cache lines
+
+template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+class MemoryWordWrite : public ThreadedComponent
 {
 public:
-	static const unsigned int CACHELINE_BYTES = N / 8;
+	static const unsigned int WORD_BYTES = N / 8;
+	static const unsigned int CACHELINE_BYTES = CACHE_LINE_BITS / 8;
+	static const unsigned int CACHELINE_WORDS = CACHELINE_BYTES / WORD_BYTES;
 	static const unsigned int ADDR_BITS = bits(BYTES);
+	static const unsigned int BYTE_INDEX_LEN = bits(WORD_BYTES);
+	static const unsigned int NUM_WORDS = BYTES / WORD_BYTES;
+	static const unsigned int WORD_INDEX_LEN = bits(NUM_WORDS);
 	static const unsigned int CACHELINE_ADDR_BITS = bits(CACHELINE_BYTES);
 	static const unsigned int NUM_LINES = BYTES / CACHELINE_BYTES;
 	static const unsigned int CACHELINE_INDEX_LEN = bits(NUM_LINES);
 	static const unsigned int MEMORY_UPDATE_RATIO = 8;
-	static const unsigned int WRITE_BUFFER_LEN = 4;
+	static const unsigned int WRITE_BUFFER_LEN = 8;
 
-	typedef Bundle<N> CacheLineBundle;
 	typedef Bundle<ADDR_BITS> AddrBundle;
+	typedef Bundle<CACHE_LINE_BITS> CacheLineBundle;
 	typedef RequestBuffer<N, ADDR_BITS, WRITE_BUFFER_LEN, MEMORY_UPDATE_RATIO> ReqBuffer;
 
 	using ThreadedComponent::ThreadedComponent;
@@ -47,14 +54,14 @@ private:
 	MuxBundle<ADDR_BITS, 2> addrRWMux;
 	AndGate servicedRead;
 
-	Decoder<NUM_LINES> addrDecoder;
+	Decoder<NUM_WORDS> addrDecoder;
 
-	std::array<Register<N>, NUM_LINES> registers;
-	MuxBundle<N, NUM_LINES> outMux;
+	std::array<Register<N>, NUM_WORDS> registers;
+	MuxBundle<CACHE_LINE_BITS, NUM_LINES> outMux;
 
 	int cycle;
 
-	Register<N> outData;
+	Register<CACHE_LINE_BITS> outData;
 	Register<1> outServicedRead;
 	Register<ADDR_BITS> outAddr;
 
@@ -63,24 +70,27 @@ private:
 	friend class Debugger;
 };
 
-template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::Connect(ReqBuffer& reqbuf)
+template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+inline void MemoryWordWrite<N, CACHE_LINE_BITS, BYTES>::Connect(ReqBuffer& reqbuf)
 {
 	pReqBuffer = &reqbuf;
 
 	servicedRead.Connect(Wire::ON, pReqBuffer->PoppedRead());
 	addrRWMux.Connect({ pReqBuffer->OutWrite().Addr(), pReqBuffer->OutRead()}, servicedRead.Out());
-	auto cachelineAddr = addrRWMux.Out().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 
-	addrDecoder.Connect(cachelineAddr, pReqBuffer->PoppedWrite());
+	auto wordAddr = addrRWMux.Out().Range<WORD_INDEX_LEN>(BYTE_INDEX_LEN);
+	addrDecoder.Connect(wordAddr, pReqBuffer->PoppedWrite());
 	
 	std::array<CacheLineBundle, NUM_LINES> lineOuts;
-	for (int i = 0; i < NUM_LINES; ++i)
+	for (int i = 0; i < NUM_WORDS; ++i)
 	{
 		registers[i].Connect(pReqBuffer->OutWrite().Data(), addrDecoder.Out()[i]);
-		lineOuts[i].Connect(0, registers[i].Out());
+		unsigned int cache_line = i / CACHELINE_WORDS;
+		unsigned int bit_line_offset = (i % CACHELINE_WORDS) * N;
+		lineOuts[cache_line].Connect(bit_line_offset, registers[i].Out());
 	}
 
+	auto cachelineAddr = addrRWMux.Out().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 	outMux.Connect(lineOuts, cachelineAddr);
 
 	outData.Connect(outMux.Out(), Wire::ON);
@@ -88,8 +98,8 @@ inline void Memory<N, BYTES>::Connect(ReqBuffer& reqbuf)
 	outAddr.Connect(addrRWMux.Out(), Wire::ON);
 }
 
-template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::Update()
+template <unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+inline void MemoryWordWrite<N, CACHE_LINE_BITS, BYTES>::Update()
 {
 	cycle++;
 	servicedRead.Update();
@@ -102,8 +112,8 @@ inline void Memory<N, BYTES>::Update()
 	outMux.Update();
 }
 
-template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::PostUpdate()
+template<unsigned int N, unsigned int CACHE_LINE_BITS, unsigned int BYTES>
+inline void MemoryWordWrite<N, CACHE_LINE_BITS, BYTES>::PostUpdate()
 {
 	outData.Update();
 	outServicedRead.Update();
