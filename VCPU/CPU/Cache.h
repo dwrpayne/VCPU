@@ -250,7 +250,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheDirtyMux.Connect(cacheDirtyCollector, index);
 	cacheMiss.Connect(cacheHitMux.Out());
-	evictedDirty.Connect(cacheMiss.Out(), &cacheDirtyMux.Out());
+	evictedDirty.Connect(cacheMiss.Out(), cacheDirtyMux.Out());
 	writeBufferFull.Connect(write, buffer.WriteFull());
 	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
 	needStallInv.Connect(needStall.Out());

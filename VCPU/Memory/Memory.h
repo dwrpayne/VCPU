@@ -49,7 +49,7 @@ private:
 
 	Decoder<NUM_LINES> addrDecoder;
 
-	std::array<Register<N>, NUM_LINES> registers;
+	std::array<Register<N>, NUM_LINES> cachelines;
 	MuxBundle<N, NUM_LINES> outMux;
 
 	int cycle;
@@ -77,8 +77,8 @@ inline void Memory<N, BYTES>::Connect(ReqBuffer& reqbuf)
 	std::array<CacheLineBundle, NUM_LINES> lineOuts;
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		registers[i].Connect(pReqBuffer->OutWrite().Data(), addrDecoder.Out()[i]);
-		lineOuts[i].Connect(0, registers[i].Out());
+		cachelines[i].Connect(pReqBuffer->OutWrite().Data(), addrDecoder.Out()[i]);
+		lineOuts[i].Connect(0, cachelines[i].Out());
 	}
 
 	outMux.Connect(lineOuts, cachelineAddr);
@@ -95,7 +95,7 @@ inline void Memory<N, BYTES>::Update()
 	servicedRead.Update();
 	addrRWMux.Update();
 	addrDecoder.Update();
-	for (auto& reg : registers)
+	for (auto& reg : cachelines)
 	{
 		reg.Update();
 	}
