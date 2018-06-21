@@ -1448,44 +1448,45 @@ bool TestPulsedPopBuffer(Verbosity verbosity)
 	success &= TestState(i++, true, test.Pushed().On(), verbosity);
 	success &= TestState(i++, 1111, test.Out().Read(), verbosity);
 
-	reg.Write(4444); // full so no push, pop earlier one
+	reg.Write(4444); // push, pop earlier one, still full
 	test.Update();
 	success &= TestState(i++, false, test.Empty().On(), verbosity);
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
 	success &= TestState(i++, true, test.Popped().On(), verbosity);
-	success &= TestState(i++, false, test.Pushed().On(), verbosity);
+	success &= TestState(i++, true, test.Pushed().On(), verbosity);
 	success &= TestState(i++, 2222, test.Out().Read(), verbosity);
 
 	push.Set(false); // wait, nop
 	test.Update();
 	success &= TestState(i++, false, test.Empty().On(), verbosity);
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
 	success &= TestState(i++, true, test.Popped().On(), verbosity);
 	success &= TestState(i++, false, test.Pushed().On(), verbosity);
 	success &= TestState(i++, 2222, test.Out().Read(), verbosity);
 
-	test.Update(); // pop, now empty
-	success &= TestState(i++, true, test.Empty().On(), verbosity);
-	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	test.Update(); // pop, 1 entry left
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
 	success &= TestState(i++, true, test.Popped().On(), verbosity);
 	success &= TestState(i++, false, test.Pushed().On(), verbosity);
 	success &= TestState(i++, 3333, test.Out().Read(), verbosity);
 
-	push.Set(true); // push 4444
+	reg.Write(5555); 
+	push.Set(true); // push 5555, full
 	test.Update(); // 
 	success &= TestState(i++, false, test.Empty().On(), verbosity);
 	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
 	success &= TestState(i++, true, test.Popped().On(), verbosity);
 	success &= TestState(i++, true, test.Pushed().On(), verbosity);
 	success &= TestState(i++, 3333, test.Out().Read(), verbosity);
 
-	test.Update(); // try pushing 4444 again, pop, empty
-	success &= TestState(i++, true, test.Empty().On(), verbosity);
-	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	test.Update(); // try pushing 5555 again, pop
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
 	success &= TestState(i++, true, test.Popped().On(), verbosity);
 	success &= TestState(i++, false, test.Pushed().On(), verbosity);
