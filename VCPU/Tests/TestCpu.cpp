@@ -575,7 +575,7 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 bool RunCPUTests()
 {
 	bool success = true;
-	auto default_verb = Debugger::VERBOSE;
+	auto default_verb = Debugger::MEMORY;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);

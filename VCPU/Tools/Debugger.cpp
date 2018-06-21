@@ -140,8 +140,8 @@ int Debugger::GetRegisterVal(int reg)
 unsigned char Debugger::GetMemoryByte(int addr)
 {
 	unsigned int cacheline = addr / pCPU->MainMem().mMemory.CACHELINE_BYTES;
-	auto line = pCPU->MainMem().mMemory.cachelines[cacheline].Out();
-	return line.Range<8>(8 * addr % pCPU->MainMem().mMemory.CACHELINE_BYTES).Read();
+	auto line = pCPU->MainMem().cachelines[cacheline].OutLine();
+	return line.Range<8>(8 * (addr % pCPU->MainMem().mMemory.CACHELINE_BYTES)).Read();
 }
 
 int Debugger::GetMemoryWord(int addr)
