@@ -19,6 +19,7 @@
 #include "Bundle.h"
 #include "Register.h"
 #include "Counter.h"
+#include "GrayCode.h"
 #include "FullAdder.h"
 #include "Adder.h"
 #include "Multiplexer.h"
@@ -589,6 +590,25 @@ bool TestCounter(Verbosity verbosity)
 
 	return success;
 }
+
+bool TestBinaryToGray(const Bundle<4>& binary)
+{
+	std::array<int, 16> graycodes = { 0, 1, 3, 2, 6, 7, 5, 4, 12, 13, 15, 14, 10, 11, 9, 8 };
+	BinaryToGray<4> test;
+	test.Connect(binary);
+	test.Update();
+	return test.Out().UnsignedRead() == graycodes[binary.UnsignedRead()];
+}
+
+bool TestGrayToBinary(const Bundle<4>& gray)
+{
+	std::array<int, 16> graycodes = { 0, 1, 3, 2, 6, 7, 5, 4, 12, 13, 15, 14, 10, 11, 9, 8 };
+	GrayToBinary<4> test;
+	test.Connect(gray);
+	test.Update();
+	return gray.UnsignedRead() == graycodes[test.Out().UnsignedRead()];
+}
+
 
 bool TestFreqSwitcher(Verbosity verbosity)
 {
@@ -1616,6 +1636,8 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_TEST(TestCounter, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestBinaryToGray, FAIL_ONLY);
+	RUN_AUTO_TEST(TestBundleComponent, TestGrayToBinary, FAIL_ONLY);
 	RUN_TEST(TestFreqSwitcher, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestFullAdder, FAIL_ONLY);
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
