@@ -33,7 +33,7 @@ public:
 
 	using ThreadedComponent::ThreadedComponent;
 
-	void Connect(ReqBuffer& reqbuf);
+	void Connect(const AddrBundle& readaddr, const AddrBundle& writeaddr, const CacheLineBundle& data, const Wire& read, const Wire& write);
 	void Update();
 	void PostUpdate();
 
@@ -43,7 +43,6 @@ public:
 
 private:
 
-	ReqBuffer* pReqBuffer;
 	MuxBundle<ADDR_BITS, 2> addrRWMux;
 	AndGate servicedRead;
 
@@ -64,20 +63,18 @@ private:
 };
 
 template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::Connect(ReqBuffer& reqbuf)
+inline void Memory<N, BYTES>::Connect(const AddrBundle& readaddr, const AddrBundle& writeaddr, const CacheLineBundle& data, const Wire& read, const Wire& write)
 {
-	pReqBuffer = &reqbuf;
-
-	servicedRead.Connect(Wire::ON, pReqBuffer->PoppedRead());
-	addrRWMux.Connect({ pReqBuffer->OutWrite().Addr(), pReqBuffer->OutRead()}, servicedRead.Out());
+	servicedRead.Connect(Wire::ON, read);
+	addrRWMux.Connect({ writeaddr, readaddr}, servicedRead.Out());
 	auto cachelineAddr = addrRWMux.Out().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 
-	addrDecoder.Connect(cachelineAddr, pReqBuffer->PoppedWrite());
+	addrDecoder.Connect(cachelineAddr, write);
 	
 	std::array<CacheLineBundle, NUM_LINES> lineOuts;
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		cachelines[i].Connect(pReqBuffer->OutWrite().Data(), addrDecoder.Out()[i]);
+		cachelines[i].Connect(data, addrDecoder.Out()[i]);
 		lineOuts[i].Connect(0, cachelines[i].Out());
 	}
 

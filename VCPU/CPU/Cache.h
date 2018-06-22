@@ -215,7 +215,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	DEBUG_addr = address;
 #endif
 
-	mMemory.Connect(buffer);
+	mMemory.Connect(buffer.OutRead(), buffer.OutWrite().Addr(), buffer.OutWrite().Data(), buffer.PoppedRead(), buffer.PoppedWrite());
 
 	CacheIndexBundle index = address.CacheLineIndex();
 		

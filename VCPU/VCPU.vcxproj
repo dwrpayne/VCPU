@@ -125,6 +125,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Async\ThreadedComponent.cpp" />
+    <ClCompile Include="Controllers\DeviceController.cpp" />
+    <ClCompile Include="Controllers\MemoryController.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
@@ -154,6 +156,8 @@
   <ItemGroup>
     <ClInclude Include="Async\AsyncFifo.h" />
     <ClInclude Include="Async\ThreadedComponent.h" />
+    <ClInclude Include="Controllers\DeviceController.h" />
+    <ClInclude Include="Controllers\MemoryController.h" />
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
