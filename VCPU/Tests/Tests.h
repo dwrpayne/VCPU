@@ -37,6 +37,7 @@
 #include "Multiplier.h"
 #include "CircularBuffer.h"
 #include "RequestBuffer.h"
+#include "AsyncFifo.h"
 
 #ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
@@ -1612,6 +1613,90 @@ bool TestRequestBuffer(Verbosity verbosity)
 	return success;
 }
 
+
+bool TestAsyncFifo(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+
+	AsyncFifo<32, 2> test;
+
+	MagicBundle<32> data;
+	Wire write(false);
+	Wire read(false);
+
+	test.ConnectWrite(data, write);
+	test.ConnectRead(read);
+	test.UpdateWrite();
+	test.UpdateRead(); 
+
+	write.Set(true);
+	data.Write(11);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	data.Write(22);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	data.Write(33);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	write.Set(false);
+	read.Set(true);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, 11, test.Out().Read(), verbosity);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Empty().On(), verbosity);
+	success &= TestState(i++, 22, test.Out().Read(), verbosity);
+
+	write.Set(true);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, 33, test.Out().Read(), verbosity);
+
+	data.Write(44);
+	write.Set(true);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, 33, test.Out().Read(), verbosity);
+
+	data.Write(55);
+	test.UpdateWrite();
+	test.UpdateRead();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, 44, test.Out().Read(), verbosity);
+
+	data.Write(66);
+	test.UpdateRead();
+	test.UpdateWrite();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, 55, test.Out().Read(), verbosity);
+
+	data.Write(77);
+	test.UpdateRead();
+	test.UpdateWrite();
+	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Empty().On(), verbosity);
+	success &= TestState(i++, 66, test.Out().Read(), verbosity);
+
+	return success;
+}
 bool RunAllTests()
 {
 	bool success = true;
@@ -1662,6 +1747,7 @@ bool RunAllTests()
 	RUN_TEST(TestCircularBuffer1, FAIL_ONLY);
 	RUN_TEST(TestPulsedPopBuffer, FAIL_ONLY);
 	RUN_TEST(TestRequestBuffer, FAIL_ONLY);
+	RUN_TEST(TestAsyncFifo, FAIL_ONLY);
 	return success;
 }
 #endif

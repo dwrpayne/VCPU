@@ -93,7 +93,7 @@
     <ClCompile Include="Tools\Program.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Control\ThreadedComponent.cpp">
+    <ClCompile Include="Async\ThreadedComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -263,16 +263,10 @@
     <ClInclude Include="Memory\RequestBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Control\ThreadedComponent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Functional\Masker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Memory\MemoryWordWrite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Async\AsyncFifo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Functional\GrayCounter.h">
@@ -282,6 +276,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Functional\Counter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Async\AsyncFifo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Async\ThreadedComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

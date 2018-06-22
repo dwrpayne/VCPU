@@ -83,6 +83,11 @@
       {{enable={(int)enables[0].in2->state}, {out}}}
     </DisplayString>
   </Type>
+  <Type Name="GrayCounter&lt;*&gt;">
+    <DisplayString>
+      {{bin={counter.out}, gray={gray.out}}}
+    </DisplayString>
+  </Type>
   <Type Name="AndGateN&lt;*&gt;">
     <DisplayString>
       {{out={ands[$T1-2].out.state}}}

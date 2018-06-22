@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -97,7 +97,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Control\ThreadedComponent.cpp" />
+    <ClCompile Include="Async\ThreadedComponent.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
@@ -153,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Async\AsyncFifo.h" />
+    <ClInclude Include="Async\ThreadedComponent.h" />
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
@@ -162,7 +163,6 @@
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\SelectBundle.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
-    <ClInclude Include="Control\ThreadedComponent.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\BranchControl.h" />
     <ClInclude Include="CPU\Cache.h" />
