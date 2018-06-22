@@ -167,9 +167,6 @@
     <ClInclude Include="Memory\RegisterFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Memory\Counter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Memory\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -275,10 +272,16 @@
     <ClInclude Include="Memory\MemoryWordWrite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Memory\GrayCode.h">
+    <ClInclude Include="Async\AsyncFifo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Async\AsyncFifo.h">
+    <ClInclude Include="Functional\GrayCounter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Functional\GrayCode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Functional\Counter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

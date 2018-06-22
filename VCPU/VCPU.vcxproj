@@ -175,7 +175,10 @@
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\Comparator.h" />
+    <ClInclude Include="Functional\Counter.h" />
     <ClInclude Include="Functional\FullAdder.h" />
+    <ClInclude Include="Functional\GrayCode.h" />
+    <ClInclude Include="Functional\GrayCounter.h" />
     <ClInclude Include="Functional\Masker.h" />
     <ClInclude Include="Functional\Matcher.h" />
     <ClInclude Include="Functional\Multiplier.h" />
@@ -190,10 +193,8 @@
     <ClInclude Include="Gates\XNorGate.h" />
     <ClInclude Include="Gates\XorGate.h" />
     <ClInclude Include="Memory\CacheLine.h" />
-    <ClInclude Include="Memory\Counter.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />
     <ClInclude Include="Memory\DFlipFlopReset.h" />
-    <ClInclude Include="Memory\GrayCode.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />
     <ClInclude Include="Memory\Memory.h" />
     <ClInclude Include="Memory\MemoryWordWrite.h" />
