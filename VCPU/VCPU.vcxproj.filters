@@ -278,5 +278,8 @@
     <ClInclude Include="Memory\GrayCode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Async\AsyncFifo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
