@@ -469,10 +469,10 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 1879070428, debugger.GetRegisterVal(23), verbosity);
 	success &= TestState(i++, 347, debugger.GetRegisterVal(24), verbosity);
-	success &= TestState(i++, 40704, debugger.GetRegisterVal(25), verbosity);
-	success &= TestState(i++, 636, debugger.GetRegisterVal(26), verbosity);
-	success &= TestState(i++, 19, debugger.GetRegisterVal(27), verbosity);
-	success &= TestState(i++, 39, debugger.GetRegisterVal(28), verbosity);
+	success &= TestState(i++, 88832, debugger.GetRegisterVal(25), verbosity);
+	success &= TestState(i++, 1388, debugger.GetRegisterVal(26), verbosity);
+	success &= TestState(i++, 43, debugger.GetRegisterVal(27), verbosity);
+	success &= TestState(i++, 86, debugger.GetRegisterVal(28), verbosity);
 	success &= TestState(i++, -35, debugger.GetRegisterVal(29), verbosity);
 	success &= TestState(i++, -138, debugger.GetRegisterVal(30), verbosity);
 	return success;

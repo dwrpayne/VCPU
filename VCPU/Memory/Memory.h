@@ -122,7 +122,7 @@ inline void Memory<N, BYTES>::Update()
 	{
 		std::stringstream ss;
 		ss << (mIsMainMemory ? "Main Mem " : "Ins Mem ");
-		ss << "servicing a " << (servicedRead.Out().On() ? "read" : "write");
+		ss << "servicing a " << (servicedRead.Out().On() ? "read" : (busBuffer.OutCtrl().Write().On() ? "write" : "hold"));
 		ss << " at " << std::hex << busBuffer.OutAddr().UnsignedRead() << std::endl;
 		std::cout << ss.str();
 	}

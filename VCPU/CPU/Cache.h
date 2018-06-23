@@ -274,7 +274,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	if (busRequest.Q().On())
 	{
 		std::stringstream ss;
-		ss << std::this_thread::get_id() << " requesting a " << (readBusRequestBuf.Out().On() ? "read" : "write");
+		ss << std::this_thread::get_id() << " requesting a " << (readBusRequestBuf.Out().On() ? "read" : (writeBusRequestBuf.Out().On() ? "write" : "hold"));
 		ss << " at " << std::hex << memAddrMux.Out().UnsignedRead() << std::endl;
 		std::cout << ss.str();
 	}
