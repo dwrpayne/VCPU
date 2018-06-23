@@ -1,6 +1,6 @@
 #include "Wire.h"
 
-int Wire::id_counter = 0;
+unsigned int Wire::id_counter = 0;
 const Wire Wire::OFF(false);
 const Wire Wire::ON(true);
 
