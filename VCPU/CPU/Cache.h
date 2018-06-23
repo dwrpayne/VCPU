@@ -147,15 +147,16 @@ private:
 	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	MuxBundle<ADDR_BITS, 4> memAddrMux;
 
-	AndGate busIsBusy;
-	NorGate shouldOutputOnBus;
+	NandGate busIsFree;
+	Inverter busReqNotYetAck;
+	AndGate shouldOutputOnBus;
 	AndGate shouldOutputDataBus;
-
-
+	
 	TriState writeBusRequestBuf;
 	TriState readBusRequestBuf;
+	TriState busRequestBuf;
 	MultiGate<TriState, CACHE_LINE_BITS> dataRequestBuf;
-	DFlipFlop busRequest;
+	DFlipFlop haveBusOwnership;
 
 	int cycles;
 
@@ -178,7 +179,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	CacheIndexBundle index = address.CacheLineIndex();
 		
 	// Did we get data from memory. Mask it in with the data we want to write.
-	gotResultFromMemory.Connect({ &busRequest.Q(), &cacheMiss.Out(), &inBusBuffer.OutCtrl().Ack() });
+	gotResultFromMemory.Connect({ &haveBusOwnership.Q(), &cacheMiss.Out(), &inBusBuffer.OutCtrl().Ack() });
 	indexDecoder.Connect(index, Wire::ON);
 	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, inBusBuffer.OutData(), bytewrite, halfwrite, write);
 
@@ -227,16 +228,20 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 
-	busIsBusy.Connect(busRequest.NotQ(), inBusBuffer.OutCtrl().Req());
-	shouldOutputOnBus.Connect(busIsBusy.Out(), inBusBuffer.OutCtrl().Ack());
+	busIsFree.Connect(haveBusOwnership.NotQ(), inBusBuffer.OutCtrl().BusReq());
+	haveBusOwnership.Connect(needStall.Out(), busIsFree.Out());
+
+	busReqNotYetAck.Connect(inBusBuffer.OutCtrl().Ack());
+
+	shouldOutputOnBus.Connect(haveBusOwnership.Q(), busReqNotYetAck.Out());
 	shouldOutputDataBus.Connect(shouldOutputOnBus.Out(), write);
 
 	writeBusRequestBuf.Connect(evictedDirty.Out(), shouldOutputOnBus.Out());
 	readBusRequestBuf.Connect(readOkay.Out(), shouldOutputOnBus.Out());
 	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(shouldOutputDataBus.Out()));
+	busRequestBuf.Connect(haveBusOwnership.Q(), shouldOutputOnBus.Out());
 	
 	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
-	busRequest.Connect(needStall.Out(), Wire::ON);
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
@@ -265,23 +270,28 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	writeBufferFull.Update();
 	needStall.Update();
 	needStallInv.Update();
+
+	// We do write-before-read because writes aren't buffered to the bus yet.
+	// This needs to change to a read first, write buffer, query the buffer first on cache miss, architecture.
 	readOkay.Update();
 
 	outCacheLineMux.Update();
 	outDataMux.Update();
 	memAddrMux.Update();
 	//buffer.Update();
- 	busIsBusy.Update();
+ 	busIsFree.Update();
+	haveBusOwnership.Update();
+	busReqNotYetAck.Update();
 	shouldOutputOnBus.Update();
 	shouldOutputDataBus.Update();
 	writeBusRequestBuf.Update();
 	readBusRequestBuf.Update();
 	dataRequestBuf.Update();
+	busRequestBuf.Update();
 	
-	busRequest.Update();
 
 #if DEBUG || 1
-	if (busRequest.Q().On())
+	if (haveBusOwnership.Q().On())
 	{
 		std::stringstream ss;
 		ss << std::this_thread::get_id() << " requesting a " << (readBusRequestBuf.Out().On() ? "read" : (writeBusRequestBuf.Out().On() ? "write" : "hold"));
@@ -309,7 +319,8 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect
 	bus.ConnectData(dataRequestBuf.Out());
 	bus.ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
 	bus.ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	bus.ConnectCtrl(busRequest.Q(), SystemBus::CtrlBit::Req);
+	bus.ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+	bus.ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 
 	inBusBuffer.Connect(bus);
 }
