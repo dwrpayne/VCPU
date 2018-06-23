@@ -178,8 +178,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	CacheIndexBundle index = address.CacheLineIndex();
 		
 	// Did we get data from memory. Mask it in with the data we want to write.
-	addrReadMatcher.Connect(addr, inBusBuffer.OutAddr());
-	gotResultFromMemory.Connect({ &addrReadMatcher.Out(), &cacheMiss.Out(), &inBusBuffer.OutCtrl().Ack() });
+	gotResultFromMemory.Connect({ &busRequest.Q(), &cacheMiss.Out(), &inBusBuffer.OutCtrl().Ack() });
 	indexDecoder.Connect(index, Wire::ON);
 	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, inBusBuffer.OutData(), bytewrite, halfwrite, write);
 
@@ -245,7 +244,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
 	inBusBuffer.Update();
 
-	addrReadMatcher.Update();
 	gotResultFromMemory.Update();
 	indexDecoder.Update();
 	lineWriteMasker.Update();

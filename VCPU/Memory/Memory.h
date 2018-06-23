@@ -144,7 +144,6 @@ inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 {
 	busBuffer.Connect(bus);
 
-	bus.ConnectAddr(outAddr.Out());
 	bus.ConnectData(outData.Out());
 	bus.ConnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
 }
@@ -153,7 +152,6 @@ inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 template<unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::DisconnectFromBus(SystemBus & bus)
 {
-	bus.DisconnectAddr(outAddr.Out());
 	bus.DisconnectData(outData.Out());
 	bus.DisconnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
 }
