@@ -29,8 +29,8 @@ public:
 private:
 	AndGate writeTag;
 	Register<NTag> tag;
-	DFlipFlopSticky valid;
 	Matcher<NTag> tagMatcher;
+	DFlipFlopSticky valid;
 	AndGate tagMatchAndValid;
 	AndGate cacheHitEnabled;
 	OrGate writing;
@@ -65,10 +65,10 @@ void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBun
 	writeTag.Connect(writeline, enable);
 	tag.Connect(tagin, writeTag.Out());
 	tagMatcher.Connect(tag.Out(), tagin);
+	valid.Connect(writeline, enable);
 	tagMatchAndValid.Connect(tagMatcher.Out(), valid.Q());
 	cacheHitEnabled.Connect(tagMatchAndValid.Out(), enable );
 	writing.Connect(writeline, dirty);
-	valid.Connect(writeline, enable);
 	updateDirtyFlag.Connect(writing.Out(), cacheHitEnabled.Out());
 	dirtyFlag.Connect(dirty, updateDirtyFlag.Out());
 	offsetDecoder.Connect(wordoffset, Wire::ON);
@@ -88,10 +88,10 @@ inline void CacheLine<N, Nwords, NTag>::Update()
 	writeTag.Update();
 	tag.Update();
 	tagMatcher.Update();
+	valid.Update();
 	tagMatchAndValid.Update();
 	cacheHitEnabled.Update();
 	writing.Update();
-	valid.Update();
 	updateDirtyFlag.Update();
 	dirtyFlag.Update();
 	offsetDecoder.Update();

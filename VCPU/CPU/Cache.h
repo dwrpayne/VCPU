@@ -3,6 +3,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <sstream>
 
 #include "Component.h"
 #include "Bundle.h"
@@ -266,8 +267,18 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	writeBusRequestBuf.Update();
 	readBusRequestBuf.Update();
 	dataRequestBuf.Update();
-
+	
 	busRequest.Update();
+
+#if DEBUG
+	if (busRequest.Q().On())
+	{
+		std::stringstream ss;
+		ss << std::this_thread::get_id() << " requesting a " << (readBusRequestBuf.Out().On() ? "read" : "write");
+		ss << " at " << std::hex << memAddrMux.Out().UnsignedRead() << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 
 	cycles++;
 }

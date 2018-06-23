@@ -117,6 +117,16 @@ inline void Memory<N, BYTES>::Update()
 	busBuffer.Update();
 	incomingRequest.Update();
 	servicedRead.Update();
+#if DEBUG
+	if (incomingRequest.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem " : "Ins Mem ");
+		ss << "servicing a " << (servicedRead.Out().On() ? "read" : "write");
+		ss << " at " << std::hex << busBuffer.OutAddr().UnsignedRead() << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	addrDecoder.Update();
 	for (auto& reg : cachelines)
 	{
