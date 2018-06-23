@@ -6,6 +6,7 @@
 #include "MuxBundle.h"
 #include "SubWordSelector.h"
 #include "BranchControl.h"
+#include "ByteExtractor.h"
 #include <vector>
 #include <future>
 
@@ -89,9 +90,6 @@ public:
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 private:
 	CPU::MainCache cache;
-	SubWordSelector<32> byteSelect;
-	SubWordSelector<32, 16> halfWordSelect;
-	MuxBundle<32, 4> memOutWordMux;
 	MuxBundle<32, 2> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
 
@@ -196,13 +194,11 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
 	// Byte/Half/Word Selection
-	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned());
-	halfWordSelect.Connect(cache.Out(), Bundle<1>(memAddr[1]), stage3.OpcodeControl().LoadSigned());
-	memOutWordMux.Connect({ cache.Out(), byteSelect.Out(), halfWordSelect.Out(), cache.Out() }, 
-		{ &stage3.OpcodeControl().MemOpByte(),&stage3.OpcodeControl().MemOpHalfWord() });
+	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned(),
+		stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
 	// Regfile Data Write
-	regWriteDataMux.Connect({ stage3.aluOut.Out(), memOutWordMux.Out() }, stage3.OpcodeControl().LoadOp());
+	regWriteDataMux.Connect({ stage3.aluOut.Out(), byteSelect.Out() }, stage3.OpcodeControl().LoadOp());
 	
 	// Out Buffer
 	bufMEMWB.Connect(proceed, stage3.Rwrite.Out(), regWriteDataMux.Out(), stage3.OpcodeControl());
@@ -267,8 +263,6 @@ void CPU::Stage4::Update()
 {
 	cache.Update();
 	byteSelect.Update();
-	halfWordSelect.Update();
-	memOutWordMux.Update();
 	regWriteDataMux.Update();
 }
 void CPU::Stage4::PostUpdate()
