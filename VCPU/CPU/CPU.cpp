@@ -90,6 +90,7 @@ public:
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 private:
 	CPU::MainCache cache;
+	ByteExtractor byteSelect;
 	MuxBundle<32, 2> regWriteDataMux;
 	BufferMEMWB bufMEMWB;
 
