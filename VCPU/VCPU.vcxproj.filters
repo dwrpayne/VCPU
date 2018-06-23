@@ -272,9 +272,6 @@
     <ClInclude Include="Functional\Masker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Memory\MemoryWordWrite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Functional\GrayCounter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -294,6 +291,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Controllers\DeviceController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Functional\ByteMask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Functional\ByteExtractor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

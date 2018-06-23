@@ -178,6 +178,8 @@
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
+    <ClInclude Include="Functional\ByteExtractor.h" />
+    <ClInclude Include="Functional\ByteMask.h" />
     <ClInclude Include="Functional\Comparator.h" />
     <ClInclude Include="Functional\Counter.h" />
     <ClInclude Include="Functional\FullAdder.h" />
@@ -201,7 +203,6 @@
     <ClInclude Include="Memory\DFlipFlopReset.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />
     <ClInclude Include="Memory\Memory.h" />
-    <ClInclude Include="Memory\MemoryWordWrite.h" />
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />

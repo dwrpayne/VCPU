@@ -13,34 +13,7 @@
 #include "MuxBundle.h"
 #include "CacheLine.h"
 #include "Memory.h"
-
-
-class ByteMask : public Component
-{
-public:
-	typedef Bundle<32> Word;
-	void Connect(const Bundle<2> byteindex, const Wire& bytewrite, const Wire& halfwrite, const Wire& wordwrite)
-	{
-		bytemasker.Connect({ Word(0xffU), Word(0xff00U), Word(0xff0000U), Word(0xff000000U) },	byteindex);
-		halfmasker.Connect({ Word(0xffffU), Word(0xffff0000U) }, byteindex[1]);
-		masker.Connect({ Word::ON, bytemasker.Out(), halfmasker.Out(), Word::ON },	{ &bytewrite, &halfwrite });
-		write.Connect(masker.Out(), Word(wordwrite));
-	}
-	void Update()
-	{
-		bytemasker.Update();
-		halfmasker.Update();
-		masker.Update();
-		write.Update();
-	}
-	const Word& Mask() const { return write.Out(); }
-
-private:
-	MuxBundle<32, 4> bytemasker;
-	MuxBundle<32, 2> halfmasker;
-	MuxBundle<32, 4> masker;
-	MultiGate<AndGate, 32> write;
-};
+#include "ByteMask.h"
 
 template <unsigned int N>
 class CacheLineMasker : public Component
@@ -50,30 +23,24 @@ public:
 	void Connect(const Bundle<2> byteindex, const Bundle<bits(N)-5> wordoffset, const Bundle<32>& dataword, const CacheLine& dataline,
 		const Wire& bytewrite, const Wire& halfwrite, const Wire& wordwrite)
 	{
-		mask.Connect(byteindex, bytewrite, halfwrite, wordwrite);
-		wordShifter.Connect(dataword, byteindex.ShiftZeroExtend<5>(3));
-		maskedDataWord.Connect(wordShifter.Out(), mask.Mask());
-		lineDataShifter.Connect(maskedDataWord.Out().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
-		lineMaskShifter.Connect(mask.Mask().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
+		maskedDataWord.Connect(byteindex, dataword, bytewrite, halfwrite, wordwrite);
+		lineDataShifter.Connect(maskedDataWord.Word().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
+		lineMaskShifter.Connect(maskedDataWord.WordMask().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
 		maskedCacheLine.Connect(lineDataShifter.Out(), dataline, lineMaskShifter.Out());
 	}
 	void Update()
 	{
-		mask.Update();
-		wordShifter.Update();
 		maskedDataWord.Update();
 		lineDataShifter.Update();
 		lineMaskShifter.Update();
 		maskedCacheLine.Update();
 	}
-	const Bundle<32>& WordMask() const { return mask.Mask(); }
-	const Bundle<32>& Word() const { return maskedDataWord.Out(); }
+	const Bundle<32>& WordMask() const { return maskedDataWord.WordMask(); }
+	const Bundle<32>& Word() const { return maskedDataWord.Word(); }
 	const CacheLine& Line() const { return maskedCacheLine.Out(); }
 
 private:
-	ByteMask mask;
-	LeftShifter<32> wordShifter;
-	MultiGate<AndGate, 32> maskedDataWord;
+	WordMasker maskedDataWord;
 	LeftShifter<N> lineDataShifter;
 	LeftShifter<N> lineMaskShifter;
 	Masker<N> maskedCacheLine;
@@ -208,7 +175,7 @@ inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::~Cache()
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
-																			const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
+	const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
 {
 	CacheAddrBundle address(addr);
 #ifdef DEBUG
