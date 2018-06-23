@@ -8,6 +8,7 @@
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
  
+
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
 	int i = 0;
@@ -343,6 +344,8 @@ bool TestCache(Verbosity verbosity)
 	Wire writebyte(false);
 	Wire writehalf(false);
 	MagicBundle<32> addr;
+	SystemBus bus;
+	test.ConnectToBus(bus);
 	test.Connect(addr, data, read, write, writebyte, writehalf);
 
 	for (int a = 0; a < 8; a++)
@@ -575,11 +578,11 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 bool RunCPUTests()
 {
 	bool success = true;
-	auto default_verb = Debugger::MEMORY;
+	auto default_verb = Debugger::VERBOSE;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
-	RUN_TEST(TestCache, FAIL_ONLY);
+	//RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);

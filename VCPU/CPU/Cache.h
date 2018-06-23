@@ -115,7 +115,7 @@ private:
 		TagBundle tag;
 	};
 
-	ReqBuffer buffer;
+	//ReqBuffer buffer;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	SystemBusBuffer inBusBuffer;
@@ -141,7 +141,7 @@ private:
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
 
 	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
-	MuxBundle<ADDR_BITS, 2> memWriteAddrMux;
+	MuxBundle<ADDR_BITS, 4> memAddrMux;
 
 	DFlipFlop busRequest;
 
@@ -192,7 +192,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	lineTagMux.Connect(cacheLineTagOuts, index);
 	CacheAddrBundle evictedCacheAddr(addr);
 	evictedCacheAddr.SetTag(lineTagMux.Out());
-	memWriteAddrMux.Connect({ addr, evictedCacheAddr }, evictedDirty.Out());
+	memAddrMux.Connect({ AddrBundle::OFF, evictedCacheAddr, addr, evictedCacheAddr }, { &evictedDirty.Out(), &cacheMiss.Out() });
 
 	// Status Flags
 	cacheHitMux.Connect(cacheHitCollector, index);
@@ -201,7 +201,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	readOrWrite.Connect(read, write);
 	cacheMiss.Connect(cacheMissInternal.Out(), readOrWrite.Out());
 	evictedDirty.Connect(cacheMiss.Out(), cacheDirtyMux.Out());
-	writeBufferFull.Connect(evictedDirty.Out(), buffer.WriteFull());
+	writeBufferFull.Connect(evictedDirty.Out(), Wire::ON);
 	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
 	needStallInv.Connect(needStall.Out());
 
@@ -215,8 +215,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 
 	
-	buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
-	busRequest.Connect(buffer.PoppedRequest(), Wire::ON);
+	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
+	busRequest.Connect(needStall.Out(), Wire::ON);
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
@@ -248,8 +248,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 
 	outCacheLineMux.Update();
 	outDataMux.Update();
-	memWriteAddrMux.Update();
-	buffer.Update();
+	memAddrMux.Update();
+	//buffer.Update();
 
 	busRequest.Update();
 
@@ -262,17 +262,16 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateU
 	do
 	{
 		Update();
-	} while (NeedStall().On() || (flush && buffer.WritePending().On()));
+	} while (NeedStall().On());// || (flush && buffer.WritePending().On()));
 }
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::ConnectToBus(SystemBus & bus)
 {
-	bus.ConnectAddr(buffer.OutRead());
-	bus.ConnectAddr(buffer.OutWrite().Addr());
-	bus.ConnectData(buffer.OutWrite().Data());
-	bus.ConnectCtrl(buffer.PoppedRead(), SystemBus::CtrlBit::Read);
-	bus.ConnectCtrl(buffer.PoppedWrite(), SystemBus::CtrlBit::Write);
+	bus.ConnectAddr(memAddrMux.Out());
+	bus.ConnectData(outCacheLineMux.Out());
+	bus.ConnectCtrl(cacheMiss.Out(), SystemBus::CtrlBit::Read);
+	bus.ConnectCtrl(evictedDirty.Out(), SystemBus::CtrlBit::Write);
 	bus.ConnectCtrl(busRequest.Q(), SystemBus::CtrlBit::Req);
 
 	inBusBuffer.Connect(bus);

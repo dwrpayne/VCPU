@@ -36,6 +36,7 @@ public:
 	ThreadedAsyncComponent();
 
 	void DoOneUpdate();
+	void WaitUntilDone();
 	void Exit();
 	inline bool IsRunning() const { return mUpdating; }
 	virtual void Update() {} 

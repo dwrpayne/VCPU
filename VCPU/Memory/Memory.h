@@ -33,7 +33,6 @@ public:
 	Memory(bool ismain);
 	void Connect();
 	void Update();
-	void PreUpdate();
 	void ConnectToBus(SystemBus& bus);
 
 	const AddrBundle& ReadAddr() const { return outAddr.Out(); }
@@ -122,11 +121,6 @@ inline void Memory<N, BYTES>::Update()
 	outServicedRead.Update();
 }
 
-template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::PreUpdate()
-{
-}
-
 template<unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 {
@@ -134,5 +128,5 @@ inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 
 	bus.ConnectAddr(outAddr.Out());
 	bus.ConnectData(outData.Out());
-	bus.ConnectCtrl(servicedRead.Out(), SystemBus::CtrlBit::Ack);
+	bus.ConnectCtrl(outServicedRead.Q(), SystemBus::CtrlBit::Ack);
 }

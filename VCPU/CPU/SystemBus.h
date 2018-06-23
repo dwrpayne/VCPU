@@ -41,7 +41,10 @@ public:
 	
 	template <unsigned int N>	void ConnectData(const Bundle<N>& b, int start = 0);
 	template <unsigned int N>	void ConnectAddr(const Bundle<N>& b, int start = 0);
+	template<unsigned int N>	void DisconnectData(const Bundle<N>& b, int start = 0);
+	template<unsigned int N>	void DisconnectAddr(const Bundle<N>& b, int start = 0);
 	void ConnectCtrl(const Wire& wire, CtrlBit start);
+	void DisconnectCtrl(const Wire & wire, CtrlBit start);
 	void Update();
 	
 private:
@@ -80,4 +83,21 @@ inline void SystemBus::ConnectAddr(const Bundle<N>& b, int start)
 inline void SystemBus::ConnectCtrl(const Wire& wire, CtrlBit start)
 {
 	ctrl.Connect(Bundle<1>(wire), start);
+}
+
+template<unsigned int N>
+inline void SystemBus::DisconnectData(const Bundle<N>& b, int start)
+{
+	data.Remove(b, start);
+}
+
+template<unsigned int N>
+inline void SystemBus::DisconnectAddr(const Bundle<N>& b, int start)
+{
+	data.Remove(b, start);
+}
+
+inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
+{
+	ctrl.Remove(Bundle<1>(wire), start);
 }

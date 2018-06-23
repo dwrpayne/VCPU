@@ -16,7 +16,7 @@ class CPU::Stage1 : public ThreadedComponent
 {
 public:
 	using ThreadedComponent::ThreadedComponent;
-	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed);
+	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed, SystemBus& systembus);
 	void Update();
 	void PostUpdate();
 	const BufferIFID& Out() const { return bufIFID; }
@@ -99,7 +99,7 @@ private:
 };
 
 
-void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed)
+void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed, SystemBus& systembus)
 {
 	// Program Counter. Select between PC + 4 and the calculated jump addr from the last executed branch
 	pcBranchInMux.Connect({ bufIFID.PCinc.Out(), pcBranchAddr }, takeBranch);
@@ -111,6 +111,7 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 
 	// Instruction memory
 	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF);
+	instructionCache.ConnectToBus(systembus);
 
 	// Out Buffer
 	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
@@ -281,8 +282,6 @@ CPU::CPU()
 	, stage2(new Stage2(mMutex, mCV, stage2Ready, exit))
 	, stage3(new Stage3(mMutex, mCV, stage3Ready, exit))
 	, stage4(new Stage4(mMutex, mCV, stage4Ready, exit))
-	, insMemoryReady(false)
-	, mainMemoryReady(false)
 	, mInsMemory(new InsMemory(false))
 	, mMainMemory(new MainMemory(true))
 	, stage1Thread(&CPU::Stage1::ThreadedUpdate, stage1)
@@ -311,8 +310,6 @@ CPU::CPU()
 	SetThreadDescription((HANDLE)stage2Thread.native_handle(), L"CPU Stage 2 Instruction Decode");
 	SetThreadDescription((HANDLE)stage3Thread.native_handle(), L"CPU Stage 3 Execution");
 	SetThreadDescription((HANDLE)stage4Thread.native_handle(), L"CPU Stage 4 Memory Access");
-	SetThreadDescription((HANDLE)insMemoryThread.native_handle(), L"Instruction Memory Update");
-	SetThreadDescription((HANDLE)mainMemoryThread.native_handle(), L"Main Memory Update");
 }
 
 CPU::~CPU()
@@ -329,7 +326,7 @@ CPU::~CPU()
 
 void CPU::Connect()
 {
-	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.ProceedIF());
+	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.ProceedIF(), systemBus);
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
 	stage4->Connect(stage3->Out(), interlock.ProceedMEM(), systemBus); 
@@ -358,12 +355,10 @@ void CPU::Update()
 
 	if (!mInsMemory->IsRunning())
 	{
-		mInsMemory->PreUpdate();
 		mInsMemory->DoOneUpdate();
 	}
 	if (!mMainMemory->IsRunning())
 	{
-		mMainMemory->PreUpdate();
 		mMainMemory->DoOneUpdate();
 	}
 
@@ -371,6 +366,11 @@ void CPU::Update()
 	{
 		cycles++;
 	}
+}
+
+const Bundle<32>& CPU::IR()
+{
+	return stage1->bufIFID.IR.Out();
 }
 
 const Bundle<32>& CPU::PC()

@@ -43,9 +43,18 @@ void ThreadedAsyncComponent::DoOneUpdate()
 	mCV.notify_one();
 }
 
+void ThreadedAsyncComponent::WaitUntilDone()
+{
+	{
+		std::unique_lock<std::mutex> lk(mMutex);
+		mCV.wait(lk, [this] {return !mUpdating; });
+	}
+}
+
 void ThreadedAsyncComponent::Exit()
 {
 	mExit = true;
+	mCV.notify_one();
 	mThread.join();
 }
 
@@ -65,6 +74,11 @@ void ThreadedAsyncComponent::ThreadedUpdate()
 		auto t1 = std::chrono::high_resolution_clock::now();
 		Update();
 		auto t2 = std::chrono::high_resolution_clock::now();
-		mUpdating = false;
+		{
+			std::unique_lock<std::mutex> lk(mMutex);
+			mUpdating = false;
+			lk.unlock();
+			mCV.notify_all();
+		}
 	}
 }

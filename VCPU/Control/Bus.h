@@ -27,6 +27,17 @@ public:
 			inputWires[i + start].push_back(&bundle[i]);
 		}
 	}
+	
+	template <unsigned int M, typename = typename std::enable_if<M <= N, const >::type>
+	void Remove(const Bundle<M>& bundle, int start = 0)
+	{
+		assert(start + M <= N);
+		for (int i = 0; i < M; i++)
+		{
+			auto& vec = inputWires[i + start];
+			vec.erase(std::remove(vec.begin(), vec.end(), &bundle[i]), vec.end());
+		}
+	}
 	void Update()
 	{
 		for (int i = 0; i < N; i++)

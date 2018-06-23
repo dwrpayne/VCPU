@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <bitset>
 #include <iomanip>
 #include "Debugger.h"
 #include "Program.h" 
@@ -36,9 +37,9 @@ void Debugger::Start(int cycles)
 	while (cycles != 0)
 	{
 		Step();
-		if (bPrintInstruction && !pCPU->PipelineFreeze())
+		if (bPrintInstruction)// && !pCPU->PipelineFreeze())
 		{
-			__debugbreak();
+			//__debugbreak();
 		}
  		if (pCPU->Halt())
 		{
@@ -170,7 +171,7 @@ int Debugger::GetNextPCAddr()
 
 void Debugger::PrintInstruction()
 {
-	std::cout << "Address  Stage   Assembled Instruction      Source Instruction" << std::endl;
+	std::cout << "Address  Stage   Assembled Instruction      Source Instruction              Instruction Register" << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
@@ -179,10 +180,12 @@ void Debugger::PrintInstruction()
 		auto src_line = addr >= 0 ? pProgram->GetSourceLine(addr) : "inserted bubble";
 		addr = std::max(addr, 0);
 
+		std::bitset<32> ir(pCPU->IR().UnsignedRead());
+
 		std::stringstream ss;
 		ss << "0x" << std::hex << std::setfill('0') << std::setw(6) << addr * 4;
 		ss << std::setfill(' ') << std::left << " " << std::setw(5) << STAGE[i] << "|  ";
-		ss << std::setw(25) << ass_line << "| " << src_line << std::endl;
+		ss << std::setw(25) << ass_line << "| " << src_line << " | " << ir << std::endl;
 		std::cout << ss.str();
 	}
 }

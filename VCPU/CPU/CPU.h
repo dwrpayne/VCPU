@@ -42,6 +42,7 @@ public:
 
 private:
 
+	const Bundle<32>& IR();
 	const Bundle<32>& PC();
 	InsCache& InstructionCache();
 	MainCache& GetMainCache();
@@ -71,8 +72,6 @@ private:
 	MainMemory* mMainMemory;
 	
 	std::condition_variable mCV;
-	std::condition_variable mCVInsMem;
-	std::condition_variable mCVMainMem;
 	std::mutex mMutex;
 	bool stage1Ready;
 	bool stage2Ready;
