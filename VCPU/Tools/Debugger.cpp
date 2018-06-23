@@ -39,7 +39,7 @@ void Debugger::Start(int cycles)
 		Step();
 		if (bPrintInstruction)// && !pCPU->PipelineFreeze())
 		{
-			//__debugbreak();
+			__debugbreak();
 		}
  		if (pCPU->Halt())
 		{
@@ -171,7 +171,8 @@ int Debugger::GetNextPCAddr()
 
 void Debugger::PrintInstruction()
 {
-	std::cout << "Address  Stage   Assembled Instruction      Source Instruction              Instruction Register" << std::endl;
+	std::cout << "Current IR: " << std::bitset<32>(pCPU->IR().UnsignedRead()) << std::endl;
+	std::cout << "Address  Stage   Assembled Instruction      Source Instruction  " << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
 	for (int i = mLastInstructions.size()-1; i >= 0; --i)
 	{
@@ -185,7 +186,7 @@ void Debugger::PrintInstruction()
 		std::stringstream ss;
 		ss << "0x" << std::hex << std::setfill('0') << std::setw(6) << addr * 4;
 		ss << std::setfill(' ') << std::left << " " << std::setw(5) << STAGE[i] << "|  ";
-		ss << std::setw(25) << ass_line << "| " << src_line << " | " << ir << std::endl;
+		ss << std::setw(25) << ass_line << "| " << src_line << std::endl;
 		std::cout << ss.str();
 	}
 }

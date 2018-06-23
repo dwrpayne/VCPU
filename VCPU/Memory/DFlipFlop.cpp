@@ -18,3 +18,15 @@ void DFlipFlop::Update()
 	nandR.Update();
 	nandS.Update();
 }
+
+void DFlipFlopSticky::Connect(const Wire & d, const Wire & e)
+{
+	enable.Connect(e, bit.NotQ());
+	bit.Connect(d, enable.Out());
+}
+
+void DFlipFlopSticky::Update()
+{
+	enable.Update();
+	bit.Update();
+}

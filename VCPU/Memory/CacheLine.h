@@ -29,7 +29,7 @@ public:
 private:
 	AndGate writeTag;
 	Register<NTag> tag;
-	DFlipFlop valid;
+	DFlipFlopSticky valid;
 	Matcher<NTag> tagMatcher;
 	AndGate tagMatchAndValid;
 	AndGate cacheHitEnabled;
@@ -68,7 +68,7 @@ void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBun
 	tagMatchAndValid.Connect(tagMatcher.Out(), valid.Q());
 	cacheHitEnabled.Connect(tagMatchAndValid.Out(), enable );
 	writing.Connect(writeline, dirty);
-	valid.Connect(writeline, Wire::ON);
+	valid.Connect(writeline, enable);
 	updateDirtyFlag.Connect(writing.Out(), cacheHitEnabled.Out());
 	dirtyFlag.Connect(dirty, updateDirtyFlag.Out());
 	offsetDecoder.Connect(wordoffset, Wire::ON);
