@@ -71,17 +71,6 @@ private:
 	InsMemory* mInsMemory;
 	MainMemory* mMainMemory;
 	
-	std::condition_variable mCV;
-	std::mutex mMutex;
-	bool stage1Ready;
-	bool stage2Ready;
-	bool stage3Ready;
-	bool stage4Ready;
-	std::thread stage1Thread;
-	std::thread stage2Thread;
-	std::thread stage3Thread;
-	std::thread stage4Thread;
-
 	HazardUnit hazardIDEX;
 	HazardUnit hazardIFID;
 	Interlock interlock;

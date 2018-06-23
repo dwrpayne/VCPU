@@ -12,10 +12,10 @@
 #include "ByteExtractor.h"
 #include "SystemBus.h"
 
-class CPU::Stage1 : public ThreadedComponent
+class CPU::Stage1 : public ThreadedAsyncComponent
 {
 public:
-	using ThreadedComponent::ThreadedComponent;
+	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 	void Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch, const Wire& proceed, SystemBus& systembus);
 	void Update();
 	void PostUpdate();
@@ -31,10 +31,10 @@ private:
 	friend class CPU;
 };
 
-class CPU::Stage2 : public ThreadedComponent
+class CPU::Stage2 : public ThreadedAsyncComponent
 {
 public:
-	using ThreadedComponent::ThreadedComponent;
+	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 	void Connect(const BufferIFID& stage1, const BufferMEMWB& stage4, const HazardUnit& hazard, const Wire& proceed, const Wire& flush);
 	void Update();
 	void PostUpdate();
@@ -56,10 +56,10 @@ private:
 	friend class CPU;
 };
 
-class CPU::Stage3 : public ThreadedComponent
+class CPU::Stage3 : public ThreadedAsyncComponent
 {
 public:
-	using ThreadedComponent::ThreadedComponent;
+	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 	void Connect(const BufferIDEX& stage2, const HazardUnit& hazard, const Wire& proceed, const Wire& flush);
 	void Update();
 	void PostUpdate();
@@ -81,10 +81,10 @@ private:
 	friend class CPU;
 };
 
-class CPU::Stage4 : public ThreadedComponent
+class CPU::Stage4 : public ThreadedAsyncComponent
 {
 public:
-	using ThreadedComponent::ThreadedComponent;
+	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 	void Connect(const BufferEXMEM& stage3, const Wire& proceed, SystemBus& systembus);
 	void Update();
 	void PostUpdate();
@@ -278,16 +278,12 @@ void CPU::Stage4::PostUpdate()
 
 CPU::CPU()
 	: exit(false)
-	, stage1(new Stage1(mMutex, mCV, stage1Ready, exit))
-	, stage2(new Stage2(mMutex, mCV, stage2Ready, exit))
-	, stage3(new Stage3(mMutex, mCV, stage3Ready, exit))
-	, stage4(new Stage4(mMutex, mCV, stage4Ready, exit))
+	, stage1(new Stage1(L"CPU Stage 1 Instruction Fetch"))
+	, stage2(new Stage2(L"CPU Stage 2 Instruction Decode"))
+	, stage3(new Stage3(L"CPU Stage 3 Execution"))
+	, stage4(new Stage4(L"CPU Stage 4 Memory Access"))
 	, mInsMemory(new InsMemory(false))
 	, mMainMemory(new MainMemory(true))
-	, stage1Thread(&CPU::Stage1::ThreadedUpdate, stage1)
-	, stage2Thread(&CPU::Stage2::ThreadedUpdate, stage2)
-	, stage3Thread(&CPU::Stage3::ThreadedUpdate, stage3)
-	, stage4Thread(&CPU::Stage4::ThreadedUpdate, stage4)
 	, cycles(1)
 {
 	hazardIFID.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
@@ -305,21 +301,14 @@ CPU::CPU()
 	mInsMemory->Connect();
 	mMainMemory->ConnectToBus(systemBus);
 	mMainMemory->Connect();
-
-	SetThreadDescription((HANDLE)stage1Thread.native_handle(), L"CPU Stage 1 Instruction Fetch");
-	SetThreadDescription((HANDLE)stage2Thread.native_handle(), L"CPU Stage 2 Instruction Decode");
-	SetThreadDescription((HANDLE)stage3Thread.native_handle(), L"CPU Stage 3 Execution");
-	SetThreadDescription((HANDLE)stage4Thread.native_handle(), L"CPU Stage 4 Memory Access");
 }
 
 CPU::~CPU()
 {
-	exit = true;
-	mCV.notify_all();
-	stage1Thread.join();
-	stage2Thread.join();
-	stage3Thread.join();
-	stage4Thread.join();
+	stage1->Exit();
+	stage2->Exit();
+	stage3->Exit();
+	stage4->Exit();
 	mInsMemory->Exit();
 	mMainMemory->Exit();
 	delete stage1;
@@ -340,20 +329,23 @@ void CPU::Connect()
 
 void CPU::Update()
 {
-	{
-		std::lock_guard<std::mutex> lk(mMutex);
-		stage1Ready = stage2Ready = stage3Ready = stage4Ready = true;
-	}
-	mCV.notify_all();
-	{
-		std::unique_lock<std::mutex> lk(mMutex);
-		mCV.wait(lk, [this] {return !stage1Ready && !stage2Ready && !stage3Ready && !stage4Ready; });
-	}
+	stage1->DoOneUpdate();
+	stage2->DoOneUpdate();
+	stage3->DoOneUpdate();
+	stage4->DoOneUpdate();
+
+	stage1->WaitUntilDone();
+	stage2->WaitUntilDone();
+	stage3->WaitUntilDone();
+	stage4->WaitUntilDone();
+	
 	interlock.Update();
+
 	stage4->PostUpdate();
 	stage3->PostUpdate();
 	stage2->PostUpdate();
 	stage1->PostUpdate();
+
 	hazardIFID.Update();
 	hazardIDEX.Update();
 
