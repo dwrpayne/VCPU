@@ -519,7 +519,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
-	success &= TestState(i++, 160, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 168, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }

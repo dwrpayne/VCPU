@@ -1,4 +1,5 @@
-main:	li	 	$t1, 3				; $t1 holds the number we are testing
+main:	li		$t8, 0x10000000		; base memory address
+		li	 	$t1, 3				; $t1 holds the number we are testing
 next:	addiu	$t1, $t1, 2			; increment number
 		move	$a0, $t1			; move number into args register
 		call	sqrt				; call sqrt, now $v0 holds the sqrt

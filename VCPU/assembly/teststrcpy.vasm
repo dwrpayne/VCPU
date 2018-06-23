@@ -1,11 +1,12 @@
 main:	li		$t0, 0x6c6c6548
-		sw		$t0, 16($r0)
+		li		$t2, 0x10000010
+		sw		$t0, 0($t2)
 		li		$t0, 0x6f57206f
-		sw		$t0, 20($r0)
+		sw		$t0, 4($t2)
 		li		$t0, 0x21646c72
-		sw		$t0, 24($r0)
-		li		$a0, 16
-		li		$a1, 40
+		sw		$t0, 8($t2)
+		move	$a0, $t2
+		addiu	$a1, $t2, 24
 		call	strcpy
 		nop
 		nop

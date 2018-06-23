@@ -290,7 +290,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	busRequestBuf.Update();
 	
 
-#if DEBUG || 1
+#if DEBUG
 	if (haveBusOwnership.Q().On())
 	{
 		std::stringstream ss;

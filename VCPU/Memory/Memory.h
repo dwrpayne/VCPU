@@ -117,7 +117,7 @@ inline void Memory<N, BYTES>::Update()
 	busBuffer.Update();
 	incomingRequest.Update();
 	servicedRead.Update();
-#if DEBUG || 1
+#if DEBUG
 	if (incomingRequest.Out().On())
 	{
 		std::stringstream ss;
