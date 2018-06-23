@@ -43,6 +43,14 @@ public:
 		for (int i = 0; i < N; i++)
 		{
 			state[i].Set(std::any_of(inputWires[i].begin(), inputWires[i].end(), [](const Wire* wire) {return wire->On(); }));
+#ifdef DEBUG
+			char on = 0;
+			for (const auto& wire : inputWires[i])
+			{
+				on += wire.HiZ() ? 0 : 1;
+			}
+			assert(on < 2);
+#endif
 		}
 	}
 	const Bundle<N>& Out() const { return out; }

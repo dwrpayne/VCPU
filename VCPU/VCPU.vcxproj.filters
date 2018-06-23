@@ -102,6 +102,9 @@
     <ClCompile Include="Controllers\DeviceController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Control\TriStateBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gates\AndGate.h">
@@ -306,6 +309,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPU\SystemBusBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\TriStateBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

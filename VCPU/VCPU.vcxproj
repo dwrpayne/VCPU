@@ -127,6 +127,7 @@
     <ClCompile Include="Async\ThreadedComponent.cpp" />
     <ClCompile Include="Controllers\DeviceController.cpp" />
     <ClCompile Include="Controllers\MemoryController.cpp" />
+    <ClCompile Include="Control\TriStateBuffer.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\SelectBundle.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
+    <ClInclude Include="Control\TriStateBuffer.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\BranchControl.h" />
     <ClInclude Include="CPU\Cache.h" />
