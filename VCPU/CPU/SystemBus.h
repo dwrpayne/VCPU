@@ -7,7 +7,7 @@
 #include "NorGate.h"
 #include "Decoder.h"
 
-class SystemBus : public Component
+class SystemBus
 {
 public:
 	enum CtrlBit
@@ -45,12 +45,11 @@ public:
 	template<unsigned int N>	void DisconnectAddr(const Bundle<N>& b, int start = 0);
 	void ConnectCtrl(const Wire& wire, CtrlBit start);
 	void DisconnectCtrl(const Wire & wire, CtrlBit start);
-	void Update();
 	
 private:
-	const Bundle<Ndata>& OutData() const { return data.Out(); }
-	const Bundle<Naddr>& OutAddr() const { return addr.Out(); }
-	const ControlBundle& OutCtrl() const { return static_cast<const ControlBundle&>(ctrl.Out()); }
+	const Bundle<Ndata>& OutData() const { return data; }
+	const Bundle<Naddr>& OutAddr() const { return addr; }
+	const ControlBundle& OutCtrl() const { return reinterpret_cast<const ControlBundle&>(ctrl); }
 
 	Bus<Ndata> data;
 	Bus<Naddr> addr;
@@ -97,12 +96,4 @@ inline void SystemBus::DisconnectAddr(const Bundle<N>& b, int start)
 inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
 {
 	ctrl.Remove(Bundle<1>(wire), start);
-}
-
-inline void SystemBus::Update()
-{
-	std::scoped_lock lk(mBusMutex);
-	data.Update();
-	addr.Update();
-	ctrl.Update();
 }

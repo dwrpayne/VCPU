@@ -42,21 +42,16 @@ void ProgramLoader::Load(const Program * program)
 		}
 		curAddr += 32;
 		req.Set(true);
-		systembus.Update();
 		while (!systembus.OutCtrl().Ack().On())
 		{
 			memory.DoOneUpdate();
 			memory.WaitUntilDone();
-			systembus.Update();
 		}
 		req.Set(false);
-		systembus.Update();
 		while (systembus.OutCtrl().Ack().On())
 		{
-			systembus.Update();
 			memory.DoOneUpdate();
 			memory.WaitUntilDone();
-			systembus.Update();
 		}
 	}
 }

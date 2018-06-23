@@ -347,9 +347,7 @@ void CPU::Update()
 
 	hazardIFID.Update();
 	hazardIDEX.Update();
-
-	systemBus.Update();
-
+	
 	if (!mInsMemory->IsRunning())
 	{
 		mInsMemory->DoOneUpdate();
