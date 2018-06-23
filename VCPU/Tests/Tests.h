@@ -598,7 +598,7 @@ bool TestBus(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 	
-	Bus<32> test;
+	StatelessBus<32> test;
 	MagicBundle<32> a, b;
 	MagicBundle<16> c;
 	test.Connect(a);
@@ -606,20 +606,16 @@ bool TestBus(Verbosity verbosity)
 	test.Connect(c, 16);
 
 	a.Write(123);
-	test.Update();
 	success &= TestState(i++, 123, test.Out().Read(), verbosity);
 
 	b.Write(116736);
-	test.Update();
 	success &= TestState(i++, 116859, test.Out().Read(), verbosity);
 
 	a.Write(0);
-	test.Update();
 	success &= TestState(i++, 116736, test.Out().Read(), verbosity);
 
 	b.Write(0);
 	c.Write(10);
-	test.Update();
 	success &= TestState(i++, 655360, test.Out().Read(), verbosity);
 	
 
@@ -1755,7 +1751,7 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_TEST(TestCounter, FAIL_ONLY);
-	//RUN_TEST(TestBus, FAIL_ONLY);
+	RUN_TEST(TestBus, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestBinaryToGray, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestGrayToBinary, FAIL_ONLY);
 	RUN_TEST(TestFreqSwitcher, FAIL_ONLY);

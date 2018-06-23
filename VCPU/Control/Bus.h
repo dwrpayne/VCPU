@@ -5,6 +5,7 @@
 #include "Component.h"
 #include "Wire.h"
 #include "Bundle.h"
+#include "Junction.h"
 
 template <unsigned int N>
 class Bus : public Component
@@ -59,5 +60,60 @@ private:
 	std::array<Wire, N> state;
 	std::array<std::vector<const Wire*>, N> inputWires;
 	Bundle<N> out;
+};
+
+
+template <unsigned int N>
+class StatelessBus
+{
+public:
+	StatelessBus() {}
+	StatelessBus(std::initializer_list<const Junction*> list)
+	{
+		Connect(list);
+	}
+
+	operator Bundle<N>()
+	{
+		Bundle<N> b;
+		for (int i = 0; i < N; i++)
+		{
+			b.Connect(i, wires[i]);
+		}
+		return b;
+	}
+
+	template <unsigned int M>
+	void Connect(const Bundle<M>& wires, int start = 0)
+	{
+		for (int i = 0; i < M; i++)
+		{
+			Connect(start + i, wires[i]);
+		}
+	}
+
+	template <unsigned int M>
+	void Remove(const Bundle<M>& wires, int start = 0)
+	{
+		for (int i = 0; i < M; i++)
+		{
+			Disconnect(start + i, wires[i]);
+		}
+	}
+
+	void Connect(int n, const Wire& wire)
+	{
+		wires[n].Connect(wire);
+	}
+
+	void Disconnect(int n, const Wire& wire)
+	{
+		wires[n].Disconnect(wire);
+	}
+
+	const Bundle<N> Out() { return Bundle<N>(*this); }
+
+protected:
+	std::array<Junction, N> wires;
 };
 
