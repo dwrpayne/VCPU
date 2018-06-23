@@ -280,7 +280,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	
 	busRequest.Update();
 
-#if DEBUG
+#if DEBUG || 1
 	if (busRequest.Q().On())
 	{
 		std::stringstream ss;
