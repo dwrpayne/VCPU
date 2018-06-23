@@ -47,7 +47,7 @@ public:
 			char on = 0;
 			for (const auto& wire : inputWires[i])
 			{
-				on += wire.HiZ() ? 0 : 1;
+				on += wire.On() ? 0 : 1;
 			}
 			assert(on < 2);
 #endif
