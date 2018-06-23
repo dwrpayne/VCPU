@@ -9,7 +9,7 @@ public:
 	inline void Set(bool new_state) { state = new_state; }
 	inline void SetHiZ(bool newHiZ) { hiZ = newHiZ; }
 	
-	bool On() const { return state; }
+	virtual bool On() const { return state; }
 	bool HiZ() const { return hiZ; }
 
 	friend std::ostream& operator<<(std::ostream& os, const Wire& dt);
