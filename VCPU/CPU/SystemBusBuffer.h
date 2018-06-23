@@ -23,7 +23,7 @@ public:
 	static const int Naddr = SystemBus::Naddr;
 	static const int Ndata = SystemBus::Ndata;
 
-	void Connect(const SystemBus& bus);
+	void Connect(SystemBus& bus);
 	void Update();
 
 	const Bundle<SystemBus::Ndata>& OutData() const { return data.Out(); }
@@ -37,7 +37,11 @@ public:
 	const Wire& TransmitterControl() const { return memmapIoDec.Out()[2]; }
 	const Wire& TransmitterData() const { return memmapIoDec.Out()[3]; }
 
+	SystemBus* GetSystemBus() { return pSystemBus; }
+
 private:
+	SystemBus * pSystemBus;
+
 	NandGateN<4> loReserved;
 	NorGate usermem;
 	AndGateN<16> memmapIo;
@@ -50,8 +54,10 @@ private:
 };
 
 
-inline void SystemBusBuffer::Connect(const SystemBus& bus)
+inline void SystemBusBuffer::Connect(SystemBus& bus)
 {
+	pSystemBus = &bus;
+
 	loReserved.Connect(addr.Out().Range<4>(Naddr - 4));
 	usermem.Connect(loReserved.Out(), addr.Out()[Naddr - 1]);
 	memmapIo.Connect(addr.Out().Range<16>(Naddr - 16));

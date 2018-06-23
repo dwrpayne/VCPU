@@ -19,6 +19,14 @@ ProgramLoader::ProgramLoader(CPU & cpu)
 	systembus.ConnectCtrl(req, SystemBus::CtrlBit::Req);
 }
 
+ProgramLoader::~ProgramLoader()
+{
+	systembus.DisconnectAddr(addrBundle);
+	systembus.DisconnectData(dataBundle);
+	systembus.DisconnectCtrl(write, SystemBus::CtrlBit::Write);
+	systembus.DisconnectCtrl(req, SystemBus::CtrlBit::Req);
+}
+
 void ProgramLoader::Load(const Program * program)
 {
 	int num_ins = program->Instructions().size();
@@ -51,9 +59,5 @@ void ProgramLoader::Load(const Program * program)
 			systembus.Update();
 		}
 	}
-	systembus.DisconnectAddr(addrBundle);
-	systembus.DisconnectData(dataBundle);
-	systembus.DisconnectCtrl(write, SystemBus::CtrlBit::Write);
-	systembus.DisconnectCtrl(req, SystemBus::CtrlBit::Req);
 }
 

@@ -31,9 +31,12 @@ public:
 	typedef Bundle<ADDR_BITS> AddrBundle;
 
 	Memory(bool ismain);
+	~Memory();
 	void Connect();
 	void Update();
 	void ConnectToBus(SystemBus& bus);
+
+	void DisconnectFromBus(SystemBus & bus);
 
 	const AddrBundle& ReadAddr() const { return outAddr.Out(); }
 	const Wire& ServicedRead() const { return outServicedRead.Out(); }
@@ -65,6 +68,11 @@ inline Memory<N, BYTES>::Memory(bool ismain)
 	: ThreadedAsyncComponent()
 	, mIsMainMemory(ismain)
 {
+}
+template<unsigned int N, unsigned int BYTES>
+inline Memory<N, BYTES>::~Memory()
+{
+	DisconnectFromBus(*busBuffer.GetSystemBus());
 }
 //template<unsigned int N, unsigned int BYTES>
 //inline Memory<N, BYTES>::Memory(bool ismain, std::mutex& mutex, std::condition_variable& cv, bool& ready, bool& exit)
@@ -129,4 +137,13 @@ inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 	bus.ConnectAddr(outAddr.Out());
 	bus.ConnectData(outData.Out());
 	bus.ConnectCtrl(outServicedRead.Q(), SystemBus::CtrlBit::Ack);
+}
+
+
+template<unsigned int N, unsigned int BYTES>
+inline void Memory<N, BYTES>::DisconnectFromBus(SystemBus & bus)
+{
+	bus.DisconnectAddr(outAddr.Out());
+	bus.DisconnectData(outData.Out());
+	bus.DisconnectCtrl(outServicedRead.Q(), SystemBus::CtrlBit::Ack);
 }

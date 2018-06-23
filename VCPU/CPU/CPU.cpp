@@ -322,6 +322,12 @@ CPU::~CPU()
 	stage4Thread.join();
 	mInsMemory->Exit();
 	mMainMemory->Exit();
+	delete stage1;
+	delete stage2;
+	delete stage3;
+	delete stage4;
+	delete mInsMemory;
+	delete mMainMemory;
 }
 
 void CPU::Connect()
