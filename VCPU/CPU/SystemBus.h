@@ -58,6 +58,7 @@ private:
 
 	friend class SystemBusBuffer;
 	friend class ProgramLoader;
+	friend class Debugger;
 };
 
 

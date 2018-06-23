@@ -42,7 +42,7 @@ public:
 private:
 	SystemBus * pSystemBus;
 
-	NandGateN<4> loReserved;
+	NorGateN<4> loReserved;
 	NorGate usermem;
 	AndGateN<16> memmapIo;
 	Decoder<4> memmapIoDec;

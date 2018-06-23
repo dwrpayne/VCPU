@@ -34,29 +34,16 @@ private:
 	Bundle<N> out;
 };
 
-template<unsigned int N>
-inline TriStateN<N>::TriStateN()
+class TriStateEnLo : public Component
 {
-	for (int i = 0; i < N; ++i)
-	{
-		out.Connect(buffers[i].Out());
-	}
-}
+public:
+	void Connect(const Wire& in, const Wire& e);
+	void Update();
 
-template<unsigned int N>
-inline void TriStateN<N>::Connect(const Bundle<N>& in, const Wire & e)
-{
-	for (int i = 0; i < N; ++i)
-	{
-		buffers.Connect(in[i], e);
-	}
-}
+	const Wire& Out() const { return out; }
 
-template<unsigned int N>
-inline void TriStateN<N>::Update()
-{
-	for (int i = 0; i < N; ++i)
-	{
-		buffers.Update();
-	}
-}
+private:
+	const Wire* input;
+	const Wire* enable;
+	Wire out;
+};

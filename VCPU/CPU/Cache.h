@@ -15,6 +15,7 @@
 #include "Memory.h"
 #include "ByteMask.h"
 #include "SystemBus.h"
+#include "TriStateBuffer.h"
 
 template <unsigned int N>
 class CacheLineMasker : public Component
@@ -130,12 +131,14 @@ private:
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Multiplexer<NUM_CACHE_LINES> cacheDirtyMux;
 	AndGate evictedDirty;
+	Inverter notEvictedDirty;
 	Inverter cacheMissInternal;
 	OrGate readOrWrite;
 	AndGate cacheMiss;
 	AndGate writeBufferFull;
 	OrGate needStall;
 	Inverter needStallInv;
+	AndGate readOkay;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
@@ -143,6 +146,9 @@ private:
 	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	MuxBundle<ADDR_BITS, 4> memAddrMux;
 
+	TriStateEnLo writeBusRequestBuf;
+	TriStateEnLo readBusRequestBuf;
+	MultiGate<TriStateEnLo, CACHE_LINE_BITS> dataRequestBuf;
 	DFlipFlop busRequest;
 
 	int cycles;
@@ -201,9 +207,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	readOrWrite.Connect(read, write);
 	cacheMiss.Connect(cacheMissInternal.Out(), readOrWrite.Out());
 	evictedDirty.Connect(cacheMiss.Out(), cacheDirtyMux.Out());
+	notEvictedDirty.Connect(evictedDirty.Out());
 	writeBufferFull.Connect(evictedDirty.Out(), Wire::ON);
 	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
 	needStallInv.Connect(needStall.Out());
+	readOkay.Connect(cacheMiss.Out(), notEvictedDirty.Out());
 
 	// Output 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
@@ -214,6 +222,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 
+	writeBusRequestBuf.Connect(evictedDirty.Out(), inBusBuffer.OutCtrl().Req());
+	readBusRequestBuf.Connect(readOkay.Out(), inBusBuffer.OutCtrl().Req());
+	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(inBusBuffer.OutCtrl().Req()));
 	
 	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
 	busRequest.Connect(needStall.Out(), Wire::ON);
@@ -242,14 +253,19 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	readOrWrite.Update();
 	cacheMiss.Update();
 	evictedDirty.Update();
+	notEvictedDirty.Update();
 	writeBufferFull.Update();
 	needStall.Update();
 	needStallInv.Update();
+	readOkay.Update();
 
 	outCacheLineMux.Update();
 	outDataMux.Update();
 	memAddrMux.Update();
 	//buffer.Update();
+	writeBusRequestBuf.Update();
+	readBusRequestBuf.Update();
+	dataRequestBuf.Update();
 
 	busRequest.Update();
 
@@ -269,9 +285,9 @@ template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned i
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::ConnectToBus(SystemBus & bus)
 {
 	bus.ConnectAddr(memAddrMux.Out());
-	bus.ConnectData(outCacheLineMux.Out());
-	bus.ConnectCtrl(cacheMiss.Out(), SystemBus::CtrlBit::Read);
-	bus.ConnectCtrl(evictedDirty.Out(), SystemBus::CtrlBit::Write);
+	bus.ConnectData(dataRequestBuf.Out());
+	bus.ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
+	bus.ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
 	bus.ConnectCtrl(busRequest.Q(), SystemBus::CtrlBit::Req);
 
 	inBusBuffer.Connect(bus);

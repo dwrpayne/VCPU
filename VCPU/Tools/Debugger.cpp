@@ -18,6 +18,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintOutputReg = verbosity >= MINIMAL;
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
+	bPrintBus = verbosity >= VERBOSE;
 
 	pAssembler = new Assembler();
 	pProgram = pAssembler->Assemble(source_filename);
@@ -90,8 +91,8 @@ void Debugger::Step()
 		{
 			mLastInstructions.pop_back();
 		}
-		PrintCycle();
 	}
+	PrintCycle();
 }
 
 void Debugger::PrintCycle()
@@ -124,6 +125,11 @@ void Debugger::PrintCycle()
 	if (bPrintMemory)
 	{
 		PrintMemory();
+	}
+
+	if (bPrintBus)
+	{
+		PrintBus();
 	}
 
 	//if (bPrintTiming)
@@ -180,9 +186,7 @@ void Debugger::PrintInstruction()
 		auto ass_line = addr >= 0 ? pProgram->GetAssembledLine(addr) : "inserted bubble";
 		auto src_line = addr >= 0 ? pProgram->GetSourceLine(addr) : "inserted bubble";
 		addr = std::max(addr, 0);
-
-		std::bitset<32> ir(pCPU->IR().UnsignedRead());
-
+		
 		std::stringstream ss;
 		ss << "0x" << std::hex << std::setfill('0') << std::setw(6) << addr * 4;
 		ss << std::setfill(' ') << std::left << " " << std::setw(5) << STAGE[i] << "|  ";
@@ -316,4 +320,16 @@ void Debugger::PrintTiming()
 			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (avg time spent: " << mmemus / mmemcycle << "us)" << std::endl;
 		}
 	}
+}
+
+void Debugger::PrintBus()
+{
+	std::cout << "--- Addr | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (first 100 bits) ----------" << std::endl;
+	std::cout << std::hex << std::left << std::setw(8) << pCPU->GetSystemBus().OutAddr().UnsignedRead() << "    |    ";
+	std::cout << std::bitset<SystemBus::Nctrl>(pCPU->GetSystemBus().OutCtrl().UnsignedRead()) << "     |    ";
+	for (int i = 0; i < 100; i++)
+	{
+		std::cout << pCPU->GetSystemBus().OutData()[i];
+	}
+	std::cout << std::dec << std::endl;
 }

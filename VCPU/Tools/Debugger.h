@@ -37,6 +37,7 @@ private:
 	void PrintOutputReg();
 	void PrintDataForward();
 	void PrintTiming();
+	void PrintBus();
 	
 	CPU* pCPU;
 	bool bPrintInstruction;
@@ -45,6 +46,7 @@ private:
 	bool bPrintOutputReg;
 	bool bPrintDataForward;
 	bool bPrintTiming;
+	bool bPrintBus;
 
 	std::deque<int> mLastInstructions;
 	std::array<unsigned char, 64> mLastCycleMemory;

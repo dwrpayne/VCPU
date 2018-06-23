@@ -461,14 +461,14 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 2, debugger.GetRegisterVal(15), verbosity);
 	success &= TestState(i++, 4063, debugger.GetRegisterVal(16), verbosity);
 	success &= TestState(i++, 2571, debugger.GetRegisterVal(17), verbosity);
-	success &= TestState(i++, 123456789, debugger.GetRegisterVal(18), verbosity);
+	success &= TestState(i++, 0x10000004, debugger.GetRegisterVal(18), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(19), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
 	success &= TestState(i++, 1887, debugger.GetMemoryWord(16), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(20), verbosity);
-	success &= TestState(i++, -898477309, debugger.GetRegisterVal(23), verbosity);
-	success &= TestState(i++, 159, debugger.GetRegisterVal(24), verbosity);
+	success &= TestState(i++, 1879070428, debugger.GetRegisterVal(23), verbosity);
+	success &= TestState(i++, 347, debugger.GetRegisterVal(24), verbosity);
 	success &= TestState(i++, 40704, debugger.GetRegisterVal(25), verbosity);
 	success &= TestState(i++, 636, debugger.GetRegisterVal(26), verbosity);
 	success &= TestState(i++, 19, debugger.GetRegisterVal(27), verbosity);
