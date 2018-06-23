@@ -19,6 +19,7 @@
 #include "Bundle.h"
 #include "Register.h"
 #include "Counter.h"
+#include "Bus.h"
 #include "GrayCode.h"
 #include "FullAdder.h"
 #include "Adder.h"
@@ -485,9 +486,9 @@ bool TestBundle(Verbosity verbosity)
 	
 	success &= TestState(i++, 0, Bundle<8>::OFF.Read(), verbosity);
 	success &= TestState(i++, 255U, Bundle<8>::ON.UnsignedRead(), verbosity);
-	success &= TestState(i++, 0xaaU, Bundle<8>::ERROR.UnsignedRead(), verbosity);
-	success &= TestState(i++, 0xdeadU, Bundle<16>::ERROR.UnsignedRead(), verbosity);
-	success &= TestState(i++, 0xdeadbeefU, Bundle<32>::ERROR.UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xaaU, Bundle<8>::ERR.UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xdeadU, Bundle<16>::ERR.UnsignedRead(), verbosity);
+	success &= TestState(i++, 0xdeadbeefU, Bundle<32>::ERR.UnsignedRead(), verbosity);
 	
 	Bundle<8> test(121);
 	Bundle<16> testExt = test.ZeroExtend<16>();
@@ -588,6 +589,39 @@ bool TestCounter(Verbosity verbosity)
 		test.Update();
 		success &= TestState(i++, (cycle)%pow2(bits), test.Out().UnsignedRead(), verbosity);
 	}
+
+	return success;
+}
+
+bool TestBus(Verbosity verbosity)
+{
+	bool success = true;
+	int i = 0;
+	
+	Bus<32> test;
+	MagicBundle<32> a, b;
+	MagicBundle<16> c;
+	test.Connect(a);
+	test.Connect(b);
+	test.Connect(c, 16);
+
+	a.Write(123);
+	test.Update();
+	success &= TestState(i++, 123, test.Out().Read(), verbosity);
+
+	b.Write(116736);
+	test.Update();
+	success &= TestState(i++, 116859, test.Out().Read(), verbosity);
+
+	a.Write(0);
+	test.Update();
+	success &= TestState(i++, 116736, test.Out().Read(), verbosity);
+
+	b.Write(0);
+	c.Write(10);
+	test.Update();
+	success &= TestState(i++, 655360, test.Out().Read(), verbosity);
+	
 
 	return success;
 }
@@ -1721,6 +1755,7 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_TEST(TestCounter, FAIL_ONLY);
+	RUN_TEST(TestBus, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestBinaryToGray, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestGrayToBinary, FAIL_ONLY);
 	RUN_TEST(TestFreqSwitcher, FAIL_ONLY);

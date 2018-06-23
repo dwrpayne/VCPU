@@ -138,9 +138,9 @@ int Debugger::GetRegisterVal(int reg)
 
 unsigned char Debugger::GetMemoryByte(int addr)
 {
-	unsigned int cacheline = addr / pCPU->MainMem().mMemory.CACHELINE_BYTES;
-	auto line = pCPU->MainMem().cachelines[cacheline].OutLine();
-	return line.Range<8>(8 * (addr % pCPU->MainMem().mMemory.CACHELINE_BYTES)).Read();
+	unsigned int cacheline = addr / pCPU->GetMainMemory().CACHELINE_BYTES;
+	auto line = pCPU->GetMainCache().cachelines[cacheline].OutLine();
+	return line.Range<8>(8 * (addr % pCPU->GetMainMemory().CACHELINE_BYTES)).Read();
 }
 
 int Debugger::GetMemoryWord(int addr)
@@ -304,10 +304,10 @@ void Debugger::PrintTiming()
 			{
 				std::cout << "CPU Stage " << i++ << " average " << us.count() << "us" << std::endl;
 			}
-			int imemcycle = pCPU->InstructionMem().mMemory.cycle;
-			int mmemcycle = pCPU->MainMem().mMemory.cycle;
-			long long imemus = pCPU->InstructionMem().mMemory.GetElapsedTime().count();
-			long long mmemus = pCPU->MainMem().mMemory.GetElapsedTime().count();
+			int imemcycle = pCPU->InstructionMemory().cycle;
+			int mmemcycle = pCPU->GetMainMemory().cycle;
+			long long imemus = pCPU->InstructionMemory().GetElapsedTime().count();
+			long long mmemus = pCPU->GetMainMemory().GetElapsedTime().count();
 			std::cout << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (avg time spent: " << imemus / imemcycle << "us)" << std::endl;
 			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (avg time spent: " << mmemus / mmemcycle << "us)" << std::endl;
 		}

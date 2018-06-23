@@ -55,6 +55,7 @@ public:
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
 	public:
+		using Bundle<OUT_WIDTH>::Bundle;
 		OpcodeDecoderBundle() 
 			: Bundle<OUT_WIDTH>()
 		{}

@@ -25,3 +25,46 @@ void ThreadedComponent::ThreadedUpdate()
 		}
 	}
 }
+
+
+ThreadedAsyncComponent::ThreadedAsyncComponent()
+	: numBeforeWires(Wire::WireCount())
+	, mUpdating(false)
+	, mThread(&ThreadedAsyncComponent::ThreadedUpdate, this)
+{
+}
+
+void ThreadedAsyncComponent::DoOneUpdate()
+{
+	{
+		std::lock_guard<std::mutex> lk(mMutex);
+		mUpdating = true;
+	}
+	mCV.notify_one();
+}
+
+void ThreadedAsyncComponent::Exit()
+{
+	mExit = true;
+	mThread.join();
+}
+
+void ThreadedAsyncComponent::ThreadedUpdate()
+{
+	while (!mExit)
+	{
+		{
+			std::unique_lock<std::mutex> lk(mMutex);
+			mCV.wait(lk, [this] {return mUpdating || mExit; });
+			if (mExit)
+			{
+				break;
+			}
+		}
+
+		auto t1 = std::chrono::high_resolution_clock::now();
+		Update();
+		auto t2 = std::chrono::high_resolution_clock::now();
+		mUpdating = false;
+	}
+}

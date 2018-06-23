@@ -342,7 +342,7 @@ bool TestCache(Verbosity verbosity)
 	Wire read(false);
 	Wire writebyte(false);
 	Wire writehalf(false);
-	MagicBundle<10> addr;
+	MagicBundle<32> addr;
 	test.Connect(addr, data, read, write, writebyte, writehalf);
 
 	for (int a = 0; a < 8; a++)

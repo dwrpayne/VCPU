@@ -6,18 +6,6 @@
 #include "AndGate.h"
 #include "MuxBundle.h"
 
-// VCPU Memory map
-// 0x00000000 -> 0x0fffffff		reserved
-// 0x10000000 -> 0x1fffffff		user-level code
-// 0x20000000 -> 0x7fffffff		user heap/stack
-// 0x80000000 -> 0xffff0000		kernel reserved
-
-// 0xffff0000			receiver control
-// 0xffff0004			receiver data
-// 0xffff0008			transmitter control
-// 0xffff000c			transmitter data
-// 0xffff0010			reserved
-
 class DeviceController;
 
 template <typename MemoryType>

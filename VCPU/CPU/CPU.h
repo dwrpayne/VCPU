@@ -10,6 +10,7 @@
 #include "Cache.h"
 #include "HazardUnit.h"
 #include "Interlock.h"
+#include "SystemBus.h"
 
 
 class CPU : public Component
@@ -31,8 +32,9 @@ public:
 		
 	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
 	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
-	typedef InsCache::MemoryType InsMemory;
-	typedef MainCache::MemoryType MainMemory;
+
+	typedef Memory<CACHE_LINE_BITS, INS_MEM_BYTES> InsMemory;
+	typedef Memory<CACHE_LINE_BITS, MAIN_MEM_BYTES> MainMemory;
 	typedef RegisterFile<WORD_SIZE, NUM_REGISTERS> RegFile;
 
 	void Connect();
@@ -41,8 +43,11 @@ public:
 private:
 
 	const Bundle<32>& PC();
-	InsCache& InstructionMem();
-	MainCache& MainMem();
+	InsCache& InstructionCache();
+	MainCache& GetMainCache();
+	InsMemory& InstructionMemory();
+	MainMemory& GetMainMemory();
+	SystemBus& GetSystemBus();
 	RegFile& Registers();
 
 	bool PipelineBubbleID() { return interlock.BubbleID().On(); }
@@ -61,8 +66,13 @@ private:
 	Stage2* stage2;
 	Stage3* stage3;
 	Stage4* stage4;
+
+	InsMemory* mInsMemory;
+	MainMemory* mMainMemory;
 	
 	std::condition_variable mCV;
+	std::condition_variable mCVInsMem;
+	std::condition_variable mCVMainMem;
 	std::mutex mMutex;
 	bool stage1Ready;
 	bool stage2Ready;
@@ -76,6 +86,8 @@ private:
 	HazardUnit hazardIDEX;
 	HazardUnit hazardIFID;
 	Interlock interlock;
+
+	SystemBus systemBus;
 
 	bool exit;
 

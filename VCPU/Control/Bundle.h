@@ -16,12 +16,17 @@ public:
 	static const unsigned int N = N;
 	static const Bundle<N> OFF;
 	static const Bundle<N> ON;
-	static const Bundle<N> ERROR;
+	static const Bundle<N> ERR;
 
 	Bundle() {}
 	Bundle(std::initializer_list<const Wire*> list)
 	{
 		Connect(list);
+	}
+
+	Bundle(const Bundle<N>& other)
+	{
+		Connect(0, other);
 	}
 
 	// Splits a single wire into an n-way Bundle.
@@ -233,7 +238,7 @@ std::ostream& operator<<(std::ostream& os, const Bundle<N>& b)
 template<unsigned int N> const Bundle<N> Bundle<N>::OFF(Wire::OFF);
 template<unsigned int N> const Bundle<N> Bundle<N>::ON(Wire::ON);
 
-template<> const Bundle<8> Bundle<8>::ERROR(0xaaU);
-template<> const Bundle<16> Bundle<16>::ERROR(0xdeadU);
-template<> const Bundle<32> Bundle<32>::ERROR(0xdeadbeefU);
+template<> const Bundle<8> Bundle<8>::ERR(0xaaU);
+template<> const Bundle<16> Bundle<16>::ERR(0xdeadU);
+template<> const Bundle<32> Bundle<32>::ERR(0xdeadbeefU);
 

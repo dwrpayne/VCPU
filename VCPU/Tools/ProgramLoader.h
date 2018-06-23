@@ -10,8 +10,11 @@ public:
 	void Load(const class Program* program);
 
 private:
-	CPU::InsCache& insMemory;
-	MagicBundle<CPU::WORD_SIZE> ins_bundle, addr_bundle;
-	unsigned int cur_addr;
+	int availBytes;
+	SystemBus& systembus;
+	MagicBundle<CPU::WORD_SIZE> addrBundle;
+	std::array<MagicBundle<CPU::WORD_SIZE>, CPU::CACHE_LINE_BITS/CPU::WORD_SIZE> wordBundles;
+	Wire write;
+	int curAddr;
 };
 

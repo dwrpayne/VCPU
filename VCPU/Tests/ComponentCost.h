@@ -66,5 +66,4 @@ void PrintComponentCosts()
 	PRINT_COST_NEW(CPU::MainCache);
 	PRINT_COST_NEW(CPU::RegFile);
 	PRINT_COST_NEW(CPU);	
-	PRINT_COST_NEW(CPU::MainMemory::ReqBuffer);
 }

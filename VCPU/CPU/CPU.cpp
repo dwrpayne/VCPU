@@ -1,15 +1,16 @@
+#include <vector>
+#include <future>
+#include <windows.h>
+
 #include "CPU.h"
 #include "Register.h"
 #include "Memory.h"
 #include "ALU.h"
 #include "Multiplier.h"
 #include "MuxBundle.h"
-#include "SubWordSelector.h"
 #include "BranchControl.h"
 #include "ByteExtractor.h"
-#include <vector>
-#include <future>
-
+#include "SystemBus.h"
 
 class CPU::Stage1 : public ThreadedComponent
 {
@@ -84,7 +85,7 @@ class CPU::Stage4 : public ThreadedComponent
 {
 public:
 	using ThreadedComponent::ThreadedComponent;
-	void Connect(const BufferEXMEM& stage3, const Wire& proceed);
+	void Connect(const BufferEXMEM& stage3, const Wire& proceed, SystemBus& systembus);
 	void Update();
 	void PostUpdate();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
@@ -187,12 +188,14 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 		alu.Flags(), stage2.OpcodeControl());
 }
 
-void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed)
+void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed, SystemBus& systembus)
 {
 	// Main Memory
 	const auto& memAddr = stage3.aluOut.Out();
-	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), stage3.OpcodeControl().LoadOp(), 
+	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), stage3.OpcodeControl().LoadOp(),
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
+
+	cache.ConnectToBus(systembus);
 
 	// Byte/Half/Word Selection
 	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned(),
@@ -278,6 +281,10 @@ CPU::CPU()
 	, stage2(new Stage2(mMutex, mCV, stage2Ready, exit))
 	, stage3(new Stage3(mMutex, mCV, stage3Ready, exit))
 	, stage4(new Stage4(mMutex, mCV, stage4Ready, exit))
+	, insMemoryReady(false)
+	, mainMemoryReady(false)
+	, mInsMemory(new InsMemory(false))
+	, mMainMemory(new MainMemory(true))
 	, stage1Thread(&CPU::Stage1::ThreadedUpdate, stage1)
 	, stage2Thread(&CPU::Stage2::ThreadedUpdate, stage2)
 	, stage3Thread(&CPU::Stage3::ThreadedUpdate, stage3)
@@ -291,9 +298,21 @@ CPU::CPU()
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
-	interlock.Connect(InstructionMem().NeedStall(), MainMem().NeedStall(), 
+	interlock.Connect(InstructionCache().NeedStall(), GetMainCache().NeedStall(), 
 		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
+
+	mInsMemory->ConnectToBus(systemBus);
+	mInsMemory->Connect();
+	mMainMemory->ConnectToBus(systemBus);
+	mMainMemory->Connect();
+
+	SetThreadDescription((HANDLE)stage1Thread.native_handle(), L"CPU Stage 1 Instruction Fetch");
+	SetThreadDescription((HANDLE)stage2Thread.native_handle(), L"CPU Stage 2 Instruction Decode");
+	SetThreadDescription((HANDLE)stage3Thread.native_handle(), L"CPU Stage 3 Execution");
+	SetThreadDescription((HANDLE)stage4Thread.native_handle(), L"CPU Stage 4 Memory Access");
+	SetThreadDescription((HANDLE)insMemoryThread.native_handle(), L"Instruction Memory Update");
+	SetThreadDescription((HANDLE)mainMemoryThread.native_handle(), L"Main Memory Update");
 }
 
 CPU::~CPU()
@@ -304,6 +323,8 @@ CPU::~CPU()
 	stage2Thread.join();
 	stage3Thread.join();
 	stage4Thread.join();
+	mInsMemory->Exit();
+	mMainMemory->Exit();
 }
 
 void CPU::Connect()
@@ -311,7 +332,7 @@ void CPU::Connect()
 	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.ProceedIF());
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
-	stage4->Connect(stage3->Out(), interlock.ProceedMEM());
+	stage4->Connect(stage3->Out(), interlock.ProceedMEM(), systemBus); 
 }
 
 void CPU::Update()
@@ -333,6 +354,19 @@ void CPU::Update()
 	hazardIFID.Update();
 	hazardIDEX.Update();
 
+	systemBus.Update();
+
+	if (!mInsMemory->IsRunning())
+	{
+		mInsMemory->PreUpdate();
+		mInsMemory->DoOneUpdate();
+	}
+	if (!mMainMemory->IsRunning())
+	{
+		mMainMemory->PreUpdate();
+		mMainMemory->DoOneUpdate();
+	}
+
 	if (!PipelineFreeze() && !PipelineBubbleID() && !PipelineBubbleEX())
 	{
 		cycles++;
@@ -344,14 +378,29 @@ const Bundle<32>& CPU::PC()
 	return stage1->pc.Out();
 }
 
-CPU::InsCache& CPU::InstructionMem()
+CPU::InsCache& CPU::InstructionCache()
 {
 	return stage1->instructionCache;
 }
 
-CPU::MainCache& CPU::MainMem()
+CPU::MainCache& CPU::GetMainCache()
 {
 	return stage4->cache;
+}
+
+CPU::InsMemory& CPU::InstructionMemory()
+{
+	return *mInsMemory;
+}
+
+CPU::MainMemory& CPU::GetMainMemory()
+{
+	return *mMainMemory;
+}
+
+SystemBus & CPU::GetSystemBus()
+{
+	return systemBus;
 }
 
 CPU::RegFile& CPU::Registers()

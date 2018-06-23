@@ -159,6 +159,7 @@
     <ClInclude Include="Controllers\DeviceController.h" />
     <ClInclude Include="Controllers\MemoryController.h" />
     <ClInclude Include="Control\Bundle.h" />
+    <ClInclude Include="Control\Bus.h" />
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
     <ClInclude Include="Control\Encoder.h" />
@@ -176,6 +177,8 @@
     <ClInclude Include="CPU\Interlock.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
+    <ClInclude Include="CPU\SystemBus.h" />
+    <ClInclude Include="CPU\SystemBusBuffer.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\ByteExtractor.h" />

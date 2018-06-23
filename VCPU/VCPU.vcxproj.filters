@@ -299,5 +299,14 @@
     <ClInclude Include="Functional\ByteExtractor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Control\Bus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\SystemBus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\SystemBusBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
