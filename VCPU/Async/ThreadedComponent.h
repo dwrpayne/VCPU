@@ -33,7 +33,7 @@ private:
 class ThreadedAsyncComponent : public Component
 {
 public:
-	ThreadedAsyncComponent();
+	ThreadedAsyncComponent(const wchar_t* name);
 
 	void DoOneUpdate();
 	void WaitUntilDone();

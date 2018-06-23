@@ -1,4 +1,5 @@
 #include "ThreadedComponent.h"
+#include <windows.h>
 
 void ThreadedComponent::ThreadedUpdate()
 {
@@ -27,11 +28,12 @@ void ThreadedComponent::ThreadedUpdate()
 }
 
 
-ThreadedAsyncComponent::ThreadedAsyncComponent()
+ThreadedAsyncComponent::ThreadedAsyncComponent(const wchar_t* name)
 	: numBeforeWires(Wire::WireCount())
 	, mUpdating(false)
 	, mThread(&ThreadedAsyncComponent::ThreadedUpdate, this)
 {
+	SetThreadDescription((HANDLE)mThread.native_handle(), name);
 }
 
 void ThreadedAsyncComponent::DoOneUpdate()

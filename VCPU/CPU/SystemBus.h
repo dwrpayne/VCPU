@@ -94,7 +94,7 @@ inline void SystemBus::DisconnectData(const Bundle<N>& b, int start)
 template<unsigned int N>
 inline void SystemBus::DisconnectAddr(const Bundle<N>& b, int start)
 {
-	data.Remove(b, start);
+	addr.Remove(b, start);
 }
 
 inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)

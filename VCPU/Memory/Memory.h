@@ -65,7 +65,7 @@ private:
 
 template<unsigned int N, unsigned int BYTES>
 inline Memory<N, BYTES>::Memory(bool ismain)
-	: ThreadedAsyncComponent()
+	: ThreadedAsyncComponent(ismain ? L"Main Memory Update" : L"Instruction Memory Update")
 	, mIsMainMemory(ismain)
 {
 }
