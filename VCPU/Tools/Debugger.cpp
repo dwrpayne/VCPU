@@ -18,7 +18,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintOutputReg = verbosity >= MINIMAL;
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
-	bPrintBus = verbosity >= VERBOSE;
+	bPrintBus = verbosity >= NORMAL;
 
 	pAssembler = new Assembler();
 	pProgram = pAssembler->Assemble(source_filename);

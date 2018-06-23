@@ -22,7 +22,6 @@ public:
 	const BufferIFID& Out() const { return bufIFID; }
 private:
 	MuxBundle<32, 2> pcBranchInMux;
-	MuxBundle<32, 2> pcJumpInMux;
 	Register<32> pc;
 	FullAdderN<32> pcIncrementer;
 	CPU::InsCache instructionCache;

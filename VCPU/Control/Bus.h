@@ -47,9 +47,9 @@ public:
 			char on = 0;
 			for (const auto* wire : inputWires[i])
 			{
-				on += wire->On() ? 0 : 1;
+				on += wire->On() ? 1 : 0;
 			}
-			//assert(on < 2);
+			assert(on < 2);
 #endif
 		}
 	}

@@ -578,13 +578,13 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 bool RunCPUTests()
 {
 	bool success = true;
-	auto default_verb = Debugger::VERBOSE;
+	auto default_verb = Debugger::NORMAL;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, Debugger::VERBOSE);
 	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);

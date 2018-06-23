@@ -147,9 +147,14 @@ private:
 	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	MuxBundle<ADDR_BITS, 4> memAddrMux;
 
-	TriStateEnLo writeBusRequestBuf;
-	TriStateEnLo readBusRequestBuf;
-	MultiGate<TriStateEnLo, CACHE_LINE_BITS> dataRequestBuf;
+	AndGate busIsBusy;
+	NorGate shouldOutputOnBus;
+	AndGate shouldOutputDataBus;
+
+
+	TriState writeBusRequestBuf;
+	TriState readBusRequestBuf;
+	MultiGate<TriState, CACHE_LINE_BITS> dataRequestBuf;
 	DFlipFlop busRequest;
 
 	int cycles;
@@ -223,9 +228,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 
-	writeBusRequestBuf.Connect(evictedDirty.Out(), inBusBuffer.OutCtrl().Req());
-	readBusRequestBuf.Connect(readOkay.Out(), inBusBuffer.OutCtrl().Req());
-	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(inBusBuffer.OutCtrl().Req()));
+	busIsBusy.Connect(busRequest.NotQ(), inBusBuffer.OutCtrl().Req());
+	shouldOutputOnBus.Connect(busIsBusy.Out(), inBusBuffer.OutCtrl().Ack());
+	shouldOutputDataBus.Connect(shouldOutputOnBus.Out(), write);
+
+	writeBusRequestBuf.Connect(evictedDirty.Out(), shouldOutputOnBus.Out());
+	readBusRequestBuf.Connect(readOkay.Out(), shouldOutputOnBus.Out());
+	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(shouldOutputDataBus.Out()));
 	
 	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
 	busRequest.Connect(needStall.Out(), Wire::ON);
@@ -264,6 +273,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	outDataMux.Update();
 	memAddrMux.Update();
 	//buffer.Update();
+ 	busIsBusy.Update();
+	shouldOutputOnBus.Update();
+	shouldOutputDataBus.Update();
 	writeBusRequestBuf.Update();
 	readBusRequestBuf.Update();
 	dataRequestBuf.Update();

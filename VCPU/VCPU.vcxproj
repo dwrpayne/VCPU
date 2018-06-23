@@ -134,6 +134,7 @@
     <ClCompile Include="CPU\HazardUnit.cpp" />
     <ClCompile Include="CPU\Interlock.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
+    <ClCompile Include="CPU\SystemBus.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />

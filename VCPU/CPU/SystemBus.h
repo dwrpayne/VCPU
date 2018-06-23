@@ -1,5 +1,5 @@
 #pragma once
-
+#include <mutex>
 #include "Component.h"
 #include "Bus.h"
 #include "AndGate.h"
@@ -56,18 +56,14 @@ private:
 	Bus<Naddr> addr;
 	Bus<Nctrl> ctrl;
 
+	static std::mutex mBusMutex;
+
 	friend class SystemBusBuffer;
 	friend class ProgramLoader;
 	friend class Debugger;
 };
 
 
-inline void SystemBus::Update()
-{
-	data.Update();
-	addr.Update();
-	ctrl.Update();
-}
 
 template<unsigned int N>
 inline void SystemBus::ConnectData(const Bundle<N>& b, int start)
@@ -101,4 +97,12 @@ inline void SystemBus::DisconnectAddr(const Bundle<N>& b, int start)
 inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
 {
 	ctrl.Remove(Bundle<1>(wire), start);
+}
+
+inline void SystemBus::Update()
+{
+	std::scoped_lock lk(mBusMutex);
+	data.Update();
+	addr.Update();
+	ctrl.Update();
 }

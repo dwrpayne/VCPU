@@ -71,9 +71,12 @@ inline void SystemBusBuffer::Connect(SystemBus& bus)
 
 inline void SystemBusBuffer::Update()
 {
-	data.Update();
-	addr.Update();
-	ctrl.Update();
+	{
+		std::scoped_lock lk(pSystemBus->mBusMutex);
+		data.Update();
+		addr.Update();
+		ctrl.Update();
+	}
 
 	loReserved.Update();
 	usermem.Update();

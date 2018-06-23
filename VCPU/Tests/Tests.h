@@ -1755,7 +1755,7 @@ bool RunAllTests()
 	RUN_TEST(TestBundle, FAIL_ONLY);
 	RUN_TEST(TestRegister, FAIL_ONLY);
 	RUN_TEST(TestCounter, FAIL_ONLY);
-	RUN_TEST(TestBus, FAIL_ONLY);
+	//RUN_TEST(TestBus, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestBinaryToGray, FAIL_ONLY);
 	RUN_AUTO_TEST(TestBundleComponent, TestGrayToBinary, FAIL_ONLY);
 	RUN_TEST(TestFreqSwitcher, FAIL_ONLY);
