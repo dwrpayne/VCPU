@@ -147,7 +147,8 @@ private:
 	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	MuxBundle<ADDR_BITS, 4> memAddrMux;
 
-	NandGate busIsFree;
+	NorGate busIsFree;
+	OrGate busIsFreeOrMine;
 	Inverter busReqNotYetAck;
 	AndGate shouldOutputOnBus;
 	AndGate shouldOutputDataBus;
@@ -159,6 +160,8 @@ private:
 	DFlipFlop haveBusOwnership;
 
 	int cycles;
+
+	std::mutex mBusMutex;
 
 #ifdef DEBUG
 	CacheAddrBundle DEBUG_addr;
@@ -228,8 +231,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 
-	busIsFree.Connect(haveBusOwnership.NotQ(), inBusBuffer.OutCtrl().BusReq());
-	haveBusOwnership.Connect(needStall.Out(), busIsFree.Out());
+	busIsFree.Connect(inBusBuffer.OutCtrl().BusReq(), inBusBuffer.OutCtrl().Ack());
+	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
+	haveBusOwnership.Connect(needStall.Out(), busIsFreeOrMine.Out());
 
 	busReqNotYetAck.Connect(inBusBuffer.OutCtrl().Ack());
 
@@ -279,8 +283,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	outDataMux.Update();
 	memAddrMux.Update();
 	//buffer.Update();
- 	busIsFree.Update();
-	haveBusOwnership.Update();
+	{
+		std::scoped_lock lk(mBusMutex);
+		busIsFree.Update();
+		busIsFreeOrMine.Update();
+		haveBusOwnership.Update();
+
+	}
 	busReqNotYetAck.Update();
 	shouldOutputOnBus.Update();
 	shouldOutputDataBus.Update();
@@ -289,6 +298,10 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	dataRequestBuf.Update();
 	busRequestBuf.Update();
 	
+	if (haveBusOwnership.Q().On() && !readBusRequestBuf.Out().On() && !writeBusRequestBuf.Out().On())
+	{
+		__debugbreak();
+	}
 
 #if DEBUG
 	if (haveBusOwnership.Q().On())
