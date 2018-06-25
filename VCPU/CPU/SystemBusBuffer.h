@@ -30,7 +30,7 @@ public:
 	const Bundle<SystemBus::Naddr>& OutAddr() const { return addr.Out(); }
 	const SystemBus::ControlBundle& OutCtrl() const { return static_cast<const SystemBus::ControlBundle&>(ctrl.Out()); }
 
-	const Wire& UserCode() const { return loReserved.Out(); }
+	const Wire& UserCode() const { return usercode.Out(); }
 	const Wire& UserData() const { return usermem.Out(); }
 	const Wire& ReceiverControl() const { return memmapIoDec.Out()[0]; }
 	const Wire& ReceiverData() const { return memmapIoDec.Out()[1]; }
@@ -42,11 +42,11 @@ public:
 private:
 	SystemBus * pSystemBus;
 
-	NorGateN<4> loReserved;
+	NorGateN<4> usercode;
 	NorGate usermem;
 	AndGateN<16> memmapIo;
 	Decoder<4> memmapIoDec;
-	NorGateN<3> kernelmem;
+	NorGate kernelmem;
 
 	Register<SystemBus::Ndata> data;
 	Register<SystemBus::Naddr> addr;
@@ -58,11 +58,11 @@ inline void SystemBusBuffer::Connect(SystemBus& bus)
 {
 	pSystemBus = &bus;
 
-	loReserved.Connect(addr.Out().Range<4>(Naddr - 4));
-	usermem.Connect(loReserved.Out(), addr.Out()[Naddr - 1]);
+	usercode.Connect(addr.Out().Range<4>(Naddr - 4));
+	usermem.Connect(usercode.Out(), addr.Out()[Naddr - 1]);
 	memmapIo.Connect(addr.Out().Range<16>(Naddr - 16));
 	memmapIoDec.Connect(addr.Out().Range<2>(2), memmapIo.Out());
-	kernelmem.Connect({ &loReserved.Out(), &usermem.Out(), &memmapIo.Out() });
+	kernelmem.Connect(addr.Out()[Naddr - 1], memmapIo.Out());
 
 	data.Connect(bus.OutData(), Wire::ON);
 	addr.Connect(bus.OutAddr(), Wire::ON);
@@ -72,13 +72,13 @@ inline void SystemBusBuffer::Connect(SystemBus& bus)
 inline void SystemBusBuffer::Update()
 {
 	{
-		std::scoped_lock lk(pSystemBus->mBusMutex);
+		//std::scoped_lock lk(pSystemBus->mBusMutex);
 		data.Update();
 		addr.Update();
 		ctrl.Update();
 	}
 
-	loReserved.Update();
+	usercode.Update();
 	usermem.Update();
 	memmapIo.Update();
 	memmapIoDec.Update();
