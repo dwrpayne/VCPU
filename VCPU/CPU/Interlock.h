@@ -30,12 +30,15 @@ public:
 private:
 	NonZeroMatcher<ADDR> idexMatcher;
 	NonZeroMatcher<ADDR> exmemMatcher;
+	NonZeroMatcher<ADDR> idextoexmemMatcher;
 	NorGateN<3> branchopnor;
 	AndGate branchopand;
-	OrGate bubble;
+	AndGate branchandload;
+	OrGateN<3> bubble;
 	OrGate freeze;
 	Inverter freezeInv;
 	AndGate bubbleID;
+	OrGate exmemMatchEither;
 	AndGate bubbleEX;
 	NorGate proceedIF;
 	NorGate proceedID;
