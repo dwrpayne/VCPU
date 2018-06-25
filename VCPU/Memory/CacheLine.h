@@ -4,6 +4,7 @@
 #include "Bundle.h"
 #include "Register.h"
 #include "Matcher.h"
+#include "JKFlipFlop.h"
 
 template <unsigned int N, unsigned int Nwords, unsigned int NTag>
 class CacheLine : public Component
@@ -31,7 +32,7 @@ private:
 	AndGate writeTag;
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
-	DFlipFlopSticky valid;
+	JKFlipFlop valid;
 	AndGate tagMatchAndValid;
 	AndGate cacheHitEnabled;
 	OrGate writing;
@@ -66,7 +67,7 @@ void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBun
 	writeTag.Connect(writeline, enable);
 	tag.Connect(tagin, writeTag.Out());
 	tagMatcher.Connect(tag.Out(), tagin);
-	valid.Connect(writeline, enable);
+	valid.Connect(writeTag.Out(), Wire::OFF);
 	tagMatchAndValid.Connect(tagMatcher.Out(), valid.Q());
 	cacheHitEnabled.Connect(tagMatchAndValid.Out(), enable );
 	writing.Connect(writeline, dirty);
