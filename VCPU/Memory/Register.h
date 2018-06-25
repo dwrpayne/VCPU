@@ -59,6 +59,7 @@ public:
 	void Update();
 
 	const Bundle<N>& Out() const { return out.Out(); }
+	const Bundle<N>& ReadReg() const { return reg.Out(); }
 
 private:
 	Register<N> reg;

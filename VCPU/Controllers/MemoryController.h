@@ -23,9 +23,6 @@ private:
 	DeviceController* pTransmitter;
 	MemoryType* pMemory;
 
-	NorGateN<8> bits8To15On;
-	AndGateN<16> bitsHiOn;
-	AndGate isMemMappedIo;
 	Inverter isRegularMemoryAddr;
 	MuxBundle<32, 4> memMappedMux;
 

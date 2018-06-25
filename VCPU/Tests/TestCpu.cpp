@@ -490,6 +490,43 @@ bool TestCache(Verbosity verbosity)
 	return success;
 }
 
+bool TestKeyboardController(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	static const unsigned int DATA_REG = 0xffff0000U;
+	static const unsigned int CONTROL_REG = 0xffff0004U;
+
+	KeyboardController test;
+	MagicBundle<256> data;
+	MagicBundle<32> addr;
+	SystemBusTest bus(data, addr);
+	test.Connect(bus);
+	bool key_ready = false;
+
+	for (int i = 0; i < 10; i++)
+	{
+		addr.Write(CONTROL_REG);
+		do
+		{
+			key_ready = bus.SendAndReceiveRead(test).Range<1>().UnsignedRead();
+		} while (!key_ready);
+
+		addr.Write(DATA_REG);
+		char key = bus.SendAndReceiveRead(test).Range<8>().UnsignedRead();
+
+		std::cout << "Got a " << key << std::endl;
+	}
+
+	return success;
+}
+
+bool TestTerminalController(Verbosity verbosity)
+{
+	return true;
+}
+
 bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
@@ -636,6 +673,9 @@ bool RunCPUTests()
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
+	RUN_TEST(TestKeyboardController, FAIL_ONLY);
+	RUN_TEST(TestTerminalController, FAIL_ONLY);
+
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
 		RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);

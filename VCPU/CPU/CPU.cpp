@@ -300,12 +300,12 @@ CPU::CPU()
 
 CPU::~CPU()
 {
-	stage1->Exit();
-	stage2->Exit();
-	stage3->Exit();
-	stage4->Exit();
-	mInsMemory->Exit();
-	mMainMemory->Exit();
+	stage1->WaitUntilDone();
+	stage2->WaitUntilDone();
+	stage3->WaitUntilDone();
+	stage4->WaitUntilDone();
+	mInsMemory->WaitUntilDone();
+	mMainMemory->WaitUntilDone();
 	delete stage1;
 	delete stage2;
 	delete stage3;

@@ -11,6 +11,11 @@ ThreadedAsyncComponent::ThreadedAsyncComponent(const wchar_t* name)
 	SetThreadDescription((HANDLE)mThread.native_handle(), name);
 }
 
+ThreadedAsyncComponent::~ThreadedAsyncComponent()
+{
+	Exit();
+}
+
 void ThreadedAsyncComponent::DoOneUpdate()
 {
 	{

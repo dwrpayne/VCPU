@@ -11,6 +11,8 @@ class ThreadedAsyncComponent : public Component
 public:
 	ThreadedAsyncComponent(const wchar_t* name);
 
+	virtual ~ThreadedAsyncComponent();
+
 	void DoOneUpdate();
 	void UpdateForever();
 	void WaitUntilDone();
@@ -20,11 +22,13 @@ public:
 	std::chrono::microseconds GetElapsedTime() { return mElapsedTime; }
 	void ThreadedUpdate();
 
+protected:
+	bool mExit;
+
 private:
 	std::condition_variable mCV;
 	std::mutex mMutex;
 	bool mUpdating;
-	bool mExit;
 	bool mUpdatingUntilExit;
 	std::thread mThread;
 	int numBeforeWires;
