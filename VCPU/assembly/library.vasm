@@ -17,7 +17,7 @@ strcpy:	lb		$t0, 0($a0)
 getch:			li		$t0, 0xffff0000U
 getch_check:	lb		$t1, 4($t0)
 				beqz	$t1, getch_check
-				lb		$t1, 4($t0)
+				nop
 				lb		$v0, 0($t0)
 				ret 
 
