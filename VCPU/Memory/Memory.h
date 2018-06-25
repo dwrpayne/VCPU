@@ -13,7 +13,7 @@
 #include "SelectBundle.h"
 #include "RequestBuffer.h"
 #include "ThreadedComponent.h"
-#include "SystemBusBuffer.h"
+#include "SystemBus.h"
 
 // Memory is read and written in cache lines
 template <unsigned int N, unsigned int BYTES>
@@ -36,13 +36,13 @@ public:
 	void Update();
 	void ConnectToBus(SystemBus& bus);
 
-	void DisconnectFromBus(SystemBus & bus);
-
-
 private:
-	SystemBusBuffer busBuffer;
+	void DisconnectFromBus();
+	SystemBus * pSystemBus;
 	AndGate incomingRequest;
 	AndGate servicedRead;
+	NorGateN<4> usercodeBusAddr;
+	NorGate userdataBusAddr;
 
 	Decoder<NUM_LINES> addrDecoder;
 
@@ -52,7 +52,6 @@ private:
 	int cycle;
 
 	MultiGate<AndGate, N> outData;
-	MultiGate<AndGate, ADDR_BITS> outAddr;
 	DFlipFlop outServicedRequest;
 
 	std::mutex mMutex;
@@ -70,43 +69,38 @@ inline Memory<N, BYTES>::Memory(bool ismain)
 template<unsigned int N, unsigned int BYTES>
 inline Memory<N, BYTES>::~Memory()
 {
-	DisconnectFromBus(*busBuffer.GetSystemBus());
+	DisconnectFromBus();
 }
-//template<unsigned int N, unsigned int BYTES>
-//inline Memory<N, BYTES>::Memory(bool ismain, std::mutex& mutex, std::condition_variable& cv, bool& ready, bool& exit)
-//	: ThreadedComponent(mutex, cv, ready, exit)
-//	,mIsMainMemory(main)
-//{
-//}
 
 template <unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::Connect()
 {
+	usercodeBusAddr.Connect(pSystemBus->OutAddr().Range<4>(-4));
+	userdataBusAddr.Connect(usercodeBusAddr.Out(), pSystemBus->OutAddr().Range<1>(-1));
 	if (mIsMainMemory)
 	{
-		incomingRequest.Connect(busBuffer.UserData(), busBuffer.OutCtrl().Req());
+		incomingRequest.Connect(userdataBusAddr.Out(), pSystemBus->OutCtrl().Req());
 	}
 	else
 	{
-		incomingRequest.Connect(busBuffer.UserCode(), busBuffer.OutCtrl().Req());
+		incomingRequest.Connect(usercodeBusAddr.Out(), pSystemBus->OutCtrl().Req());
 	}
-	servicedRead.Connect(incomingRequest.Out(), busBuffer.OutCtrl().Read());
+	servicedRead.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Read());
 
-	auto cachelineAddr = busBuffer.OutAddr().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
+	auto cachelineAddr = pSystemBus->OutAddr().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 
-	addrDecoder.Connect(cachelineAddr, busBuffer.OutCtrl().Write());
+	addrDecoder.Connect(cachelineAddr, pSystemBus->OutCtrl().Write());
 	
 	std::array<CacheLineBundle, NUM_LINES> lineOuts;
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		cachelines[i].Connect(busBuffer.OutData(), addrDecoder.Out()[i]);
+		cachelines[i].Connect(pSystemBus->OutData(), addrDecoder.Out()[i]);
 		lineOuts[i].Connect(0, cachelines[i].Out());
 	}
 
 	outMux.Connect(lineOuts, cachelineAddr);
 
 	outData.Connect(outMux.Out(), Bundle<N>(servicedRead.Out()));
-	outAddr.Connect(busBuffer.OutAddr().Range<ADDR_BITS>(), Bundle<ADDR_BITS>(servicedRead.Out()));
 	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
 }
 
@@ -114,7 +108,8 @@ template <unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::Update()
 {
 	cycle++;
-	busBuffer.Update();
+	usercodeBusAddr.Update();
+	userdataBusAddr.Update();
 	incomingRequest.Update();
 	servicedRead.Update();
 #if DEBUG
@@ -122,8 +117,8 @@ inline void Memory<N, BYTES>::Update()
 	{
 		std::stringstream ss;
 		ss << (mIsMainMemory ? "Main Mem " : "Ins Mem ");
-		ss << "servicing a " << (servicedRead.Out().On() ? "read" : (busBuffer.OutCtrl().Write().On() ? "write" : "hold"));
-		ss << " at " << std::hex << busBuffer.OutAddr().UnsignedRead() << std::endl;
+		ss << "servicing a " << (servicedRead.Out().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
+		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
 		std::cout << ss.str();
 	}
 #endif
@@ -134,7 +129,6 @@ inline void Memory<N, BYTES>::Update()
 	}
 	outMux.Update();
 	outData.Update();
-	outAddr.Update();
 
 	outServicedRequest.Update();
 }
@@ -142,7 +136,7 @@ inline void Memory<N, BYTES>::Update()
 template<unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 {
-	busBuffer.Connect(bus);
+	pSystemBus = &bus;
 
 	bus.ConnectData(outData.Out());
 	bus.ConnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
@@ -150,8 +144,8 @@ inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
 
 
 template<unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::DisconnectFromBus(SystemBus & bus)
+inline void Memory<N, BYTES>::DisconnectFromBus()
 {
-	bus.DisconnectData(outData.Out());
-	bus.DisconnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
+	pSystemBus->DisconnectData(outData.Out());
+	pSystemBus->DisconnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
 }

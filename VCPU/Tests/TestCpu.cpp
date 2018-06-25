@@ -577,17 +577,21 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 
 bool RunCPUTests()
 {
+	static const int NUM_TIMES_TO_TEST = 20;
 	bool success = true;
-	auto default_verb = Debugger::MEMORY;
+	auto default_verb = Debugger::MINIMAL;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
+	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
+	{
+		RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
+	}
 
 	return success;
 }

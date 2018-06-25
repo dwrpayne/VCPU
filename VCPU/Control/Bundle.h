@@ -94,8 +94,13 @@ public:
 	}
 
 	template <unsigned int TO>
-	const Bundle<TO> Range(unsigned int start=0) const
+	const Bundle<TO> Range(int start=0) const
 	{
+		// Python-esque negative index means take the top '-start' bits
+		if (start < 0)
+		{
+			start = N + start;
+		}
 		int shiftby = -(int)start;
 		return Bundle<TO>(*this, shiftby);
 	}

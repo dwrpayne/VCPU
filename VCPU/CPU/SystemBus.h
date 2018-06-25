@@ -26,10 +26,10 @@ public:
 	static const int Ndata = 256;
 
 
-	class ControlBundle : public Bundle<Nctrl>
+	class ControlBundle : public Bus<Nctrl>
 	{
 	public:
-		using Bundle<Nctrl>::Bundle;
+		using Bus<Nctrl>::Bus;
 		const Wire& Read() const { return Get(CtrlBit::Read); }
 		const Wire& Write() const { return Get(CtrlBit::Write); }
 		const Wire& Req() const { return Get(CtrlBit::Req); }
@@ -45,19 +45,20 @@ public:
 	template<unsigned int N>	void DisconnectAddr(const Bundle<N>& b, int start = 0);
 	void ConnectCtrl(const Wire& wire, CtrlBit start);
 	void DisconnectCtrl(const Wire & wire, CtrlBit start);
-	
-private:
+
 	const Bundle<Ndata>& OutData() const { return data; }
 	const Bundle<Naddr>& OutAddr() const { return addr; }
-	const ControlBundle& OutCtrl() const { return reinterpret_cast<const ControlBundle&>(ctrl); }
+	const ControlBundle& OutCtrl() const { return ctrl; }
+
+	
+private:
 
 	Bus<Ndata> data;
 	Bus<Naddr> addr;
-	Bus<Nctrl> ctrl;
+	ControlBundle ctrl;
 
 	static std::mutex mBusMutex;
 
-	friend class SystemBusBuffer;
 	friend class ProgramLoader;
 	friend class Debugger;
 };

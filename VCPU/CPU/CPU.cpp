@@ -109,8 +109,8 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 	pcIncrementer.Connect(pc.Out(), Bundle<32>(4), Wire::OFF);
 
 	// Instruction memory
-	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF);
 	instructionCache.ConnectToBus(systembus);
+	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF);
 
 	// Out Buffer
 	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
@@ -192,10 +192,10 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed, System
 {
 	// Main Memory
 	const auto& memAddr = stage3.aluOut.Out();
+	cache.ConnectToBus(systembus);
 	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), stage3.OpcodeControl().LoadOp(),
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
 
-	cache.ConnectToBus(systembus);
 
 	// Byte/Half/Word Selection
 	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned(),
@@ -347,7 +347,7 @@ void CPU::Update()
 
 	hazardIFID.Update();
 	hazardIDEX.Update();
-	
+		
 	if (!mInsMemory->IsRunning())
 	{
 		mInsMemory->DoOneUpdate();

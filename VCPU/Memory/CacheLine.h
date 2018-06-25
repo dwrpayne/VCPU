@@ -25,6 +25,7 @@ public:
 	const LineBundle& OutLine() { return outLineBundle; }
 	const Wire& CacheHit() { return tagMatchAndValid.Out(); }
 	const Wire& Dirty() { return dirtyFlag.Q(); }
+	const Wire& Valid() { return valid.Q(); }
 
 private:
 	AndGate writeTag;

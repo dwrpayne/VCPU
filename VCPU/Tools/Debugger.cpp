@@ -18,7 +18,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintOutputReg = verbosity >= MINIMAL;
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
-	bPrintBus = verbosity >= NORMAL;
+	bPrintBus = verbosity >= NORMAL; 
 
 	pAssembler = new Assembler();
 	pProgram = pAssembler->Assemble(source_filename);
@@ -40,7 +40,7 @@ void Debugger::Start(int cycles)
 		Step();
 		if (bPrintInstruction)// && !pCPU->PipelineFreeze())
 		{
-			__debugbreak();
+			//__debugbreak();
 		}
  		if (pCPU->Halt())
 		{
@@ -143,11 +143,24 @@ int Debugger::GetRegisterVal(int reg)
 	return pCPU->Registers().registers[reg].Out().Read();
 }
 
-unsigned char Debugger::GetMemoryByte(int addr)
+unsigned char Debugger::GetMemoryByte(int addr, bool cache, bool insmem)
 {
-	unsigned int cacheline = addr / pCPU->GetMainMemory().CACHELINE_BYTES;
-	auto line = pCPU->GetMainCache().cachelines[cacheline].OutLine();
-	return line.Range<8>(8 * (addr % pCPU->GetMainMemory().CACHELINE_BYTES)).Read();
+	auto& cachesrc = insmem ? pCPU->InstructionCache() : pCPU->GetMainCache();
+	auto& memsrc = insmem ? pCPU->InstructionMemory() : pCPU->GetMainMemory();
+	if (cache)
+	{
+		unsigned int cacheline = addr / cachesrc.CACHE_LINE_BYTES;
+		cacheline %= cachesrc.NUM_CACHE_LINES;
+		auto line = cachesrc.cachelines[cacheline].OutLine();
+		return line.Range<8>(8 * (addr % cachesrc.CACHE_LINE_BYTES)).Read();
+	}
+	else
+	{
+		unsigned int cacheline = addr / memsrc.CACHELINE_BYTES;
+		cacheline %= memsrc.NUM_LINES;
+		auto line = memsrc.cachelines[cacheline].Out();
+		return line.Range<8>(8 * (addr % memsrc.CACHELINE_BYTES)).Read();
+	}
 }
 
 int Debugger::GetMemoryWord(int addr)

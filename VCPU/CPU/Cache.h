@@ -58,6 +58,8 @@ public:
 	static const int ADDR_BITS = 32;
 	static const int CACHE_BYTES = CACHE_SIZE_BYTES;
 	static const int MEMORY_BYTES = MAIN_MEMORY_BYTES;
+	static const int CACHE_LINE_BYTES = CACHE_LINE_BITS / 8;
+
 
 	static const int WORD_BYTES = WORD_SIZE / 8;
 	static const int BYTE_INDEX_BITS = bits(WORD_BYTES);
@@ -117,10 +119,11 @@ private:
 		TagBundle tag;
 	};
 
+	void DisconnectFromBus();
+	SystemBus * pSystemBus;
+
 	//ReqBuffer buffer;
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
-
-	SystemBusBuffer inBusBuffer;
 
 	Matcher<ADDR_BITS> addrReadMatcher;
 	AndGateN<3> gotResultFromMemory;
@@ -182,9 +185,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	CacheIndexBundle index = address.CacheLineIndex();
 		
 	// Did we get data from memory. Mask it in with the data we want to write.
-	gotResultFromMemory.Connect({ &haveBusOwnership.Q(), &cacheMiss.Out(), &inBusBuffer.OutCtrl().Ack() });
+	gotResultFromMemory.Connect({ &haveBusOwnership.Q(), &cacheMiss.Out(), &pSystemBus->OutCtrl().Ack() });
 	indexDecoder.Connect(index, Wire::ON);
-	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, inBusBuffer.OutData(), bytewrite, halfwrite, write);
+	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, pSystemBus->OutData(), bytewrite, halfwrite, write);
 
 	// Temp Bundles for the cache line array
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
@@ -231,13 +234,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	}
 	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 
-	busIsFree.Connect(inBusBuffer.OutCtrl().BusReq(), inBusBuffer.OutCtrl().Ack());
+	busIsFree.Connect(pSystemBus->OutCtrl().BusReq(), pSystemBus->OutCtrl().Ack());
 	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
 	haveBusOwnership.Connect(needStall.Out(), busIsFreeOrMine.Out());
 
-	busReqNotYetAck.Connect(inBusBuffer.OutCtrl().Ack());
+	busReqNotYetAck.Connect(pSystemBus->OutCtrl().Ack());
 
-	shouldOutputOnBus.Connect(haveBusOwnership.Q(), busReqNotYetAck.Out());
+	shouldOutputOnBus.Connect(haveBusOwnership.Q(), Wire::ON);
 	shouldOutputDataBus.Connect(shouldOutputOnBus.Out(), write);
 
 	writeBusRequestBuf.Connect(evictedDirty.Out(), shouldOutputOnBus.Out());
@@ -251,12 +254,10 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
-	inBusBuffer.Update();
-
 	gotResultFromMemory.Update();
 	indexDecoder.Update();
 	lineWriteMasker.Update();
-	
+		
 	// Must update the line tag mux *before* the registers, as their tags get stomped on write
 	lineTagMux.Update();
 
@@ -288,7 +289,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 		busIsFree.Update();
 		busIsFreeOrMine.Update();
 		haveBusOwnership.Update();
-
 	}
 	busReqNotYetAck.Update();
 	shouldOutputOnBus.Update();
@@ -298,11 +298,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	dataRequestBuf.Update();
 	busRequestBuf.Update();
 	
-	if (haveBusOwnership.Q().On() && !readBusRequestBuf.Out().On() && !writeBusRequestBuf.Out().On())
-	{
-		__debugbreak();
-	}
-
 #if DEBUG
 	if (haveBusOwnership.Q().On())
 	{
@@ -326,14 +321,24 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateU
 }
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::DisconnectFromBus()
+{
+	pSystemBus->DisconnectAddr(memAddrMux.Out());
+	pSystemBus->DisconnectAddr(dataRequestBuf.Out());
+	pSystemBus->DisconnectAddr(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
+	pSystemBus->DisconnectAddr(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
+	pSystemBus->DisconnectAddr(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+	pSystemBus->DisconnectAddr(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+}
+
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::ConnectToBus(SystemBus & bus)
 {
-	bus.ConnectAddr(memAddrMux.Out());
-	bus.ConnectData(dataRequestBuf.Out());
-	bus.ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
-	bus.ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	bus.ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
-	bus.ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
-
-	inBusBuffer.Connect(bus);
+	pSystemBus = &bus;
+	pSystemBus->ConnectAddr(memAddrMux.Out());
+	pSystemBus->ConnectData(dataRequestBuf.Out());
+	pSystemBus->ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
+	pSystemBus->ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
+	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+	pSystemBus->ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 }

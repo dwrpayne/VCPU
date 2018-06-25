@@ -182,7 +182,6 @@
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="CPU\SystemBus.h" />
-    <ClInclude Include="CPU\SystemBusBuffer.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\ByteExtractor.h" />
