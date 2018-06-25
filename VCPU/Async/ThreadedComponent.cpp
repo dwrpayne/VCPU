@@ -1,5 +1,6 @@
 #include "ThreadedComponent.h"
 #include <windows.h>
+#include <assert.h>
 
 
 ThreadedAsyncComponent::ThreadedAsyncComponent(const wchar_t* name)
@@ -19,8 +20,19 @@ void ThreadedAsyncComponent::DoOneUpdate()
 	mCV.notify_one();
 }
 
+void ThreadedAsyncComponent::UpdateForever()
+{
+	mUpdatingUntilExit = true;
+	{
+		std::lock_guard<std::mutex> lk(mMutex);
+		mUpdating = true;
+	}
+	mCV.notify_one();
+}
+
 void ThreadedAsyncComponent::WaitUntilDone()
 {
+	assert(!mUpdatingUntilExit || mExit && "Not safe to call WaitUntilDone when updating forever and not exit yet!");
 	{
 		std::unique_lock<std::mutex> lk(mMutex);
 		mCV.wait(lk, [this] {return !mUpdating; });
@@ -50,11 +62,14 @@ void ThreadedAsyncComponent::ThreadedUpdate()
 		auto t1 = std::chrono::high_resolution_clock::now();
 		Update();
 		auto t2 = std::chrono::high_resolution_clock::now();
+		if (!mUpdatingUntilExit)
 		{
-			std::unique_lock<std::mutex> lk(mMutex);
-			mUpdating = false;
-			lk.unlock();
-			mCV.notify_all();
+			{
+				std::unique_lock<std::mutex> lk(mMutex);
+				mUpdating = false;
+				lk.unlock();
+				mCV.notify_all();
+			}
 		}
 	}
 }

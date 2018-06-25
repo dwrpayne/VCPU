@@ -12,6 +12,7 @@ public:
 	ThreadedAsyncComponent(const wchar_t* name);
 
 	void DoOneUpdate();
+	void UpdateForever();
 	void WaitUntilDone();
 	void Exit();
 	inline bool IsRunning() const { return mUpdating; }
@@ -24,6 +25,7 @@ private:
 	std::mutex mMutex;
 	bool mUpdating;
 	bool mExit;
+	bool mUpdatingUntilExit;
 	std::thread mThread;
 	int numBeforeWires;
 
