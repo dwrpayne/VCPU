@@ -503,15 +503,11 @@ bool TestKeyboardController(Verbosity verbosity)
 	MagicBundle<32> addr;
 	SystemBusTest bus(data, addr);
 	test.Connect(bus);
-	bool key_ready = false;
 
 	for (int i = 0; i < 10; i++)
 	{
 		addr.Write(CONTROL_REG);
-		do
-		{
-			key_ready = bus.SendAndReceiveRead(test).Range<1>().UnsignedRead();
-		} while (!key_ready);
+		while (!bus.SendAndReceiveRead(test).Range<1>().UnsignedRead());
 
 		addr.Write(DATA_REG);
 		char key = bus.SendAndReceiveRead(test).Range<8>().UnsignedRead();
@@ -524,7 +520,30 @@ bool TestKeyboardController(Verbosity verbosity)
 
 bool TestTerminalController(Verbosity verbosity)
 {
-	return true;
+	int i = 0;
+	bool success = true;
+
+	static const unsigned int DATA_REG = 0xffff0008U;
+	static const unsigned int CONTROL_REG = 0xffff000CU;
+
+	TerminalController test;
+	MagicBundle<256> data;
+	MagicBundle<32> addr;
+	SystemBusTest bus(data, addr);
+	test.Connect(bus);
+
+	for (int i = 0; i < 26; i++)
+	{
+		addr.Write(CONTROL_REG);
+		while (!bus.SendAndReceiveRead(test).Range<1>().UnsignedRead());
+
+		addr.Write(DATA_REG);
+		data.Write(65 + i);
+		bus.SendAndReceiveWrite(test);
+	}
+	std::cout << std::endl;
+
+	return success;
 }
 
 bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)

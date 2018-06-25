@@ -36,7 +36,12 @@ void DeviceController::Update()
 
 	{
 		std::scoped_lock lk(controlRegMutex);
-		InternalControlUpdate();
+		if (InternalControlUpdate())
+		{
+			pending.Set(true);
+		}
+		pendingState.Update();
+		pending.Set(false);
 		control.Update();
 	}
 	{
@@ -54,19 +59,6 @@ void DeviceController::DisconnectFromBus()
 	pSystemBus->DisconnectCtrl(outServicedRequest.Out(), SystemBus::CtrlBit::Ack);
 }
 
-void TerminalController::Connect(SystemBus& bus)
-{
-	// 0xffff0008 is control, 0xffff000c is data
-	DeviceController::Connect(bus);	
-	incomingRequest.Connect({ &isMemMappedIo.Out(), &pSystemBus->OutAddr()[3], &pSystemBus->OutCtrl().Req() });
-
-	Bundle<32> controlBundle = Bundle<32>::OFF;
-	controlBundle.Connect(0, Wire::ON);
-	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());
-
-	data.Connect(pSystemBus->OutData().Range<32>(), incomingDataRequest.Out(), incomingDataRequest.Out());
-}
-
 void KeyboardController::Connect(SystemBus& bus)
 {
 	// 0xffff0000 is control, 0xffff0004 is data
@@ -74,27 +66,51 @@ void KeyboardController::Connect(SystemBus& bus)
 	pSystemBus->ConnectData(data.Out());
 
 	incomingRequest.Connect({ &isMemMappedIo.Out(), &addrBit3Inv.Out(), &pSystemBus->OutCtrl().Req() });
-	pendingKey.Connect(pending, incomingDataRequest.Out());
+	pendingState.Connect(pending, incomingDataRequest.Out());
 
 	Bundle<32> dataBundle = Bundle<32>::OFF;
 	dataBundle.Connect(0, c_in);
 	data.Connect(dataBundle, Wire::ON, incomingDataRequest.Out());
 
 	Bundle<32> controlBundle = Bundle<32>::OFF;
-	controlBundle.Connect(0, pendingKey.Q());
+	controlBundle.Connect(0, pendingState.Q());
 	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());	
 }
 
-void KeyboardController::InternalControlUpdate()
+bool KeyboardController::InternalControlUpdate()
 {
 	if (_kbhit())
 	{
 		if (int c = _getch())
 		{
 			c_in.Write(c);
-			pending.Set(true);
+			return true;
 		}
 	}
-	pendingKey.Update();
-	pending.Set(false);
+	return false;
+}
+
+void TerminalController::Connect(SystemBus& bus)
+{
+	// 0xffff0008 is control, 0xffff000c is data
+	DeviceController::Connect(bus);
+	incomingRequest.Connect({ &isMemMappedIo.Out(), &pSystemBus->OutAddr()[3], &pSystemBus->OutCtrl().Req() });
+
+	Bundle<32> controlBundle = Bundle<32>::OFF;
+	controlBundle.Connect(0, Wire::ON);
+	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());
+
+	data.Connect(pSystemBus->OutData().Range<32>(), incomingDataRequest.Out(), incomingDataRequest.Out());
+
+	pendingState.Connect(pending, incomingDataRequest.Out());
+}
+
+bool TerminalController::InternalControlUpdate()
+{
+	if (pendingState.NotQ().On())
+	{
+		std::cout << (unsigned char)data.ReadReg().Range<8>().UnsignedRead();
+		return true;
+	}
+	return false;
 }
