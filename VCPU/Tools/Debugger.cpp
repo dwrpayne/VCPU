@@ -91,8 +91,8 @@ void Debugger::Step()
 		{
 			mLastInstructions.pop_back();
 		}
+		PrintCycle();
 	}
-	PrintCycle();
 }
 
 void Debugger::PrintCycle()

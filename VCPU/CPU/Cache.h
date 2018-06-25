@@ -173,6 +173,7 @@ private:
 	TriState busRequestBuf;
 	
 	MultiGate<TriState, CACHE_LINE_BITS> dataRequestBuf;
+	MultiGate<TriState, ADDR_BITS> addrRequestBuf;
 	DFlipFlop haveBusOwnership;
 
 	int cycles;
@@ -196,7 +197,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 #endif
 
 	pSystemBus = &bus;
-	pSystemBus->ConnectAddr(memAddrMux.Out());
+	pSystemBus->ConnectAddr(addrRequestBuf.Out());
 	pSystemBus->ConnectData(dataRequestBuf.Out());
 	pSystemBus->ConnectData(uncachedWriteBuffer.Out());
 	pSystemBus->ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
@@ -282,6 +283,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	writeBusRequestBuf.Connect(shouldSendWriteReq.Out(), shouldOutputOnBus.Out());
 	readBusRequestBuf.Connect(shouldSendReadReq.Out(), shouldOutputOnBus.Out());
 	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(shouldOutputDataBus.Out()));
+	addrRequestBuf.Connect(memAddrMux.Out(), Bundle<32>(shouldOutputOnBus.Out()));
 	busRequestBuf.Connect(haveBusOwnership.Q(), shouldOutputOnBus.Out());
 	
 	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
@@ -346,12 +348,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	readBusRequestBuf.Update();
 	uncachedWriteBuffer.Update();
 	dataRequestBuf.Update();
+	addrRequestBuf.Update();
 	busRequestBuf.Update();
 	
 #if DEBUG &&0
 	if (haveBusOwnership.Q().On())
 	{
-		if (!readBusRequestBuf.Out().On() && !writeBusRequestBuf.Out().On())
+		if (pSystemBus->OutAddr().UnsignedRead() > 0xffff0010U)
 		{
 			__debugbreak();
 		}
@@ -377,7 +380,7 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateU
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::DisconnectFromBus()
 {
-	pSystemBus->DisconnectAddr(memAddrMux.Out());
+	pSystemBus->DisconnectAddr(addrRequestBuf.Out());
 	pSystemBus->DisconnectData(dataRequestBuf.Out());
 	pSystemBus->DisconnectData(uncachedWriteBuffer.Out());
 	pSystemBus->DisconnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);

@@ -1,14 +1,4 @@
-; first we write all the characters from a-z to test putch
-main:	li 		$a0, 97
-		li		$t8, 123
-out:	call 	putch
-		bne		$a0, $t8, out
-		addiu	$a0, $a0, 1
-		nop
-		nop
-		nop
-; then loop, getch and putch rot-13
-		li 		$t3, 110 			; greater than or equal to "n" means sub 13 instead
+main:	li 		$t3, 110 			; greater than or equal to "n" means sub 13 instead
 loop: 	call 	getch
 		blt		$v0, $t3, lochar
 		addiu 	$a0, $v0, 13

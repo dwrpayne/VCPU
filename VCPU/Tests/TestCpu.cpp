@@ -683,6 +683,17 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 	return success;
 }
 
+bool TestCPUPutch(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testputch.vasm", dverb);
+	debugger.Start();
+
+	return success;
+}
+
 bool TestCPURot13(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
@@ -705,7 +716,8 @@ bool RunCPUTests()
 	//RUN_TEST(TestCache, FAIL_ONLY);
 	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
 	//RUN_TEST(TestTerminalController, FAIL_ONLY);
-	RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPURot13, FAIL_ONLY, Debugger::VERBOSE);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
