@@ -122,10 +122,20 @@ private:
 	SystemBus * pSystemBus;
 
 	//ReqBuffer buffer;
-	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
+	AndGateN<16> unCacheableAddr; // Replace this with a lookup table of some kind, or a tag!
+	Inverter cacheableAddr;
+	AndGate uncachedWrite;
+	AndGate uncachedRead;
+	OrGate uncachedReadOrWrite;
 	Matcher<ADDR_BITS> addrReadMatcher;
-	AndGateN<3> gotResultFromMemory;
+	AndGate gotResultFromMemory;
+	Inverter gotResultFromMemoryInv;
+	AndGate waitingForUncachedData;
+
+	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
+	Register<WORD_SIZE> uncachedBuffer;
+	RegisterEnable<WORD_SIZE> uncachedWriteBuffer;
 
 	Decoder<NUM_CACHE_LINES> indexDecoder;
 
@@ -138,13 +148,17 @@ private:
 	Inverter cacheMissInternal;
 	OrGate readOrWrite;
 	AndGate cacheMiss;
+	AndGate cacheableAddrCacheMiss;
 	AndGate writeBufferFull;
-	OrGate needStall;
+	OrGateN<3> needStall;
 	Inverter needStallInv;
-	AndGate readOkay;
+	AndGateN<3> cachedReadReqOkay;
+	OrGate shouldSendReadReq;
+	OrGate shouldSendWriteReq;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
-	MuxBundle<WORD_SIZE, CACHE_WORDS> outDataMux;
+	MuxBundle<WORD_SIZE, CACHE_WORDS> outCacheDataMux;
+	MuxBundle<WORD_SIZE, 2> outDataMux;
 
 	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	MuxBundle<ADDR_BITS, 4> memAddrMux;
@@ -157,6 +171,7 @@ private:
 	TriState writeBusRequestBuf;
 	TriState readBusRequestBuf;
 	TriState busRequestBuf;
+	
 	MultiGate<TriState, CACHE_LINE_BITS> dataRequestBuf;
 	DFlipFlop haveBusOwnership;
 
@@ -183,16 +198,27 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	pSystemBus = &bus;
 	pSystemBus->ConnectAddr(memAddrMux.Out());
 	pSystemBus->ConnectData(dataRequestBuf.Out());
+	pSystemBus->ConnectData(uncachedWriteBuffer.Out());
 	pSystemBus->ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
 	pSystemBus->ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
 	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
 	pSystemBus->ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+	
+	readOrWrite.Connect(read, write);
+
+	unCacheableAddr.Connect(addr.Range<16>(16));
+	cacheableAddr.Connect(unCacheableAddr.Out());
+	uncachedWrite.Connect(unCacheableAddr.Out(), write);
+	uncachedRead.Connect(unCacheableAddr.Out(), read);
+	uncachedReadOrWrite.Connect(uncachedRead.Out(), uncachedWrite.Out());
 
 	CacheIndexBundle index = address.CacheLineIndex();
 		
 	// If we got data from memory, mask it in with the data we want to write.
-	gotResultFromMemory.Connect({ &haveBusOwnership.Q(), &cacheMiss.Out(), &pSystemBus->OutCtrl().Ack() });
-	indexDecoder.Connect(index, Wire::ON);
+	gotResultFromMemory.Connect(haveBusOwnership.Q(), pSystemBus->OutCtrl().Ack());
+	gotResultFromMemoryInv.Connect(gotResultFromMemory.Out());
+	waitingForUncachedData.Connect(gotResultFromMemoryInv.Out(), uncachedReadOrWrite.Out());
+	indexDecoder.Connect(index, cacheableAddr.Out());
 	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, pSystemBus->OutData(), bytewrite, halfwrite, write);
 
 	// Temp Bundles for the cache line array
@@ -211,6 +237,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 		cacheDirtyCollector.Connect(i, cachelines[i].Dirty());
 	}
+	uncachedBuffer.Connect(pSystemBus->OutData().Range<WORD_SIZE>(), unCacheableAddr.Out());
 
 	// Evicted tag collector and addr calculation
 	lineTagMux.Connect(cacheLineTagOuts, index);
@@ -222,14 +249,17 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	cacheHitMux.Connect(cacheHitCollector, index);
 	cacheDirtyMux.Connect(cacheDirtyCollector, index);
 	cacheMissInternal.Connect(cacheHitMux.Out());
-	readOrWrite.Connect(read, write);
 	cacheMiss.Connect(cacheMissInternal.Out(), readOrWrite.Out());
+	cacheableAddrCacheMiss.Connect(cacheMiss.Out(), cacheableAddr.Out());
 	evictedDirty.Connect(cacheMiss.Out(), cacheDirtyMux.Out());
 	notEvictedDirty.Connect(evictedDirty.Out());
 	writeBufferFull.Connect(evictedDirty.Out(), Wire::ON);
-	needStall.Connect(cacheMiss.Out(), writeBufferFull.Out());
+	needStall.Connect({ &cacheableAddrCacheMiss.Out(), &writeBufferFull.Out(), &waitingForUncachedData.Out() });
 	needStallInv.Connect(needStall.Out());
-	readOkay.Connect(cacheMiss.Out(), notEvictedDirty.Out());
+	cachedReadReqOkay.Connect({ &cacheMiss.Out(), &notEvictedDirty.Out(), &cacheableAddr.Out() });
+
+	shouldSendReadReq.Connect(cachedReadReqOkay.Out(), uncachedRead.Out());
+	shouldSendWriteReq.Connect(evictedDirty.Out(), uncachedWrite.Out());
 
 	// Output 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
@@ -238,7 +268,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	{
 		dataWordBundles[i] = outCacheLineMux.Out().Range<WORD_SIZE>(i*WORD_SIZE);
 	}
-	outDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
+	outCacheDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
+	outDataMux.Connect({ outCacheDataMux.Out(), uncachedBuffer.Out() }, unCacheableAddr.Out());
 
 	busIsFree.Connect(pSystemBus->OutCtrl().BusReq(), pSystemBus->OutCtrl().Ack());
 	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
@@ -247,8 +278,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	shouldOutputOnBus.Connect(haveBusOwnership.Q(), Wire::ON);
 	shouldOutputDataBus.Connect(shouldOutputOnBus.Out(), write);
 
-	writeBusRequestBuf.Connect(evictedDirty.Out(), shouldOutputOnBus.Out());
-	readBusRequestBuf.Connect(readOkay.Out(), shouldOutputOnBus.Out());
+	uncachedWriteBuffer.Connect(data, uncachedWrite.Out(), shouldOutputDataBus.Out());
+	writeBusRequestBuf.Connect(shouldSendWriteReq.Out(), shouldOutputOnBus.Out());
+	readBusRequestBuf.Connect(shouldSendReadReq.Out(), shouldOutputOnBus.Out());
 	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(shouldOutputDataBus.Out()));
 	busRequestBuf.Connect(haveBusOwnership.Q(), shouldOutputOnBus.Out());
 	
@@ -258,7 +290,16 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 {
+	readOrWrite.Update();
+	unCacheableAddr.Update();
+	cacheableAddr.Update();
+	uncachedWrite.Update();
+	uncachedRead.Update();
+	uncachedReadOrWrite.Update();
+
 	gotResultFromMemory.Update();
+	gotResultFromMemoryInv.Update();
+	waitingForUncachedData.Update();
 	indexDecoder.Update();
 	lineWriteMasker.Update();
 		
@@ -269,11 +310,12 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	{
 		line.Update();
 	}
+	uncachedBuffer.Update();
 	cacheHitMux.Update();
 	cacheDirtyMux.Update();
 	cacheMissInternal.Update();
-	readOrWrite.Update();
 	cacheMiss.Update();
+	cacheableAddrCacheMiss.Update();
 	evictedDirty.Update();
 	notEvictedDirty.Update();
 	writeBufferFull.Update();
@@ -282,9 +324,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 
 	// We do write-before-read because writes aren't buffered to the bus yet.
 	// This needs to change to a read first, write buffer, query the buffer first on cache miss, architecture.
-	readOkay.Update();
+	cachedReadReqOkay.Update();
+
+	shouldSendWriteReq.Update();
+	shouldSendReadReq.Update();
 
 	outCacheLineMux.Update();
+	outCacheDataMux.Update();
 	outDataMux.Update();
 	memAddrMux.Update();
 	//buffer.Update();
@@ -298,12 +344,17 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	shouldOutputDataBus.Update();
 	writeBusRequestBuf.Update();
 	readBusRequestBuf.Update();
+	uncachedWriteBuffer.Update();
 	dataRequestBuf.Update();
 	busRequestBuf.Update();
 	
-#if DEBUG
+#if DEBUG &&0
 	if (haveBusOwnership.Q().On())
 	{
+		if (!readBusRequestBuf.Out().On() && !writeBusRequestBuf.Out().On())
+		{
+			__debugbreak();
+		}
 		std::stringstream ss;
 		ss << std::this_thread::get_id() << " requesting a " << (readBusRequestBuf.Out().On() ? "read" : (writeBusRequestBuf.Out().On() ? "write" : "hold"));
 		ss << " at " << std::hex << memAddrMux.Out().UnsignedRead() << std::endl;
@@ -327,9 +378,10 @@ template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned i
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::DisconnectFromBus()
 {
 	pSystemBus->DisconnectAddr(memAddrMux.Out());
-	pSystemBus->DisconnectAddr(dataRequestBuf.Out());
-	pSystemBus->DisconnectAddr(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
-	pSystemBus->DisconnectAddr(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	pSystemBus->DisconnectAddr(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
-	pSystemBus->DisconnectAddr(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+	pSystemBus->DisconnectData(dataRequestBuf.Out());
+	pSystemBus->DisconnectData(uncachedWriteBuffer.Out());
+	pSystemBus->DisconnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
+	pSystemBus->DisconnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
+	pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+	pSystemBus->DisconnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 }

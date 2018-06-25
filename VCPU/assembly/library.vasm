@@ -5,25 +5,6 @@ sqrt:	li		$t5, 1
 		srl		$v0, $t5, 1
 		ret
 
-mul2:	clr		$v0
-		bgt		$a0, $a1, 12
-		move	$t5, $a0
-		move 	$a0, $a1
-		move 	$a1, $t5
-		addiu	$a1, $a1, -1
-		bgtz	$a1, -8
-		add		$v0, $v0, $a0
-		ret
-		
-mul3:	clr		$v0				; $v0 = 0
-		andi	$t5, $a1, 1		; if ($a1 & 1)
-		beqz	$t5, 8			; {
-		srl		$a1, $a1, 1		; 	$a1 <<= 1
-		add		$v0, $v0, $a0	; 	$v0 += $a0		
-		bgtz	$a1, -20		; }
-		sll		$a0, $a0, 1		; $a0 <<= 1
-		ret						; if ($a1 > 0) goto mul3st
-
 ; strcpy takes the src in $a0 and the dest in $a1
 strcpy:	lb		$t0, 0($a0)		
 		addi	$a0, $a0, 1
@@ -31,3 +12,19 @@ strcpy:	lb		$t0, 0($a0)
 		bgtz	$t0, strcpy
 		addi	$a1, $a1, 1
 		ret
+
+; getch blocks until a char is ready
+getch:			li		$t0, 0xffff0000U
+getch_check:	lb		$t1, 4($t0)
+				beqz	$t1, getch_check
+				lb		$t1, 4($t0)
+				lb		$v0, 0($t0)
+				ret 
+
+; putch takes the char to output in $a0	
+putch:			li		$t0, 0xffff0008U
+putch_check:	lb		$t1, 4($t0)
+				beqz	$t1, putch_check
+				nop
+				sb		$a0, 0($t0)
+				ret 

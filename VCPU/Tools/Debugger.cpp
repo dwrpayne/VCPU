@@ -38,9 +38,9 @@ void Debugger::Start(int cycles)
 	while (cycles != 0)
 	{
 		Step();
-		if (bPrintInstruction)// && !pCPU->PipelineFreeze())
+		if (bPrintInstruction && !pCPU->PipelineFreeze())
 		{
-			//__debugbreak();
+			__debugbreak();
 		}
  		if (pCPU->Halt())
 		{

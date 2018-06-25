@@ -11,7 +11,7 @@
 #include "HazardUnit.h"
 #include "Interlock.h"
 #include "SystemBus.h"
-
+#include "Controllers/DeviceController.h"
 
 class CPU : public Component
 {
@@ -70,6 +70,8 @@ private:
 
 	InsMemory* mInsMemory;
 	MainMemory* mMainMemory;
+	KeyboardController mKeyboard;
+	TerminalController mTerminal;
 	
 	HazardUnit hazardIDEX;
 	HazardUnit hazardIFID;

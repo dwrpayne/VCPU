@@ -296,6 +296,8 @@ CPU::CPU()
 
 	mInsMemory->Connect(systemBus);
 	mMainMemory->Connect(systemBus);
+	mKeyboard.Connect(systemBus);
+	mTerminal.Connect(systemBus);
 }
 
 CPU::~CPU()
@@ -306,6 +308,8 @@ CPU::~CPU()
 	stage4->WaitUntilDone();
 	mInsMemory->WaitUntilDone();
 	mMainMemory->WaitUntilDone();
+	mKeyboard.WaitUntilDone();
+	mTerminal.WaitUntilDone();
 	delete stage1;
 	delete stage2;
 	delete stage3;
@@ -344,14 +348,10 @@ void CPU::Update()
 	hazardIFID.Update();
 	hazardIDEX.Update();
 		
-	if (!mInsMemory->IsRunning())
-	{
-		mInsMemory->DoOneUpdate();
-	}
-	if (!mMainMemory->IsRunning())
-	{
-		mMainMemory->DoOneUpdate();
-	}
+	mInsMemory->DoOneUpdate();
+	mMainMemory->DoOneUpdate();
+	mKeyboard.DoOneUpdate();
+	mTerminal.DoOneUpdate();
 
 	if (!PipelineFreeze() && !PipelineBubbleID() && !PipelineBubbleEX())
 	{

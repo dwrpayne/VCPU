@@ -100,7 +100,7 @@ void TerminalController::Connect(SystemBus& bus)
 	controlBundle.Connect(0, Wire::ON);
 	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());
 
-	data.Connect(pSystemBus->OutData().Range<32>(), incomingDataRequest.Out(), incomingDataRequest.Out());
+	data.Connect(pSystemBus->OutData().Range<32>(), incomingDataRequest.Out(), Wire::OFF);
 
 	pendingState.Connect(pending, incomingDataRequest.Out());
 }

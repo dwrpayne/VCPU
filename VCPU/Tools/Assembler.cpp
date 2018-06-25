@@ -111,7 +111,7 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 	{
 		if (word.size() > 2 && word[0] == '0' && (word[1] == 'x' || word[1] == 'X'))
 		{
-			int hex = std::stoi(word, 0, 16);
+			unsigned int hex = std::stoul(word, 0, 16);
 			line = std::regex_replace(line, std::regex(word), std::to_string(hex));
 			break;
 		}

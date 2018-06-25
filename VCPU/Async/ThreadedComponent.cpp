@@ -18,6 +18,7 @@ ThreadedAsyncComponent::~ThreadedAsyncComponent()
 
 void ThreadedAsyncComponent::DoOneUpdate()
 {
+	if (!IsRunning())
 	{
 		std::lock_guard<std::mutex> lk(mMutex);
 		mUpdating = true;
