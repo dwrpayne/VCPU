@@ -345,8 +345,7 @@ bool TestCache(Verbosity verbosity)
 	Wire writehalf(false);
 	MagicBundle<32> addr;
 	SystemBus bus;
-	test.ConnectToBus(bus);
-	test.Connect(addr, data, read, write, writebyte, writehalf);
+	test.Connect(addr, data, read, write, writebyte, writehalf, bus);
 
 	for (int a = 0; a < 8; a++)
 	{

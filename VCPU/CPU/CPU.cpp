@@ -109,8 +109,7 @@ void CPU::Stage1::Connect(const Bundle<32>& pcBranchAddr, const Wire& takeBranch
 	pcIncrementer.Connect(pc.Out(), Bundle<32>(4), Wire::OFF);
 
 	// Instruction memory
-	instructionCache.ConnectToBus(systembus);
-	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF);
+	instructionCache.Connect(pc.Out().Range<InsCache::ADDR_BITS>(0), InsCache::DataBundle::OFF, Wire::ON, Wire::OFF, Wire::OFF, Wire::OFF, systembus);
 
 	// Out Buffer
 	bufIFID.Connect(proceed, instructionCache.Out(), pcIncrementer.Out());
@@ -192,9 +191,8 @@ void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed, System
 {
 	// Main Memory
 	const auto& memAddr = stage3.aluOut.Out();
-	cache.ConnectToBus(systembus);
 	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), stage3.OpcodeControl().LoadOp(),
-		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
+		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord(), systembus);
 
 
 	// Byte/Half/Word Selection
@@ -296,10 +294,8 @@ CPU::CPU()
 		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
 
-	mInsMemory->ConnectToBus(systemBus);
-	mInsMemory->Connect();
-	mMainMemory->ConnectToBus(systemBus);
-	mMainMemory->Connect();
+	mInsMemory->Connect(systemBus);
+	mMainMemory->Connect(systemBus);
 }
 
 CPU::~CPU()

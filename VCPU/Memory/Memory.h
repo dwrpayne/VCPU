@@ -32,9 +32,8 @@ public:
 
 	Memory(bool ismain);
 	~Memory();
-	void Connect();
+	void Connect(SystemBus & bus);
 	void Update();
-	void ConnectToBus(SystemBus& bus);
 
 private:
 	void DisconnectFromBus();
@@ -73,8 +72,13 @@ inline Memory<N, BYTES>::~Memory()
 }
 
 template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::Connect()
+inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 {
+	pSystemBus = &bus;
+
+	pSystemBus->ConnectData(outData.Out());
+	pSystemBus->ConnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
+
 	usercodeBusAddr.Connect(pSystemBus->OutAddr().Range<4>(-4));
 	userdataBusAddr.Connect(usercodeBusAddr.Out(), pSystemBus->OutAddr().Range<1>(-1));
 	if (mIsMainMemory)
@@ -132,16 +136,6 @@ inline void Memory<N, BYTES>::Update()
 
 	outServicedRequest.Update();
 }
-
-template<unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::ConnectToBus(SystemBus & bus)
-{
-	pSystemBus = &bus;
-
-	bus.ConnectData(outData.Out());
-	bus.ConnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
-}
-
 
 template<unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::DisconnectFromBus()

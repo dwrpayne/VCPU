@@ -79,8 +79,7 @@ public:
 	typedef Bundle<TAG_BITS> TagBundle;
 	typedef RequestBuffer<CACHE_LINE_BITS, ADDR_BITS, 4, 4> ReqBuffer;
 
-	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite);
-	void ConnectToBus(SystemBus& bus);
+	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus);
 	void Update();
 	void UpdateUntilNoStall(bool flush = false);
 
@@ -152,7 +151,6 @@ private:
 
 	NorGate busIsFree;
 	OrGate busIsFreeOrMine;
-	Inverter busReqNotYetAck;
 	AndGate shouldOutputOnBus;
 	AndGate shouldOutputDataBus;
 	
@@ -175,16 +173,24 @@ private:
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
-	const Wire& write, const Wire& bytewrite, const Wire& halfwrite)
+	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
 #ifdef DEBUG
 	DEBUG_addr = address;
 #endif
 
+	pSystemBus = &bus;
+	pSystemBus->ConnectAddr(memAddrMux.Out());
+	pSystemBus->ConnectData(dataRequestBuf.Out());
+	pSystemBus->ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
+	pSystemBus->ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
+	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+	pSystemBus->ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+
 	CacheIndexBundle index = address.CacheLineIndex();
 		
-	// Did we get data from memory. Mask it in with the data we want to write.
+	// If we got data from memory, mask it in with the data we want to write.
 	gotResultFromMemory.Connect({ &haveBusOwnership.Q(), &cacheMiss.Out(), &pSystemBus->OutCtrl().Ack() });
 	indexDecoder.Connect(index, Wire::ON);
 	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, pSystemBus->OutData(), bytewrite, halfwrite, write);
@@ -238,8 +244,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
 	haveBusOwnership.Connect(needStall.Out(), busIsFreeOrMine.Out());
 
-	busReqNotYetAck.Connect(pSystemBus->OutCtrl().Ack());
-
 	shouldOutputOnBus.Connect(haveBusOwnership.Q(), Wire::ON);
 	shouldOutputDataBus.Connect(shouldOutputOnBus.Out(), write);
 
@@ -290,7 +294,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 		busIsFreeOrMine.Update();
 		haveBusOwnership.Update();
 	}
-	busReqNotYetAck.Update();
 	shouldOutputOnBus.Update();
 	shouldOutputDataBus.Update();
 	writeBusRequestBuf.Update();
@@ -329,16 +332,4 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Disconn
 	pSystemBus->DisconnectAddr(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
 	pSystemBus->DisconnectAddr(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
 	pSystemBus->DisconnectAddr(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
-}
-
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::ConnectToBus(SystemBus & bus)
-{
-	pSystemBus = &bus;
-	pSystemBus->ConnectAddr(memAddrMux.Out());
-	pSystemBus->ConnectData(dataRequestBuf.Out());
-	pSystemBus->ConnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
-	pSystemBus->ConnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
-	pSystemBus->ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 }
