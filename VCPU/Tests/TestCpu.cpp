@@ -7,7 +7,60 @@
 #include "Instructions.h"
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
- 
+#include "Controllers/DeviceController.h"
+
+class SystemBusTest : public SystemBus
+{
+public:
+	SystemBusTest(const Bundle<Ndata>& data, const Bundle<Naddr>& addr)
+	{
+		ConnectData(data);
+		ConnectAddr(addr);
+		ConnectCtrl(req, CtrlBit::Req);
+		ConnectCtrl(read, CtrlBit::Read);
+		ConnectCtrl(write, CtrlBit::Write);
+		databuffer.Connect(OutData(), Wire::ON);
+	}
+	const Bundle<Ndata>& SendAndReceiveRead(ThreadedAsyncComponent& target)
+	{
+		read.Set(true);
+		Send(target);
+		databuffer.Update();
+		ClearAck(target);
+		return databuffer.Out();
+	}
+	void SendAndReceiveWrite(ThreadedAsyncComponent& target)
+	{
+		write.Set(true);
+		Send(target);
+		ClearAck(target);
+	}
+
+private:
+	Wire req, read, write;
+	Register<256> databuffer;
+	void Send(ThreadedAsyncComponent& target)
+	{
+		req.Set(true);
+		while (!OutCtrl().Ack().On())
+		{
+			target.DoOneUpdate();
+			target.WaitUntilDone();
+		}
+	}
+
+	void ClearAck(ThreadedAsyncComponent& target)
+	{
+		req.Set(false);
+		read.Set(false);
+		write.Set(false);
+		while (OutCtrl().Ack().On())
+		{
+			target.DoOneUpdate();
+			target.WaitUntilDone();
+		}
+	}
+};
 
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
@@ -576,7 +629,7 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 
 bool RunCPUTests()
 {
-	static const int NUM_TIMES_TO_TEST = 20;
+	static const int NUM_TIMES_TO_TEST = 1;
 	bool success = true;
 	auto default_verb = Debugger::MINIMAL;
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
