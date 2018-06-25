@@ -50,7 +50,7 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 24;
+	static const int OUT_WIDTH = 25;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
@@ -88,6 +88,7 @@ public:
 		const Wire& JumpOrBranch() const { return Get(20); }
 		const Wire& MultOp() const { return Get(21); }		
 		const Bundle<2> MultMoveReg() const { return Range<2>(22); }
+		const Wire& LoadOpInv() const { return Get(24); }
 	};
 
 	const OpcodeDecoderBundle& OutBundle() { return out; }
@@ -100,6 +101,7 @@ private:
 	Inverter nonzeroOpcode;
 	AndGate loadstore;
 	AndGate loadOp;
+	Inverter loadOpInv;
 	AndGate storeOp;
 	AndGateN<4> branchOp;
 	AndGateN<3> immOp;

@@ -15,7 +15,7 @@ public:
 
 	void Connect(const RegBundle& exmemRd, const Bundle<32>& exmemAluOut, const Wire& exmemRegWrite,
 		const RegBundle& memwbRd, const Bundle<32>& memwbAluOut, const Wire& memwbRegWrite,
-		const RegBundle& idexRs, const RegBundle& idexRt);
+		const RegBundle& idexRs, const RegBundle& idexRt, const Wire& forwardexmemRt);
 	void Update();
 
 	const DataBundle& ForwardDataRs() const { return ForwardRsDataMux.Out(); }
@@ -36,7 +36,7 @@ private:
 	Matcher<ADDR> MemWbRdRt;
 
 	AndGateN<3> ForwardExMemRs;
-	AndGateN<3> ForwardExMemRt;
+	AndGateN<4> ForwardExMemRt;
 	Inverter NotForwardExMemRs;
 	Inverter NotForwardExMemRt;
 

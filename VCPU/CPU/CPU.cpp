@@ -285,10 +285,10 @@ CPU::CPU()
 {
 	hazardIFID.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
-		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr());
+		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage3->Out().OpcodeControl().LoadOpInv());
 	hazardIDEX.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
-		stage2->Out().RS.Out(), stage2->Out().RT.Out());
+		stage2->Out().RS.Out(), stage2->Out().RT.Out(), Wire::ON);
 
 	interlock.Connect(InstructionCache().NeedStall(), GetMainCache().NeedStall(), 
 		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(),
