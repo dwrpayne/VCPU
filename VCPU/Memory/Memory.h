@@ -140,6 +140,9 @@ inline void Memory<N, BYTES>::Update()
 template<unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::DisconnectFromBus()
 {
-	pSystemBus->DisconnectData(outData.Out());
-	pSystemBus->DisconnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
+	if (pSystemBus)
+	{
+		pSystemBus->DisconnectData(outData.Out());
+		pSystemBus->DisconnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
+	}
 }

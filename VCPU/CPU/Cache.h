@@ -84,6 +84,7 @@ public:
 	typedef Bundle<TAG_BITS> TagBundle;
 	typedef RequestBuffer<CACHE_LINE_BITS, ADDR_BITS, 4, 4> ReqBuffer;
 
+	~Cache();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus);
 	void Update();
 	void UpdateUntilNoStall(bool flush = false);
@@ -189,6 +190,12 @@ private:
 
 	friend class Debugger;
 };
+
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
+inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::~Cache()
+{
+	DisconnectFromBus();
+}
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
@@ -383,11 +390,14 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateU
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
 inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::DisconnectFromBus()
 {
-	pSystemBus->DisconnectAddr(addrRequestBuf.Out());
-	pSystemBus->DisconnectData(dataRequestBuf.Out());
-	pSystemBus->DisconnectData(uncachedWriteBuffer.Out());
-	pSystemBus->DisconnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
-	pSystemBus->DisconnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
-	pSystemBus->DisconnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+	if (pSystemBus)
+	{
+		pSystemBus->DisconnectAddr(addrRequestBuf.Out());
+		pSystemBus->DisconnectData(dataRequestBuf.Out());
+		pSystemBus->DisconnectData(uncachedWriteBuffer.Out());
+		pSystemBus->DisconnectCtrl(readBusRequestBuf.Out(), SystemBus::CtrlBit::Read);
+		pSystemBus->DisconnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
+		pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+		pSystemBus->DisconnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+	}
 }
