@@ -14,6 +14,7 @@
 Assembler::Assembler()
 {
 	pProgram = new Program();
+	ParseSourceLine("li $sp, 0x10000800", pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");
 }
@@ -70,7 +71,7 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 
 	unsigned int source_line = program->AddSourceLine(label, code_line, comment);
 
-	if (code_line.size() >= 3)
+	if (code_line.size() >= 4)
 	{
 		for (auto& line : GetInstructionsForLine(code_line))
 		{

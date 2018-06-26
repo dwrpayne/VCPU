@@ -25,7 +25,7 @@ public:
 	void Step();
 	void PrintCycle();
 	int GetRegisterVal(int reg);
-	unsigned char GetMemoryByte(int addr, bool cache=true, bool insmem=false);
+	unsigned char GetMemoryByte(int addr);
 	int GetMemoryWord(int addr);
 	std::string GetMemoryString(int addr);
 	int GetNextPCAddr();

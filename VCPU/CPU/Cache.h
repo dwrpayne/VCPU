@@ -49,9 +49,14 @@ private:
 	Masker<N> maskedCacheLine;
 };
 
+class CacheBase : public Component
+{
+protected:
+	std::mutex mBusMutex;
+};
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
-class Cache : public Component
+class Cache : public CacheBase
 {
 public:
 	static const int WORD_SIZE = 32;
@@ -177,8 +182,6 @@ private:
 	DFlipFlop haveBusOwnership;
 
 	int cycles;
-
-	std::mutex mBusMutex;
 
 #ifdef DEBUG
 	CacheAddrBundle DEBUG_addr;

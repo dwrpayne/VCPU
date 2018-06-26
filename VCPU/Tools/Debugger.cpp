@@ -143,24 +143,14 @@ int Debugger::GetRegisterVal(int reg)
 	return pCPU->Registers().registers[reg].Out().Read();
 }
 
-unsigned char Debugger::GetMemoryByte(int addr, bool cache, bool insmem)
+unsigned char Debugger::GetMemoryByte(int addr)
 {
-	auto& cachesrc = insmem ? pCPU->InstructionCache() : pCPU->GetMainCache();
-	auto& memsrc = insmem ? pCPU->InstructionMemory() : pCPU->GetMainMemory();
-	if (cache)
-	{
-		unsigned int cacheline = addr / cachesrc.CACHE_LINE_BYTES;
-		cacheline %= cachesrc.NUM_CACHE_LINES;
-		auto line = cachesrc.cachelines[cacheline].OutLine();
-		return line.Range<8>(8 * (addr % cachesrc.CACHE_LINE_BYTES)).Read();
-	}
-	else
-	{
-		unsigned int cacheline = addr / memsrc.CACHELINE_BYTES;
-		cacheline %= memsrc.NUM_LINES;
-		auto line = memsrc.cachelines[cacheline].Out();
-		return line.Range<8>(8 * (addr % memsrc.CACHELINE_BYTES)).Read();
-	}
+	auto& cache = pCPU->GetMainCache();
+	unsigned int cacheline = addr / cache.CACHE_LINE_BYTES;
+	cacheline %= cache.NUM_CACHE_LINES;
+	auto line = cache.cachelines[cacheline].OutLine();
+	return line.Range<8>(8 * (addr % cache.CACHE_LINE_BYTES)).Read();
+
 }
 
 int Debugger::GetMemoryWord(int addr)

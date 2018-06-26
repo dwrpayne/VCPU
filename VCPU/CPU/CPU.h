@@ -13,6 +13,13 @@
 #include "SystemBus.h"
 #include "Controllers/DeviceController.h"
 
+// Code mem runs 0x00000000 - 0x10000000
+// User data starts at 0x10000000
+
+// No Virt->Phys mapping yet, so stack starts at top of mem and grows down 
+// 2KB main mem, so user stack starts at 0x10000800
+
+
 class CPU : public Component
 {
 public:
@@ -28,7 +35,7 @@ public:
 	static const int MAIN_CACHE_BYTES = 256;
 
 	static const int INS_MEM_BYTES = 1024;
-	static const int MAIN_MEM_BYTES = 1024;
+	static const int MAIN_MEM_BYTES = 2048;
 		
 	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
 	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
