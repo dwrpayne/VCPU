@@ -388,8 +388,8 @@ bool TestCache(Verbosity verbosity)
 	bool success = true;
 	int i = 0;
 
-	Cache<256, 256, 1024>* pCache = new Cache<256, 256, 1024>();
-	Cache<256, 256, 1024>& test = *pCache;
+	auto* pCache = new Cache<256, 256>();
+	auto& test = *pCache;
 
 	MagicBundle<32> data;
 	Wire write(true);

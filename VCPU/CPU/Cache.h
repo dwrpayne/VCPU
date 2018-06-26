@@ -377,7 +377,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 }
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::UpdateUntilNoStall(bool flush)
+void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::UpdateUntilNoStall(bool flush)
 {
 	do
 	{
@@ -386,7 +386,7 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::UpdateUntilNoStall(bool fl
 }
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::DisconnectFromBus()
+void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::DisconnectFromBus()
 {
 	if (pSystemBus)
 	{

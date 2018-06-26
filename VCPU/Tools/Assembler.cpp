@@ -341,14 +341,14 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "srav"  , { 0,  7,  R_TYPE } } ,		// TESTED
 	{ "jr"    , { 0,  8,  R_TYPE } } ,		// TESTED
 	{ "jalr"  , { 0,  9,  R_TYPE } } ,		// TESTED
-	{ "mfhi"  , { 0,  16, R_TYPE } } ,
-	{ "mthi"  , { 0,  17, R_TYPE } } ,
-	{ "mflo"  , { 0,  18, R_TYPE } } ,
-	{ "mtlo"  , { 0,  19, R_TYPE } } ,
-	{ "mult"  , { 0,  24, R_TYPE } } ,
-	{ "multu" , { 0,  25, R_TYPE } } ,
-	{ "div"   , { 0,  26, R_TYPE } } ,
-	{ "divu"  , { 0,  27, R_TYPE } } ,
+	{ "mfhi"  , { 0,  16, R_TYPE } } ,		// TESTED
+	//{ "mthi"  , { 0,  17, R_TYPE } } ,		// WON'T IMPLEMENT
+	{ "mflo"  , { 0,  18, R_TYPE } } ,		// TESTED
+	//{ "mtlo"  , { 0,  19, R_TYPE } } ,		// WON'T IMPLEMENT
+	{ "mult"  , { 0,  24, R_TYPE } } ,		// TESTED
+	{ "multu" , { 0,  25, R_TYPE } } ,		// TESTED
+	//{ "div"   , { 0,  26, R_TYPE } } ,		// WON'T IMPLEMENT
+	//{ "divu"  , { 0,  27, R_TYPE } } ,		// WON'T IMPLEMENT
 	{ "add"   , { 0,  32, R_TYPE } } ,		// TESTED
 	{ "addu"  , { 0,  33, R_TYPE } } ,		// TESTED
 	{ "sub"   , { 0,  34, R_TYPE } } ,		// TESTED

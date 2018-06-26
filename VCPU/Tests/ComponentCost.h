@@ -4,6 +4,7 @@
 #define _PRINT_COST(obj) std::cout << Wire::WireCount() - cnt << "\t" << typeid(obj).name() << std::endl;
 #define PRINT_COST(type) {int cnt = Wire::WireCount(); type t; _PRINT_COST(t);}
 #define PRINT_COST_NEW(type) {int cnt = Wire::WireCount(); type* t = new type(); _PRINT_COST((*t)); delete t;}
+#define PRINT_COST_NEW_MEM(type) {int cnt = Wire::WireCount(); type* t = new type(true); _PRINT_COST((*t)); delete t;}
 
 void PrintComponentCosts()
 {
@@ -64,6 +65,8 @@ void PrintComponentCosts()
 	PRINT_COST(OpcodeDecoder);
 	PRINT_COST_NEW(CPU::InsCache);
 	PRINT_COST_NEW(CPU::MainCache);
+	PRINT_COST_NEW_MEM(CPU::InsMemory);
+	PRINT_COST_NEW_MEM(CPU::MainMemory);
 	PRINT_COST_NEW(CPU::RegFile);
 	PRINT_COST_NEW(CPU);	
 }

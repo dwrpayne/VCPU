@@ -37,8 +37,8 @@ public:
 	static const int INS_MEM_BYTES = 1024;
 	static const int MAIN_MEM_BYTES = 2048;
 		
-	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS, INS_MEM_BYTES> InsCache;
-	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS, MAIN_MEM_BYTES> MainCache;
+	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS> InsCache;
+	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS> MainCache;
 
 	typedef Memory<CACHE_LINE_BITS, INS_MEM_BYTES> InsMemory;
 	typedef Memory<CACHE_LINE_BITS, MAIN_MEM_BYTES> MainMemory;

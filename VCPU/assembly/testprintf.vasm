@@ -6,6 +6,7 @@ main:	li		$t0, 0x6c6c6548
 		li		$t0, 0x21646c72
 		sw		$t0, 8($t2)
 		li		$t0, 0x00000a0a
+		sw		$t0, 12($t2)
 		move	$a0, $t2
 		call	printf
 		nop
