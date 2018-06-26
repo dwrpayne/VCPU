@@ -1,4 +1,3 @@
-blez	$4, 12
 main:	addi 	$1, $0, 12
 		addi 	$2, $0, 12
 		beq		$1, $2, 12
