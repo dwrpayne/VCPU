@@ -28,3 +28,13 @@ putch_check:	lb		$t1, 4($t0)
 				nop
 				sb		$a0, 0($t0)
 				ret 
+
+; printf takes the address of the string in $a0
+printf:			move 	$t2, $a0
+				push	$ra
+printf_loop:	lb		$a0, 0($t2)		
+				call 	putch
+				bgtz	$a0, printf_loop
+				addi	$t2, $t2, 1
+				pop 	$ra
+				ret

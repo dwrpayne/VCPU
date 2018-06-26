@@ -1,0 +1,12 @@
+main:	li		$t0, 0x6c6c6548
+		li		$t2, 0x10000010
+		sw		$t0, 0($t2)
+		li		$t0, 0x6f57206f
+		sw		$t0, 4($t2)
+		li		$t0, 0x21646c72
+		sw		$t0, 8($t2)
+		li		$t0, 0x00000a0a
+		move	$a0, $t2
+		call	printf
+		nop
+		hlt

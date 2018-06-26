@@ -255,7 +255,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	cacheMissInternal.Connect(cacheHitMux.Out());
 	cacheMiss.Connect(cacheMissInternal.Out(), readOrWrite.Out());
 	cacheableAddrCacheMiss.Connect(cacheMiss.Out(), cacheableAddr.Out());
-	evictedDirty.Connect(cacheMiss.Out(), cacheDirtyMux.Out());
+	evictedDirty.Connect(cacheableAddrCacheMiss.Out(), cacheDirtyMux.Out());
 	notEvictedDirty.Connect(evictedDirty.Out());
 	writeBufferFull.Connect(evictedDirty.Out(), Wire::ON);
 	needStall.Connect({ &cacheableAddrCacheMiss.Out(), &writeBufferFull.Out(), &waitingForUncachedData.Out() });
