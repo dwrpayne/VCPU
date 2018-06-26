@@ -32,10 +32,11 @@ public:
 	static const int NUM_REGISTERS = 32;
 
 	static const int INS_CACHE_BYTES = 256;
-	static const int MAIN_CACHE_BYTES = 256;
+	static const int INS_CACHE_BYTES = 128;
+	static const int MAIN_CACHE_BYTES = 128;
 
-	static const int INS_MEM_BYTES = 1024;
-	static const int MAIN_MEM_BYTES = 2048;
+	static const int INS_MEM_BYTES = 2048;
+	static const int MAIN_MEM_BYTES = 16384;
 		
 	typedef Cache<INS_CACHE_BYTES, CACHE_LINE_BITS> InsCache;
 	typedef Cache<MAIN_CACHE_BYTES, CACHE_LINE_BITS> MainCache;

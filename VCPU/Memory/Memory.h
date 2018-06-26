@@ -95,14 +95,15 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 
 	addrDecoder.Connect(cachelineAddr, pSystemBus->OutCtrl().Write());
 	
-	std::array<CacheLineBundle, NUM_LINES> lineOuts;
+	auto* lineOuts = new std::array<CacheLineBundle, NUM_LINES>();
+
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
 		cachelines[i].Connect(pSystemBus->OutData(), addrDecoder.Out()[i]);
-		lineOuts[i].Connect(0, cachelines[i].Out());
+		lineOuts->at(i).Connect(0, cachelines[i].Out());
 	}
 
-	outMux.Connect(lineOuts, cachelineAddr);
+	outMux.Connect(*lineOuts, cachelineAddr);
 
 	outData.Connect(outMux.Out(), Bundle<N>(servicedRead.Out()));
 	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
