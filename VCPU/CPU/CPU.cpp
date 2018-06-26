@@ -291,7 +291,7 @@ CPU::CPU()
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
 	interlock.Connect(InstructionCache().NeedStall(), GetMainCache().NeedStall(), 
-		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(),
+		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(), stage1->Out().IR.Function(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
 
 	mInsMemory->Connect(systemBus);
