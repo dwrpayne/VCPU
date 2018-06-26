@@ -55,20 +55,18 @@ protected:
 	std::mutex mBusMutex;
 };
 
-template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES = 2048>
+template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
 class Cache : public CacheBase
 {
 public:
 	static const int WORD_SIZE = 32;
 	static const int ADDR_BITS = 32;
 	static const int CACHE_BYTES = CACHE_SIZE_BYTES;
-	static const int MEMORY_BYTES = MAIN_MEMORY_BYTES;
 	static const int CACHE_LINE_BYTES = CACHE_LINE_BITS / 8;
 
 
 	static const int WORD_BYTES = WORD_SIZE / 8;
 	static const int BYTE_INDEX_BITS = bits(WORD_BYTES);
-	static const int MAIN_MEMORY_LINES = MAIN_MEMORY_BYTES * 8 / CACHE_LINE_BITS;
 	static const int NUM_CACHE_LINES = CACHE_SIZE_BYTES * 8 / CACHE_LINE_BITS;
 	static const int CACHE_INDEX_BITS = bits(NUM_CACHE_LINES);
 	static const int CACHE_WORDS = CACHE_LINE_BITS / WORD_SIZE;
@@ -191,14 +189,14 @@ private:
 	friend class Debugger;
 };
 
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::~Cache()
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
+inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::~Cache()
 {
 	DisconnectFromBus();
 }
 
-template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
+template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
+void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
 	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
@@ -299,8 +297,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Connect(const 
 	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
 }
 
-template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
+template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
+void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 {
 	readOrWrite.Update();
 	unCacheableAddr.Update();
@@ -378,8 +376,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::Update()
 	cycles++;
 }
 
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateUntilNoStall(bool flush)
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
+inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::UpdateUntilNoStall(bool flush)
 {
 	do
 	{
@@ -387,8 +385,8 @@ inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::UpdateU
 	} while (NeedStall().On());// || (flush && buffer.WritePending().On()));
 }
 
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS, unsigned int MAIN_MEMORY_BYTES>
-inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS, MAIN_MEMORY_BYTES>::DisconnectFromBus()
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
+inline void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::DisconnectFromBus()
 {
 	if (pSystemBus)
 	{
