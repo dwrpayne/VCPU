@@ -25,6 +25,7 @@ public:
 	void Step();
 	void PrintCycle();
 	int GetRegisterVal(int reg);
+	unsigned char GetCacheByte(int addr);
 	unsigned char GetMemoryByte(int addr);
 	int GetMemoryWord(int addr);
 	std::string GetMemoryString(int addr);
@@ -50,7 +51,7 @@ private:
 	bool bPrintBus;
 
 	std::deque<int> mLastInstructions;
-	std::array<unsigned char, 64> mLastCycleMemory;
+	std::array<unsigned char, 16384> mLastCycleMemory;
 
 	long long last_output_reg;
 

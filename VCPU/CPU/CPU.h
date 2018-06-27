@@ -17,7 +17,10 @@
 // User data starts at 0x10000000
 
 // No Virt->Phys mapping yet, so stack starts at top of mem and grows down 
-// 2KB main mem, so user stack starts at 0x10000800
+// 16KB memory. Let's reserve 4KB for the kernel, and 12KB for user.
+// user stack starts at 01x10002fff and grows down.
+// kernel mem runs 0x10003000 - 01x10003fff
+
 
 
 class CPU : public Component

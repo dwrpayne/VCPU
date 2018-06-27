@@ -117,16 +117,6 @@ inline void Memory<N, BYTES>::Update()
 	userdataBusAddr.Update();
 	incomingRequest.Update();
 	servicedRead.Update();
-#if DEBUG &&0
-	if (incomingRequest.Out().On())
-	{
-		std::stringstream ss;
-		ss << (mIsMainMemory ? "Main Mem " : "Ins Mem ");
-		ss << "servicing a " << (servicedRead.Out().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
-		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
-		std::cout << ss.str();
-	}
-#endif
 	addrDecoder.Update();
 	for (auto& reg : cachelines)
 	{
@@ -134,7 +124,19 @@ inline void Memory<N, BYTES>::Update()
 	}
 	outMux.Update();
 	outData.Update();
-
+#if DEBUG ||1
+	if (incomingRequest.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem " : "Ins Mem ");
+		ss << "servicing a " << (servicedRead.Out().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
+		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
+		ss << "Returned data ";
+		pSystemBus->OutData().print(ss);
+		ss << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	outServicedRequest.Update();
 }
 

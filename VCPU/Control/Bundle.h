@@ -201,6 +201,15 @@ public:
 		return (negative ? -1 : 1) * n - (int)negative;
 	}
 
+	void print(std::ostream& os) const
+	{
+		for (int i = N - 32; i >= 0; i -= 32)
+		{
+			const auto& b = Range<32>(i);
+			os << std::hex << b.UnsignedRead() << " ";
+		}
+	}
+
 	template <unsigned int N>
 	friend std::ostream& operator<<(std::ostream& os, const Bundle<N>& b);
 

@@ -51,6 +51,13 @@ putch_check:	lb		$t1, 4($t0)
 				nop
 				sb		$a0, 0($t0)
 				ret 
+								
+; newline just outputs a newline
+newline:		push	$ra
+				li		$a0, 10			;10 is newline
+				call 	putch
+				pop		$ra
+				ret
 
 ; printf takes the address of the string in $a0
 printf:			move 	$t2, $a0
@@ -77,6 +84,7 @@ itoa_pos:		li 		$a1, 10				; divisor
 				addiu	$t4, $t4, 1
 				bgtz	$v0, itoa_pos
 				move 	$a0, $v0
+				brk
 itoa_write:		pop		$v1
 				addiu	$v1, $v1, 48				; convert to ascii
 				sb		$v1, 0($t3)
@@ -85,4 +93,14 @@ itoa_write:		pop		$v1
 				addiu	$t3, $t3, 1
 				pop		$ra
 				sb		$r0, 0($t3)
+				ret
+
+;	print_int takes an integer in $a0 and prints it to stdout
+;	use a fixed buffer at 0x10003ff0
+print_int:		push	$ra
+				li		$a1, 0x10003ff0
+				call itoa
+				li		$a0, 0x10003ff0
+				call printf
+				pop		$ra
 				ret

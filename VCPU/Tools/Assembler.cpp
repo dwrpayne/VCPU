@@ -31,7 +31,7 @@ std::vector<std::string> split(const char *str)
 Assembler::Assembler()
 {
 	pProgram = new Program();
-	ParseSourceLine("li $sp, 0x10000800", pProgram);
+	ParseSourceLine("li $sp, 0x10003000", pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");
 }

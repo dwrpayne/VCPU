@@ -96,50 +96,52 @@ void Debugger::Step()
 		{
 			mLastInstructions.pop_back();
 		}
-		PrintCycle();
 	}
+	PrintCycle();
 }
 
 void Debugger::PrintCycle()
 {
-	if (bPrintInstruction)
+	if (!pCPU->PipelineFreeze())
 	{
-		std::cout << "--------------------- CYCLE " << pCPU->cycles << " -----";
-		std::cout << (pCPU->PipelineFreeze() ? " PIPELINE FREEZE" : "---------------") << "---------" << std::endl;
-	}
-	if (bPrintDataForward)
-	{
-		PrintDataForward();
-	}
+		if (bPrintInstruction)
+		{
+			std::cout << "--------------------- CYCLE " << pCPU->cycles << " -----";
+			std::cout << (pCPU->PipelineFreeze() ? " PIPELINE FREEZE" : "---------------") << "---------" << std::endl;
+		}
+		if (bPrintDataForward)
+		{
+			PrintDataForward();
+		}
 
-	if (bPrintInstruction)
-	{
-		PrintInstruction();
-	}
+		if (bPrintInstruction)
+		{
+			PrintInstruction();
+		}
 
-	if (bPrintRegisters)
-	{
-		PrintRegisters();
-	}
+		if (bPrintRegisters)
+		{
+			PrintRegisters();
+		}
 
-	if (bPrintOutputReg)
-	{
-		PrintOutputReg();
-	}
+		if (bPrintOutputReg)
+		{
+			PrintOutputReg();
+		}
 
-	if (bPrintMemory)
-	{
-		PrintMemory();
-	}
+		if (bPrintMemory)
+		{
+			PrintMemory();
+		}
 
+		//if (bPrintTiming)
+		{
+			PrintTiming();
+		}
+	}
 	if (bPrintBus)
 	{
 		PrintBus();
-	}
-
-	//if (bPrintTiming)
-	{
-		PrintTiming();
 	}
 }
 
@@ -148,14 +150,21 @@ int Debugger::GetRegisterVal(int reg)
 	return pCPU->Registers().registers[reg].Out().Read();
 }
 
-unsigned char Debugger::GetMemoryByte(int addr)
+unsigned char Debugger::GetCacheByte(int addr)
 {
 	auto& cache = pCPU->GetMainCache();
 	unsigned int cacheline = addr / cache.CACHE_LINE_BYTES;
 	cacheline %= cache.NUM_CACHE_LINES;
 	auto line = cache.cachelines[cacheline].OutLine();
 	return line.Range<8>(8 * (addr % cache.CACHE_LINE_BYTES)).Read();
+}
 
+unsigned char Debugger::GetMemoryByte(int addr)
+{
+	auto& mem = pCPU->GetMainMemory();
+	unsigned int cacheline = addr / mem.CACHELINE_BYTES;
+	auto line = mem.cachelines[cacheline].Out();
+	return line.Range<8>(8 * (addr % mem.CACHELINE_BYTES)).Read();
 }
 
 int Debugger::GetMemoryWord(int addr)
@@ -214,7 +223,12 @@ void Debugger::PrintRegisters()
 			std::stringstream ss;
 			ss << "$" << pAssembler->GetRegName(num) << "(" << num << ") ";
 			std::cout << std::left << std::setw(8) << ss.str();
-			std::cout << std::setw(12) << GetRegisterVal(i + 8 * j);
+			if (num >= 28) 
+				std::cout << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << GetRegisterVal(num);
+			else
+				std::cout << std::setw(12) << GetRegisterVal(num);
+			if (num >= 28) 
+				std::cout << std::setw(12) << std::setfill(' ') << std::dec;
 		}
 		std::cout << std::endl;
 	}
@@ -234,9 +248,18 @@ void Debugger::PrintMemory()
 	if (diff)
 	{
 		std::cout << "Memory: " << std::hex << std::setfill('0');
+		int i = 0;
 		for (unsigned short val : mLastCycleMemory)
 		{
+			if (!(i++ % 64))
+			{
+				std::cout << std::endl << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << i-1 << "  ";
+			}
 			std::cout << std::setw(2) << std::right << val;
+			if (!(i % 16))
+			{
+				std::cout << " ";
+			}
 		}
 		std::cout << std::dec << std::setfill(' ') << std::endl;
 	}
