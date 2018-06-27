@@ -40,6 +40,7 @@ private:
 	void PrintBus();
 	
 	CPU* pCPU;
+	bool bSingleStep;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
 	bool bPrintMemory;

@@ -12,6 +12,7 @@
 Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 {
 	pCPU = new CPU();
+	bSingleStep = verbosity >= NORMAL;
 	bPrintInstruction = verbosity >= NORMAL;
 	bPrintRegisters = verbosity >= NORMAL;
 	bPrintMemory = verbosity >= MEMORY;
@@ -38,7 +39,7 @@ void Debugger::Start(int cycles)
 	while (cycles != 0)
 	{
 		Step();
-		if (bPrintInstruction && !pCPU->PipelineFreeze())
+		if (bSingleStep && !pCPU->PipelineFreeze())
 		{
 			__debugbreak();
 		}
