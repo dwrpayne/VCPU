@@ -719,12 +719,12 @@ bool TestCPUPrintf(Verbosity verbosity, Debugger::Verbosity dverb)
 	return success;
 }
 
-bool TestCPUDiv(Verbosity verbosity, Debugger::Verbosity dverb)
+bool TestCPUCustom(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
 	bool success = true;
 
-	Debugger debugger("testdiv.vasm", dverb);
+	Debugger debugger("testitoa.vasm", dverb);
 
 	debugger.Start();
 
@@ -745,7 +745,7 @@ bool RunCPUTests()
 	//RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUDiv, FAIL_ONLY, Debugger::VERBOSE);
+	RUN_TEST2(TestCPUCustom, FAIL_ONLY, Debugger::MINIMAL);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{

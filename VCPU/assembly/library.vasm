@@ -10,6 +10,7 @@ sqrt:	li		$t5, 1
 ; $v0: quotient
 ; $v1: remainder 
 div:		clr		$v0
+			clr 	$v1
 			li		$t0, 1
 div_start:	blt		$t0, $a0, div_start
 			sll		$t0, $t0, 1
@@ -62,23 +63,26 @@ printf_loop:	lb		$a0, 0($t2)
 				ret
 
 ; itoa takes an int in $a0, and the address to store the string in $a1
-itoa:			clr		$t4					; strlen counter
+itoa:			push	$ra
+				clr		$t4					; strlen counter
 				bge		$a0, $r0, itoa_pos
 				move	$t3, $a1			; str* to $t3
-				sb		45, 0($t3)			; 45 is '-'
-				addiu 	$t3, $t3, 4
+				li		$t0, 45				; 45 is '-'
+				sb		$t0, 0($t3)			
+				addiu 	$t3, $t3, 1
 				subu	$a0, $r0, $a0		; negate
 itoa_pos:		li 		$a1, 10				; divisor
 				call	div					; now quotient in $v0, remainder in $v1
-				brk
 				push	$v1
 				addiu	$t4, $t4, 1
 				bgtz	$v0, itoa_pos
 				move 	$a0, $v0
-itoa_write:		addiu	$v1, 48				; convert to ascii
+itoa_write:		pop		$v1
+				addiu	$v1, $v1, 48				; convert to ascii
 				sb		$v1, 0($t3)
-				addiu	$t4, $t4, -1
-				pop		$v1				
+				addiu	$t4, $t4, -1						
 				bgtz	$t4, itoa_write
-				addiu	$t3, $t3, 4
+				addiu	$t3, $t3, 1
+				pop		$ra
+				sb		$r0, 0($t3)
 				ret

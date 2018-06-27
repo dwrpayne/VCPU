@@ -1,0 +1,10 @@
+main:	li	$a0, 3154726
+		li	$a1, 0x10000010
+		call itoa
+		nop
+		li	$a0, 0x10000010
+		brk
+		call printf
+		nop
+		brk
+		hlt

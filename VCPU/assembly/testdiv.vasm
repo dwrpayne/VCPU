@@ -1,5 +1,5 @@
-main:	li	$a0, 34726
-		li	$a1, 7
+main:	li	$a0, 315472
+		li	$a1, 10
 		call div
 		nop
 		nop

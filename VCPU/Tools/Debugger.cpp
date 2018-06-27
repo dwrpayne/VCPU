@@ -43,7 +43,7 @@ void Debugger::Start(int cycles)
 		{
 			__debugbreak();
 		}
- 		if (pCPU->Break())
+ 		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
 			__debugbreak();
 		}

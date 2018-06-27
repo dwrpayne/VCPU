@@ -10,6 +10,23 @@
 #include <assert.h>
 #include "Program.h"
 
+std::vector<std::string> split(const char *str)
+{
+	std::vector<std::string> result;
+	do
+	{
+		while (*str && (*str == ' ' || *str == '\t'))
+			str++;
+
+		const char *begin = str;
+		while (*str != ' ' && *str != '\t' && *str)
+			str++;
+
+		result.push_back(std::string(begin, str));
+	} while (0 != *str++);
+
+	return result;
+}
 
 Assembler::Assembler()
 {
@@ -71,7 +88,8 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 
 	unsigned int source_line = program->AddSourceLine(label, code_line, comment);
 
-	if (code_line.size() >= 4)
+	std::vector<std::string> words = split(code_line.c_str());
+	if (words[0].size() > 0)
 	{
 		for (auto& line : GetInstructionsForLine(code_line))
 		{
@@ -83,24 +101,6 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 const std::string Assembler::GetRegName(unsigned int reg) const
 {
 	return reg_names[reg];
-}
-
-std::vector<std::string> split(const char *str)
-{
-	std::vector<std::string> result;
-	do
-	{
-		while (*str && (*str == ' ' || *str == '\t'))
-			str++;
-
-		const char *begin = str;
-		while (*str != ' ' && *str != '\t' && *str)
-			str++;
-
-		result.push_back(std::string(begin, str));
-	} while (0 != *str++);
-
-	return result;
 }
 
 std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
