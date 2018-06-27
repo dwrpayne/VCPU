@@ -150,8 +150,6 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("^\\s*bge\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*ble\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*beqz\\s+(\\$.+), (\\S+)"),			"beq	$1, $$zero, $2");
-	line = std::regex_replace(line, std::regex("^\\s*beq\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
-	line = std::regex_replace(line, std::regex("^\\s*bne\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 	
 	// Pseudo-Instructions
 	// Logic and Data

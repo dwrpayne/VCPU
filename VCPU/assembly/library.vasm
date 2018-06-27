@@ -5,6 +5,26 @@ sqrt:	li		$t5, 1
 		srl		$v0, $t5, 1
 		ret
 
+; div does $a0/$a1 -> $v0, $a0%$a1 -> $v1
+; N = $a0, D = $a1, Q = $v0, R = $v1
+div:		clr		$v0
+			li		$t2, 1
+			li		$t0, 1
+div_start:	blt		$t0, $a0, div_start
+			sll		$t0, $t0, 1
+div_loop:	srl		$t0, $t0, 1
+			sll		$v1, $v1, 1
+			and		$t1, $a0, $t0		; $t1 = N(i)
+			beqz	$t1, div_no_add
+			nop
+			addiu	$v1, $v1, 1
+div_no_add:	blt		$v1, $a1, div_loop
+			nop
+			addu	$v0, $v0, $t0
+			bne		$t1, $t2, div_loop
+			sub		$v1, $v1, $a1
+			ret		
+
 ; strcpy takes the src in $a0 and the dest in $a1
 strcpy:	lb		$t0, 0($a0)		
 		addi	$a0, $a0, 1
@@ -38,3 +58,7 @@ printf_loop:	lb		$a0, 0($t2)
 				addi	$t2, $t2, 1
 				pop 	$ra
 				ret
+; itoa takes an int in $a0, and the address to store the string in $a1
+itoa			bge		$a0, $r0, itoa_pos
+				nop
+				

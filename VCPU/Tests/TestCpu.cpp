@@ -713,6 +713,20 @@ bool TestCPUPrintf(Verbosity verbosity, Debugger::Verbosity dverb)
 	Debugger debugger("testprintf.vasm", dverb);
 
 	debugger.Start();
+	success &= TestState(i++, 127, debugger.GetRegisterVal(2), verbosity);
+	success &= TestState(i++, 7, debugger.GetRegisterVal(3), verbosity);
+
+	return success;
+}
+
+bool TestCPUDiv(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testdiv.vasm", dverb);
+
+	debugger.Start();
 
 	return success;
 }
@@ -730,7 +744,8 @@ bool RunCPUTests()
 	//RUN_TEST(TestTerminalController, FAIL_ONLY);
 	//RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
+	//RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUDiv, FAIL_ONLY, Debugger::VERBOSE);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
