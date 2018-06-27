@@ -1,3 +1,4 @@
+; sqrt takes number in $a0 and returns in $v0
 sqrt:	li		$t5, 1
 		sub		$a0, $a0, $t5
 		bgtz	$a0, -8
@@ -5,25 +6,26 @@ sqrt:	li		$t5, 1
 		srl		$v0, $t5, 1
 		ret
 
-; div does $a0/$a1 -> $v0, $a0%$a1 -> $v1
-; N = $a0, D = $a1, Q = $v0, R = $v1
+; div does $a0 / $a1
+; $v0: quotient
+; $v1: remainder 
 div:		clr		$v0
-			li		$t2, 1
 			li		$t0, 1
 div_start:	blt		$t0, $a0, div_start
 			sll		$t0, $t0, 1
 div_loop:	srl		$t0, $t0, 1
-			sll		$v1, $v1, 1
-			and		$t1, $a0, $t0		; $t1 = N(i)
+			beqz	$t0, div_end	
+			and		$t1, $a0, $t0		; $t1 = N(i)		
+			sll		$v1, $v1, 1			
 			beqz	$t1, div_no_add
 			nop
 			addiu	$v1, $v1, 1
 div_no_add:	blt		$v1, $a1, div_loop
 			nop
 			addu	$v0, $v0, $t0
-			bne		$t1, $t2, div_loop
+			b		div_loop
 			sub		$v1, $v1, $a1
-			ret		
+div_end:	ret		
 
 ; strcpy takes the src in $a0 and the dest in $a1
 strcpy:	lb		$t0, 0($a0)		
@@ -58,7 +60,25 @@ printf_loop:	lb		$a0, 0($t2)
 				addi	$t2, $t2, 1
 				pop 	$ra
 				ret
+
 ; itoa takes an int in $a0, and the address to store the string in $a1
-itoa			bge		$a0, $r0, itoa_pos
-				nop
-				
+itoa:			clr		$t4					; strlen counter
+				bge		$a0, $r0, itoa_pos
+				move	$t3, $a1			; str* to $t3
+				sb		45, 0($t3)			; 45 is '-'
+				addiu 	$t3, $t3, 4
+				subu	$a0, $r0, $a0		; negate
+itoa_pos:		li 		$a1, 10				; divisor
+				call	div					; now quotient in $v0, remainder in $v1
+				brk
+				push	$v1
+				addiu	$t4, $t4, 1
+				bgtz	$v0, itoa_pos
+				move 	$a0, $v0
+itoa_write:		addiu	$v1, 48				; convert to ascii
+				sb		$v1, 0($t3)
+				addiu	$t4, $t4, -1
+				pop		$v1				
+				bgtz	$t4, itoa_write
+				addiu	$t3, $t3, 4
+				ret
