@@ -136,7 +136,7 @@ private:
 	MuxBundle<4, 2> control;
 	MuxBundle<4, 2> controlAll;
 	AndGateN<6> halt;
-	AndGateN<6> break;
+	AndGateN<6> brk;
 
 	OpcodeDecoderBundle out;
 };

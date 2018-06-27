@@ -383,8 +383,8 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	//{ "swl"   , { 42, 0,  I_TYPE } } ,		// WON'T IMPLEMENT
 	{ "sw"    , { 43, 0,  I_TYPE } } ,		// TESTED
 	//{ "swr"   , { 46, 0,  I_TYPE } } ,		// WON'T IMPLEMENT
-	{ "brk"   , { 62, 0,  X_TYPE } }		// TESTED
-	{ "hlt"   , { 63, 0,  X_TYPE } }		// TESTED
+	{ "brk"   , { 62, 0,  X_TYPE } },		// TESTED
+	{ "hlt"   , { 63, 0,  X_TYPE } },		// TESTED
 	});
 
 
