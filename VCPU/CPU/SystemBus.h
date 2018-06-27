@@ -6,6 +6,8 @@
 #include "NandGate.h"
 #include "NorGate.h"
 #include "Decoder.h"
+#include <bitset>
+#include <iomanip>
 
 class SystemBus
 {
@@ -49,6 +51,15 @@ public:
 	const Bundle<Ndata>& OutData() const { return data; }
 	const Bundle<Naddr>& OutAddr() const { return addr; }
 	const ControlBundle& OutCtrl() const { return ctrl; }
+
+	void PrintBus()
+	{
+		std::cout << "--- Addr | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (first 100 bits) ----------" << std::endl;
+		std::cout << std::hex << std::left << std::setw(8) << OutAddr().UnsignedRead() << "    |    ";
+		std::cout << std::bitset<Nctrl>(OutCtrl().UnsignedRead()) << "     |    ";
+		OutData().print(std::cout);
+		std::cout << std::dec << std::endl;
+	}
 
 	
 private:
