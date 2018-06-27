@@ -62,6 +62,7 @@ private:
 	bool PipelineBubbleEX() { return interlock.BubbleEX().On(); }
 	bool PipelineFreeze() { return interlock.Freeze().On(); }
 	bool Halt();
+	bool Break();
 	std::array<std::chrono::microseconds, 4> GetStageTiming();
 
 private:

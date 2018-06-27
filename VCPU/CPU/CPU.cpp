@@ -406,6 +406,11 @@ bool CPU::Halt()
 	return stage2->Out().OpcodeControl().Halt().On();
 }
 
+bool CPU::Break()
+{
+	return stage2->Out().OpcodeControl().Break().On();
+}
+
 std::array<std::chrono::microseconds, 4> CPU::GetStageTiming()
 {
 	return {stage1->GetElapsedTime() / cycles,

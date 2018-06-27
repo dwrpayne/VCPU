@@ -42,6 +42,10 @@ void Debugger::Start(int cycles)
 		{
 			__debugbreak();
 		}
+ 		if (pCPU->Break())
+		{
+			__debugbreak();
+		}
  		if (pCPU->Halt())
 		{
 			break;

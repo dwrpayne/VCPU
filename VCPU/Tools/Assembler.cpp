@@ -61,7 +61,7 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 	std::string comment = comment_pos == std::string::npos ? "" : line.substr(comment_pos);
 
 	// Get label
-	auto colon_pos = line.find(':');
+	auto colon_pos = code_line.find(':');
 	std::string label = "";
 	if (colon_pos != std::string::npos)
 	{
@@ -383,6 +383,7 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	//{ "swl"   , { 42, 0,  I_TYPE } } ,		// WON'T IMPLEMENT
 	{ "sw"    , { 43, 0,  I_TYPE } } ,		// TESTED
 	//{ "swr"   , { 46, 0,  I_TYPE } } ,		// WON'T IMPLEMENT
+	{ "brk"   , { 62, 0,  X_TYPE } }		// TESTED
 	{ "hlt"   , { 63, 0,  X_TYPE } }		// TESTED
 	});
 
