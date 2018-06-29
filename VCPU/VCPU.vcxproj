@@ -171,6 +171,7 @@
     <ClInclude Include="Control\TriStateBuffer.h" />
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\BranchControl.h" />
+    <ClInclude Include="CPU\BusRequestBuffer.h" />
     <ClInclude Include="CPU\BusWriteBuffer.h" />
     <ClInclude Include="CPU\Cache.h" />
     <ClInclude Include="CPU\CPU.h" />

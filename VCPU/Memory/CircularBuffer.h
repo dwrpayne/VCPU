@@ -18,13 +18,17 @@ public:
 
 	void Connect(const Bundle<N>& in, const Wire & pop, const Wire& push);
 	void Update();
-	const Bundle<N>& Out() { return popBuffer.Out(); }
+	const Bundle<N>& Out()const { return popBuffer.Out(); }
 
-	const Wire& Full() { return counters.Full(); }
-	const Wire& NonEmpty() { return counters.NonEmpty(); }
-	const Wire& Empty() { return counters.Empty(); }
-	const Wire& DidPush() { return pushEnable.Out(); }
-	const Wire& DidPop() { return popEnable.Out(); }
+	const Wire& Full() const { return counters.Full(); }
+	const Wire& NonEmpty() const { return counters.NonEmpty(); }
+	const Wire& Empty() const { return counters.Empty(); }
+	const Wire& DidPush() const { return pushEnable.Out(); }
+	const Wire& DidPop() const { return popEnable.Out(); }
+
+#if DEBUG
+	int size() const { return counters.WriteIndex().Read() - counters.ReadIndex().Read(); }
+#endif
 
 private:
 	class CounterPair : public Component
@@ -32,12 +36,12 @@ private:
 	public:
 		void Connect(const Wire& read, const Wire& write);
 		void Update();
-		const AddrBundle WriteIndex() { return writeCounter.Out().Range<ADDR_LEN>(); }
-		const AddrBundle ReadIndex() { return readCounter.Out().Range<ADDR_LEN>(); }
-		const Wire& Full() { return queueFull.Out(); }
-		const Wire& HasRoom() { return queueNotFull.Out(); }
-		const Wire& NonEmpty() { return queueNotEmpty.Out(); }
-		const Wire& Empty() { return queueEmpty.Out(); }
+		const AddrBundle WriteIndex() const { return writeCounter.Out().Range<ADDR_LEN>(); }
+		const AddrBundle ReadIndex() const { return readCounter.Out().Range<ADDR_LEN>(); }
+		const Wire& Full() const { return queueFull.Out(); }
+		const Wire& HasRoom() const { return queueNotFull.Out(); }
+		const Wire& NonEmpty() const { return queueNotEmpty.Out(); }
+		const Wire& Empty() const { return queueEmpty.Out(); }
 
 	private:
 		Counter<ADDR_LEN + 1> readCounter;

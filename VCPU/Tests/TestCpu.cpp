@@ -9,6 +9,7 @@
 #include "Tools/Assembler.h"
 #include "Controllers/DeviceController.h"
 #include "CPU/BusWriteBuffer.h"
+#include "CPU/BusRequestBuffer.h"
 
 class SystemBusTest : public SystemBus
 {
@@ -282,25 +283,82 @@ bool TestBusWriteBuffer(Verbosity verbosity)
 	MagicBundle<32> addr;
 	Wire write(false);
 	test.Connect(bus, data, addr, write);
-
-	TerminalController terminal;
-	terminal.Connect(bus);
-	terminal.UpdateForever();
-
-	addr.Write(0xffff000c);
-	write.Set(true);
-	for (int i = 64; i < 127; i++)
 	{
-		data.Write(i);
-		test.Update();
-		std::cout << std::endl << "Wrote " << (unsigned char)i << std::endl;
-		while (test.Full().On())
+		TerminalController terminal;
+		terminal.Connect(bus);
+		terminal.UpdateForever();
+
+		addr.Write(0xffff000c);
+		write.Set(true);
+		for (int i = 64; i < 127; i++)
 		{
+			data.Write(i);
 			test.Update();
+			std::cout << std::endl << "Wrote " << (unsigned char)i << std::endl;
+			while (test.Full().On())
+			{
+				test.Update();
+			}
 		}
 	}
 	std::cout << std::endl;
 
+	return success;
+}
+
+void PrintBus(SystemBus& bus, bool& stop)
+{
+	while (!stop)
+	{
+		bus.PrintBus();
+	}
+}
+
+bool TestBusRequestBuffer(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+	SystemBus bus;
+
+	BusRequestBuffer<16, 16, 8> test;
+	MagicBundle<16> data;
+	MagicBundle<16> raddr;
+	MagicBundle<16> waddr;
+	Wire write(false);
+	Wire read(false);
+	bool done = false;
+	std::thread busprintthread([&bus, &done]() {PrintBus(bus, done); });
+	test.Connect(bus, data, waddr, raddr, write, read);
+	{
+		Memory<32, 256> memory(false);
+		memory.Connect(bus);
+
+
+		write.Set(true);
+
+		for (const auto&[a, b] : std::map<int, int>({ { 0x111, 4}, {0x222, 8}, {0x333, 12}, {0x444, 36}, {0x555, 60}, {0x666, 72}, {0x777, 100} }))
+		{
+			data.Write(a);
+			waddr.Write(b);
+			test.Update(); // Push some values into memory
+			memory.DoOneUpdate();
+		}
+
+		write.Set(false);
+		read.Set(true);
+		data.Write(2);
+		waddr.Write(16);
+		raddr.Write(72);
+		do
+		{
+			test.Update(); // Push some values into memory
+			memory.DoOneUpdate();
+		} while (!test.ReadSuccess().On());
+
+		std::cout << "Read Data: " << test.OutRead().UnsignedRead() << std::endl;
+	}
+	done = true;
+	busprintthread.join();
 	return success;
 }
 
@@ -771,6 +829,7 @@ bool RunCPUTests()
 	bool success = true;
 	auto default_verb = Debugger::MINIMAL;
 	RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
+	RUN_TEST(TestBusRequestBuffer, FAIL_ONLY);
 	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
 	//RUN_TEST(TestTerminalController, FAIL_ONLY);
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
