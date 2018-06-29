@@ -277,38 +277,33 @@ bool TestBusWriteBuffer(Verbosity verbosity)
 	bool success = true;
 	SystemBus bus;
 
-	BusWriteBuffer<16, 8, 4> test;
-	MagicBundle<16> data;
-	MagicBundle<8> addr;
+	BusWriteBuffer<32, 32, 8> test;
+	MagicBundle<32> data;
+	MagicBundle<32> addr;
 	Wire write(false);
 	test.Connect(bus, data, addr, write);
+
+	TerminalController terminal;
+	terminal.Connect(bus);
+	terminal.UpdateForever();
+
+	addr.Write(0xffff000c);
+	write.Set(true);
+	for (int i = 64; i < 127; i++)
 	{
-		TerminalController terminal;
-		terminal.Connect(bus);
-		terminal.UpdateForever();
-
-		//addr.Write(0xffff000c);
-		write.Set(true);
-		for (int i = 64; i < 95; i++)
+		data.Write(i);
+		test.Update();
+		std::cout << std::endl << "Wrote " << (unsigned char)i << std::endl;
+		while (test.Full().On())
 		{
-			data.Write(i);
 			test.Update();
-			test.Update();
-			test.Update();
-			test.Update();
-			test.Update();
-			while (test.Full().On())
-			{
-				test.Update();
-				bus.PrintBus();
-			}
 		}
-
-
 	}
+	std::cout << std::endl;
 
 	return success;
 }
+
 bool TestByteMask(Verbosity verbosity)
 {
 	int i = 0;

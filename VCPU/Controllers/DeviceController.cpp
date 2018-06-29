@@ -5,6 +5,7 @@
 
 DeviceController::~DeviceController()
 {
+	StopUpdating();
 	if (pSystemBus)
 	{
 		pSystemBus->DisconnectData(control.Out());
@@ -53,6 +54,7 @@ void DeviceController::Update()
 
 KeyboardController::~KeyboardController()
 {
+	StopUpdating();
 	if (pSystemBus)
 	{
 		pSystemBus->DisconnectData(data.Out());

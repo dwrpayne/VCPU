@@ -36,6 +36,12 @@ void ThreadedAsyncComponent::UpdateForever()
 	mCV.notify_one();
 }
 
+void ThreadedAsyncComponent::StopUpdating()
+{
+	mUpdatingUntilExit = false;
+	WaitUntilDone();
+}
+
 void ThreadedAsyncComponent::WaitUntilDone()
 {
 	assert(!mUpdatingUntilExit || mExit && "Not safe to call WaitUntilDone when updating forever and not exit yet!");
