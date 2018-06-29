@@ -271,6 +271,36 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 	return success;
 }
 
+bool TestBusWriteBuffer(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	BusWriteBuffer<32, 32, 4> test;
+	MagicBundle<32> data;
+	MagicBundle<32> addr;
+	Wire write(false);
+	SystemBus bus;
+	test.Connect(bus, data, addr, write);
+
+	TerminalController terminal;
+	terminal.Connect(bus);
+	terminal.UpdateForever();
+
+	addr.Write(0xffff000c);
+	write.Set(true);
+	for (int i = 64; i < 95; i++)
+	{
+		data.Write(i);
+		test.Update();
+		while (test.Full().On())
+		{
+			test.Update();
+		}
+	}
+
+	return success;
+}
 bool TestByteMask(Verbosity verbosity)
 {
 	int i = 0;
@@ -496,8 +526,8 @@ bool TestKeyboardController(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	static const unsigned int DATA_REG = 0xffff0000U;
-	static const unsigned int CONTROL_REG = 0xffff0004U;
+	static const unsigned int DATA_REG = 0xffff0004U;
+	static const unsigned int CONTROL_REG = 0xffff0000U;
 
 	KeyboardController test;
 	MagicBundle<256> data;
@@ -524,8 +554,8 @@ bool TestTerminalController(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	static const unsigned int DATA_REG = 0xffff0008U;
-	static const unsigned int CONTROL_REG = 0xffff000CU;
+	static const unsigned int DATA_REG = 0xffff000CU;
+	static const unsigned int CONTROL_REG = 0xffff0008U;
 
 	TerminalController test;
 	MagicBundle<256> data;
@@ -737,12 +767,13 @@ bool RunCPUTests()
 	static const int NUM_TIMES_TO_TEST = 1;
 	bool success = true;
 	auto default_verb = Debugger::MINIMAL;
+	RUN_TEST(TestKeyboardController, FAIL_ONLY);
+	RUN_TEST(TestTerminalController, FAIL_ONLY);
+	RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
-	//RUN_TEST(TestTerminalController, FAIL_ONLY);
 	//RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
