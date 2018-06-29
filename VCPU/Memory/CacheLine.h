@@ -18,7 +18,7 @@ public:
 	typedef Bundle<NTag> TagBundle;
 
 	CacheLine();
-	void Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable);
+	void Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable, const Wire& dirty);
 	void Update();
 
 	const TagBundle& Tag() { return tag.Out(); }
@@ -61,7 +61,7 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
-void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable)
+void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable, const Wire& dirty)
 {
 	writeTag.Connect(writeline, enable);
 	tag.Connect(tagin, writeTag.Out());
