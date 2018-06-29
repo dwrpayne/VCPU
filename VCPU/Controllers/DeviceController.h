@@ -65,7 +65,10 @@ public:
 	TerminalController()
 		: DeviceController(L"Terminal Controller Thread")
 	{}
-	virtual ~TerminalController() {}
+	virtual ~TerminalController() 
+	{
+		StopUpdating();
+	}
 	virtual void Connect(SystemBus& bus);
 	virtual void InternalUpdate();
 };

@@ -306,14 +306,6 @@ bool TestBusWriteBuffer(Verbosity verbosity)
 	return success;
 }
 
-void PrintBus(SystemBus& bus, bool& stop)
-{
-	while (!stop)
-	{
-		bus.PrintBus();
-	}
-}
-
 bool TestBusRequestBuffer(Verbosity verbosity)
 {
 	int i = 0;
@@ -326,8 +318,6 @@ bool TestBusRequestBuffer(Verbosity verbosity)
 	MagicBundle<16> waddr;
 	Wire write(false);
 	Wire read(false);
-	bool done = false;
-	std::thread busprintthread([&bus, &done]() {PrintBus(bus, done); });
 	test.Connect(bus, data, waddr, raddr, write, read);
 	{
 		Memory<32, 256> memory(false);
@@ -357,8 +347,6 @@ bool TestBusRequestBuffer(Verbosity verbosity)
 
 		std::cout << "Read Data: " << test.OutRead().UnsignedRead() << std::endl;
 	}
-	done = true;
-	busprintthread.join();
 	return success;
 }
 
