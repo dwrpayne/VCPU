@@ -40,7 +40,7 @@ private:
 	AndGate cachedRead;
 	OrGate cachedReadOrWrite;
 	AndGate gotResponseFromMemory;
-	AndGate gotReadDataFromMemory;
+	AndGate gotCacheableDataFromMemory;
 	Inverter gotResponseFromMemoryInv;
 	AndGate waitingForUncachedData;
 

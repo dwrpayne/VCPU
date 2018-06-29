@@ -24,3 +24,8 @@ constexpr unsigned int pow2(unsigned int exp)
 {
 	return exp == 0 ? 1 : 2 * pow2(exp - 1);
 }
+
+constexpr unsigned long long pow2ll(unsigned long long exp)
+{
+	return exp == 0 ? 1 : 2 * pow2ll(exp - 1);
+}

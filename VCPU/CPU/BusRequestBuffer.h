@@ -16,8 +16,6 @@
 // Reads are blocking and take priority over writes.
 // Read requests are served from the buffer.
 
-// Only allowed to read or write, not both at same time.
-
 template <unsigned int N, unsigned int Naddr, unsigned int Nbuf>
 class BusRequestBuffer : Component
 {
@@ -35,9 +33,10 @@ public:
 	int WriteBufferCount() const { return (Nbuf + writeBuffer.size()) % Nbuf; }
 #endif
 
-	const Wire& PendingRead() const { return waitingForRead.Q(); }
+	const Wire& PendingRead() const { return havePendingReadRequest.Out(); }
 	const Wire& WriteSuccess() const { return writeBuffer.DidPush(); }
 	const Wire& ReadSuccess() const { return receivedReadAck.Out(); }
+	const Wire& WaitingForResponse() const { return haveBusOwnership.Q(); }
 
 private:
 	void ConnectToBus(SystemBus& bus);
@@ -69,9 +68,10 @@ private:
 	CircularBuffer<N + Naddr, Nbuf> writeBuffer;
 	CircularBuffer<Naddr, 1> readBuffer;
 
+	OrGate havePendingReadRequest;
+	OrGate havePendingRequests;
 	TriState shouldOutputOnBus;
 	TriState shouldOutputOnDataBus;
-	OrGate havePendingRequests;
 
 	NorGateN<3> busIsFree;
 	OrGate busIsFreeOrMine;
@@ -148,6 +148,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 	readBuffer.Connect(readaddr, shouldPopRead.Out(), newRead.Out());
 
 	// Check if we can use the bus.
+	havePendingReadRequest.Connect(readBuffer.NonEmpty(), waitingForRead.Q());
 	havePendingRequests.Connect(writeBuffer.NonEmpty(), readBuffer.NonEmpty());
 	shouldOutputOnBus.Connect(noAckOnBus.Out(), haveBusOwnership.Q());
 	shouldOutputOnDataBus.Connect(shouldOutputOnBus.Out(), waitingForWrite.Q());
@@ -198,6 +199,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 	writeBuffer.Update();
 	readBuffer.Update();
 
+	havePendingReadRequest.Update();
 	havePendingRequests.Update();
 	shouldOutputOnBus.Update();
 	shouldOutputOnDataBus.Update();

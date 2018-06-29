@@ -432,46 +432,46 @@ bool TestCacheLineMasker(Verbosity verbosity)
 	dataword.Write(0x6eadbeefU);
 	dataline.Write(0x123456789abcdef);
 	test.Update();
-	success &= TestState(i++, 0, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0xffffffffffffffff, test.LineMask().UnsignedReadLong(), verbosity);
 	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
 
 	ww.Set(true);
 	test.Update();
-	success &= TestState(i++, 0x6eadbeef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x00000000ffffffffLL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x012345676eadbeef, test.Line().ReadLong(), verbosity);
 
 	offset.Write(1U);
 	test.Update();
-	success &= TestState(i++, 0x6eadbeef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0xffffffff00000000ULL, test.LineMask().UnsignedReadLong(), verbosity);
 	success &= TestState(i++, 0x6eadbeef89abcdef, test.Line().ReadLong(), verbosity);
 
 	wb.Set(true);
 	test.Update();
-	success &= TestState(i++, 0xef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x000000ff00000000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x012345ef89abcdef, test.Line().ReadLong(), verbosity);
 
 	index.Write(2U);
 	test.Update();
-	success &= TestState(i++, 0xef0000, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x00ff000000000000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x01ef456789abcdef, test.Line().ReadLong(), verbosity);
 
 	offset.Write(0);
 	test.Update();
-	success &= TestState(i++, 0xef0000, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x0000000000ff0000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x0123456789efcdef, test.Line().ReadLong(), verbosity);
 
 	wh.Set(true);
 	wb.Set(false);
 	test.Update();
-	success &= TestState(i++, 0xbeef0000U, test.Word().UnsignedRead(), verbosity);
+	success &= TestState(i++, 0x00000000ffff0000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x01234567beefcdef, test.Line().ReadLong(), verbosity);
 
 	wh.Set(false);
 	ww.Set(false);
 	test.Update();
-	success &= TestState(i++, 0, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0xffffffffffffffff, test.LineMask().UnsignedReadLong(), verbosity);
 	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
-		
+
 	return success;
 }
 

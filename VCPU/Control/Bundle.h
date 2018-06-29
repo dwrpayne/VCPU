@@ -201,6 +201,12 @@ public:
 		return (negative ? -1 : 1) * n - (int)negative;
 	}
 
+	unsigned long long UnsignedReadLong() const
+	{
+		long long val = ReadLong();
+		return val >= 0 ? val : pow2ll(N) + val;
+	}
+
 	void print(std::ostream& os) const
 	{
 		for (int i = N - 32; i >= 0; i -= 32)
