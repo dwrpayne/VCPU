@@ -49,14 +49,8 @@ private:
 	Masker<N> maskedCacheLine;
 };
 
-class CacheBase : public Component
-{
-protected:
-	std::mutex mBusMutex;
-};
-
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
-class Cache : public CacheBase
+class Cache : public Component
 {
 public:
 	static const int WORD_SIZE = 32;
@@ -345,7 +339,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	memAddrMux.Update();
 	//buffer.Update();
 	{
-		std::scoped_lock lk(mBusMutex);
+		std::scoped_lock lk(pSystemBus->mBusMutex);
 		busIsFree.Update();
 		busIsFreeOrMine.Update();
 		haveBusOwnership.Update();
