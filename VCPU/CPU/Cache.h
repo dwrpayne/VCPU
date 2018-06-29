@@ -170,8 +170,8 @@ private:
 	TriState readBusRequestBuf;
 	TriState busRequestBuf;
 	
-	MultiGate<TriState, CACHE_LINE_BITS> dataRequestBuf;
-	MultiGate<TriState, ADDR_BITS> addrRequestBuf;
+	TriStateN<CACHE_LINE_BITS> dataRequestBuf;
+	TriStateN<ADDR_BITS> addrRequestBuf;
 	DFlipFlop haveBusOwnership;
 
 	int cycles;
@@ -284,8 +284,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	uncachedWriteBuffer.Connect(data, uncachedWrite.Out(), shouldOutputDataBus.Out());
 	writeBusRequestBuf.Connect(shouldSendWriteReq.Out(), shouldOutputOnBus.Out());
 	readBusRequestBuf.Connect(shouldSendReadReq.Out(), shouldOutputOnBus.Out());
-	dataRequestBuf.Connect(outCacheLineMux.Out(), Bundle<CACHE_LINE_BITS>(shouldOutputDataBus.Out()));
-	addrRequestBuf.Connect(memAddrMux.Out(), Bundle<32>(shouldOutputOnBus.Out()));
+	dataRequestBuf.Connect(outCacheLineMux.Out(), shouldOutputDataBus.Out());
+	addrRequestBuf.Connect(memAddrMux.Out(), shouldOutputOnBus.Out());
 	busRequestBuf.Connect(haveBusOwnership.Q(), shouldOutputOnBus.Out());
 	
 	//buffer.Connect(addr, memWriteAddrMux.Out(), outCacheLineMux.Out(), evictedDirty.Out(), cacheMiss.Out());
