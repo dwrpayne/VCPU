@@ -139,7 +139,6 @@ private:
 	AndGateN<3> gotReadDataFromMemory;
 	AndGate gotResponseFromMemory;
 	Inverter gotResponseFromMemoryInv;
-	AndGate writeAndDidntHaventFinished
 	AndGate waitingForUncachedData;
 
 	std::array<CacheLine<WORD_SIZE, CACHE_WORDS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
