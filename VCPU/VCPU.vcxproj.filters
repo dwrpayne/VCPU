@@ -314,5 +314,8 @@
     <ClInclude Include="Memory\EdgeDetector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CPU\BusRequestBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

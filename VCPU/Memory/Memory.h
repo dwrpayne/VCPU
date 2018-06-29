@@ -68,6 +68,7 @@ inline Memory<N, BYTES>::Memory(bool ismain)
 template<unsigned int N, unsigned int BYTES>
 inline Memory<N, BYTES>::~Memory()
 {
+	WaitUntilDone();
 	DisconnectFromBus();
 }
 
@@ -99,7 +100,8 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		cachelines[i].Connect(pSystemBus->OutData(), addrDecoder.Out()[i]);
+		unsigned int line_bit_index = (NUM_LINES * N) % pSystemBus->Ndata;
+		cachelines[i].Connect(pSystemBus->OutData().Range<N>(line_bit_index), addrDecoder.Out()[i]);
 		lineOuts->at(i).Connect(0, cachelines[i].Out());
 	}
 
