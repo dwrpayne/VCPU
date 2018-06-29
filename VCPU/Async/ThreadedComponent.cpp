@@ -39,6 +39,7 @@ void ThreadedAsyncComponent::UpdateForever()
 void ThreadedAsyncComponent::StopUpdating()
 {
 	mUpdatingUntilExit = false;
+	mExit = true;
 	WaitUntilDone();
 }
 

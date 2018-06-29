@@ -147,7 +147,7 @@ private:
 	
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Multiplexer<NUM_CACHE_LINES> cacheDirtyMux;
-	AndGateN<3> evictedDirty;
+	AndGate evictedDirty;
 	Inverter notEvictedDirty;
 	Inverter cacheMissInternal;
 	OrGate readOrWrite;
@@ -203,8 +203,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	uncachedRead.Connect(unCacheableAddr.Out(), read);
 	uncachedReadOrWrite.Connect(uncachedRead.Out(), uncachedWrite.Out());
 	waitingForUncachedData.Connect(busBuffer.WaitingForResponse(), uncachedReadOrWrite.Out());
-
-		
+			
 	// If we got data from memory, mask it in with the data we want to write.
 	// This produces either the buffer read line with "data", if write is true, and a 32-bit shifted mask
 	// Or just the buffer read line, if write is false, and a mask of all ones.
@@ -246,12 +245,12 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 
 	// We need to know when we have finished writing back the evicted dirty line. If we had a response from memory by now, the write succeeded.
 	// This logic will need to change when I have a write buffer.
-	evictedDirty.Connect({ &cacheableAddrCacheMiss.Out(), &cacheDirtyMux.Out(), &busBuffer.ReadSuccess() });
+	evictedDirty.Connect(cacheableAddrCacheMiss.Out(), cacheDirtyMux.Out());
 	notEvictedDirty.Connect(evictedDirty.Out());
 	needStall.Connect(busBuffer.WaitingForResponse(), waitingForUncachedData.Out());
 	needStallInv.Connect(needStall.Out());
 
-	shouldSendReadReq.Connect(cachedReadReqOkay.Out(), uncachedRead.Out());
+	shouldSendReadReq.Connect(cacheableAddrCacheMiss.Out(), uncachedRead.Out());
 	shouldSendWriteReq.Connect(evictedDirty.Out(), uncachedWrite.Out());
 
 	// Output 
@@ -277,14 +276,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	uncachedWrite.Update();
 	uncachedRead.Update();
 	uncachedReadOrWrite.Update();
-
-	gotCacheableDataFromMemory.Update();
-	gotResponseFromMemory.Update();
-	gotResponseFromMemoryInv.Update();
 	waitingForUncachedData.Update();
+
+	lineWriteMasker.Update();
 	cachelinewrite.Update();
 	indexDecoder.Update();
-	lineWriteMasker.Update();
 
 	// Must update the line tag mux *before* the registers, as their tags get stomped on write
 	lineTagMux.Update();
@@ -301,14 +297,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	cacheableAddrCacheMiss.Update();
 	evictedDirty.Update();
 	notEvictedDirty.Update();
-	writeBufferFull.Update();
 	needStall.Update();
 	needStallInv.Update();
 
 	// We do write-before-read because writes aren't buffered to the bus yet.
 	// This needs to change to a read first, write buffer, query the buffer first on cache miss, architecture.
-	cachedReadReqOkay.Update();
-
 	shouldSendWriteReq.Update();
 	shouldSendReadReq.Update();
 
