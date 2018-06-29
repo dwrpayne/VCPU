@@ -102,7 +102,7 @@
     <ClCompile Include="Control\TriStateBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CPU\SystemBus.cpp">
+    <ClCompile Include="Memory\EdgeDetector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -284,9 +284,6 @@
     <ClInclude Include="Functional\Counter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Async\AsyncFifo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Async\ThreadedComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -309,6 +306,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Control\Junction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\BusWriteBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\EdgeDetector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
