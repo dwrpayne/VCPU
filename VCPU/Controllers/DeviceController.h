@@ -20,7 +20,7 @@ public:
 protected:
 	virtual void Update();
 	virtual void DisconnectFromBus();
-	virtual bool InternalControlUpdate() { return false; }
+	virtual void InternalUpdate() = 0;
 
 	AndGateN<3> incomingRequest;
 	RegisterEnable<32> control;
@@ -37,9 +37,6 @@ protected:
 	AndGate incomingWriteRequest;
 	AndGate outServicedRequest;
 
-	std::mutex controlRegMutex;
-	std::mutex dataRegMutex;
-
 	Wire pending;
 	JKFlipFlop pendingState;
 };
@@ -51,7 +48,7 @@ public:
 		: DeviceController(L"Keyboard Controller Thread")
 	{}
 	virtual void Connect(SystemBus& bus);
-	virtual bool InternalControlUpdate();
+	virtual void InternalUpdate();
 	
 private:
 	MagicBundle<8> c_in;
@@ -65,6 +62,6 @@ public:
 		: DeviceController(L"Terminal Controller Thread")
 	{}
 	virtual void Connect(SystemBus& bus);
-	virtual bool InternalControlUpdate();
+	virtual void InternalUpdate();
 };
 

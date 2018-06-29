@@ -1,6 +1,6 @@
 #include "DeviceController.h"
 #include <conio.h>
-
+#include <sstream>
 
 void DeviceController::Connect(SystemBus & bus)
 {
@@ -14,8 +14,8 @@ void DeviceController::Connect(SystemBus & bus)
 	
 	addrBit2Inv.Connect(pSystemBus->OutAddr()[2]);
 	addrBit3Inv.Connect(pSystemBus->OutAddr()[3]);
-	incomingDataRequest.Connect(incomingRequest.Out(), addrBit2Inv.Out());
-	incomingControlRequest.Connect(incomingRequest.Out(), pSystemBus->OutAddr()[2]);
+	incomingDataRequest.Connect(incomingRequest.Out(), pSystemBus->OutAddr()[2]);
+	incomingControlRequest.Connect(incomingRequest.Out(), addrBit2Inv.Out());
 	incomingWriteRequest.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Write());
 
 	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
@@ -34,20 +34,7 @@ void DeviceController::Update()
 	incomingControlRequest.Update();
 	incomingWriteRequest.Update();
 
-	{
-		std::scoped_lock lk(controlRegMutex);
-		if (InternalControlUpdate())
-		{
-			pending.Set(true);
-		}
-		pendingState.Update();
-		pending.Set(false);
-		control.Update();
-	}
-	{
-		std::scoped_lock lk(dataRegMutex);
-		data.Update();
-	}
+	InternalUpdate();
 
 	outServicedRequest.Update();
 }
@@ -77,17 +64,22 @@ void KeyboardController::Connect(SystemBus& bus)
 	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());	
 }
 
-bool KeyboardController::InternalControlUpdate()
+void KeyboardController::InternalUpdate()
 {
 	if (_kbhit())
 	{
 		if (int c = _getch())
 		{
 			c_in.Write(c);
-			return true;
+			pending.Set(true);
 		}
 	}
-	return false;
+
+	pendingState.Update();
+	pending.Set(false);
+
+	control.Update();
+	data.Update();
 }
 
 void TerminalController::Connect(SystemBus& bus)
@@ -105,12 +97,16 @@ void TerminalController::Connect(SystemBus& bus)
 	pendingState.Connect(pending, incomingDataRequest.Out());
 }
 
-bool TerminalController::InternalControlUpdate()
+void TerminalController::InternalUpdate()
 {
+	data.Update();
+
 	if (pendingState.NotQ().On())
 	{
 		std::cout << (unsigned char)data.ReadReg().Range<8>().UnsignedRead();
-		return true;
+		pending.Set(true);
 	}
-	return false;
+	pendingState.Update();
+	pending.Set(false);
+	control.Update();
 }
