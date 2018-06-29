@@ -8,6 +8,8 @@
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
 #include "Controllers/DeviceController.h"
+#include "CPU/BusWriteBuffer.h"
+#include "CPU/BusRequestBuffer.h"
 
 class SystemBusTest : public SystemBus
 {
@@ -21,7 +23,7 @@ public:
 		ConnectCtrl(write, CtrlBit::Write);
 		databuffer.Connect(OutData(), Wire::ON);
 	}
-	const Bundle<Ndata>& SendAndReceiveRead(ThreadedAsyncComponent& target)
+	const Bundle<Ndata>& SendReadAndWaitForAck(ThreadedAsyncComponent& target)
 	{
 		read.Set(true);
 		Send(target);
@@ -29,7 +31,7 @@ public:
 		ClearAck(target);
 		return databuffer.Out();
 	}
-	void SendAndReceiveWrite(ThreadedAsyncComponent& target)
+	void SendWriteAndWaitForAck(ThreadedAsyncComponent& target)
 	{
 		write.Set(true);
 		Send(target);
@@ -270,6 +272,96 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 	return success;
 }
 
+bool TestBusWriteBuffer(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+	SystemBus bus;
+
+	BusWriteBuffer<32, 32, 8> test;
+	MagicBundle<32> data;
+	MagicBundle<32> addr;
+	Wire write(false);
+	test.Connect(bus, data, addr, write);
+	{
+		TerminalController terminal;
+		terminal.Connect(bus);
+		terminal.UpdateForever();
+
+		addr.Write(0xffff000c);
+		write.Set(true);
+		for (int i = 64; i < 127; i++)
+		{
+			data.Write(i);
+			test.Update();
+			std::cout << std::endl << "Wrote " << (unsigned char)i << std::endl;
+			while (test.Full().On())
+			{
+				test.Update();
+			}
+		}
+	}
+	std::cout << std::endl;
+
+	return success;
+}
+
+void PrintBus(SystemBus& bus, bool& stop)
+{
+	while (!stop)
+	{
+		bus.PrintBus();
+	}
+}
+
+bool TestBusRequestBuffer(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+	SystemBus bus;
+
+	BusRequestBuffer<16, 16, 8> test;
+	MagicBundle<16> data;
+	MagicBundle<16> raddr;
+	MagicBundle<16> waddr;
+	Wire write(false);
+	Wire read(false);
+	bool done = false;
+	std::thread busprintthread([&bus, &done]() {PrintBus(bus, done); });
+	test.Connect(bus, data, waddr, raddr, write, read);
+	{
+		Memory<32, 256> memory(false);
+		memory.Connect(bus);
+
+
+		write.Set(true);
+
+		for (const auto&[a, b] : std::map<int, int>({ { 0x111, 4}, {0x222, 8}, {0x333, 12}, {0x444, 36}, {0x555, 60}, {0x666, 72}, {0x777, 100} }))
+		{
+			data.Write(a);
+			waddr.Write(b);
+			test.Update(); // Push some values into memory
+			memory.DoOneUpdate();
+		}
+
+		write.Set(false);
+		read.Set(true);
+		data.Write(2);
+		waddr.Write(16);
+		raddr.Write(72);
+		do
+		{
+			test.Update(); // Push some values into memory
+			memory.DoOneUpdate();
+		} while (!test.ReadSuccess().On());
+
+		std::cout << "Read Data: " << test.OutRead().UnsignedRead() << std::endl;
+	}
+	done = true;
+	busprintthread.join();
+	return success;
+}
+
 bool TestByteMask(Verbosity verbosity)
 {
 	int i = 0;
@@ -495,8 +587,8 @@ bool TestKeyboardController(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	static const unsigned int DATA_REG = 0xffff0000U;
-	static const unsigned int CONTROL_REG = 0xffff0004U;
+	static const unsigned int DATA_REG = 0xffff0004U;
+	static const unsigned int CONTROL_REG = 0xffff0000U;
 
 	KeyboardController test;
 	MagicBundle<256> data;
@@ -507,10 +599,10 @@ bool TestKeyboardController(Verbosity verbosity)
 	for (int i = 0; i < 10; i++)
 	{
 		addr.Write(CONTROL_REG);
-		while (!bus.SendAndReceiveRead(test).Range<1>().UnsignedRead());
+		while (!bus.SendReadAndWaitForAck(test).Range<1>().UnsignedRead());
 
 		addr.Write(DATA_REG);
-		char key = bus.SendAndReceiveRead(test).Range<8>().UnsignedRead();
+		char key = bus.SendReadAndWaitForAck(test).Range<8>().UnsignedRead();
 
 		std::cout << "Got a " << key << std::endl;
 	}
@@ -523,8 +615,8 @@ bool TestTerminalController(Verbosity verbosity)
 	int i = 0;
 	bool success = true;
 
-	static const unsigned int DATA_REG = 0xffff0008U;
-	static const unsigned int CONTROL_REG = 0xffff000CU;
+	static const unsigned int DATA_REG = 0xffff000CU;
+	static const unsigned int CONTROL_REG = 0xffff0008U;
 
 	TerminalController test;
 	MagicBundle<256> data;
@@ -535,11 +627,11 @@ bool TestTerminalController(Verbosity verbosity)
 	for (int i = 0; i < 26; i++)
 	{
 		addr.Write(CONTROL_REG);
-		while (!bus.SendAndReceiveRead(test).Range<1>().UnsignedRead());
+		while (!bus.SendReadAndWaitForAck(test).Range<1>().UnsignedRead());
 
 		addr.Write(DATA_REG);
 		data.Write(65 + i);
-		bus.SendAndReceiveWrite(test);
+		bus.SendWriteAndWaitForAck(test);
 	}
 	std::cout << std::endl;
 
@@ -736,12 +828,14 @@ bool RunCPUTests()
 	static const int NUM_TIMES_TO_TEST = 1;
 	bool success = true;
 	auto default_verb = Debugger::MINIMAL;
+	RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
+	RUN_TEST(TestBusRequestBuffer, FAIL_ONLY);
+	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
+	//RUN_TEST(TestTerminalController, FAIL_ONLY);
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
-	//RUN_TEST(TestTerminalController, FAIL_ONLY);
 	//RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);

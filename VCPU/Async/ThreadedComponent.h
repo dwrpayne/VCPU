@@ -15,6 +15,7 @@ public:
 
 	void DoOneUpdate();
 	void UpdateForever();
+	void StopUpdating();
 	void WaitUntilDone();
 	void Exit();
 	inline bool IsRunning() const { return mUpdating; }

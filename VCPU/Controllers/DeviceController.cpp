@@ -1,6 +1,17 @@
 #include "DeviceController.h"
 #include <conio.h>
+#include <sstream>
 
+
+DeviceController::~DeviceController()
+{
+	StopUpdating();
+	if (pSystemBus)
+	{
+		pSystemBus->DisconnectData(control.Out());
+		pSystemBus->DisconnectCtrl(outServicedRequest.Out(), SystemBus::CtrlBit::Ack);
+	}
+}
 
 void DeviceController::Connect(SystemBus & bus)
 {
@@ -14,9 +25,10 @@ void DeviceController::Connect(SystemBus & bus)
 	
 	addrBit2Inv.Connect(pSystemBus->OutAddr()[2]);
 	addrBit3Inv.Connect(pSystemBus->OutAddr()[3]);
-	incomingDataRequest.Connect(incomingRequest.Out(), addrBit2Inv.Out());
-	incomingControlRequest.Connect(incomingRequest.Out(), pSystemBus->OutAddr()[2]);
+	incomingDataRequest.Connect(incomingRequest.Out(), pSystemBus->OutAddr()[2]);
+	incomingControlRequest.Connect(incomingRequest.Out(), addrBit2Inv.Out());
 	incomingWriteRequest.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Write());
+	incomingDataNow.Connect(incomingDataRequest.Out());
 
 	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
 }
@@ -33,30 +45,20 @@ void DeviceController::Update()
 	incomingDataRequest.Update();
 	incomingControlRequest.Update();
 	incomingWriteRequest.Update();
+	incomingDataNow.Update();
 
-	{
-		std::scoped_lock lk(controlRegMutex);
-		if (InternalControlUpdate())
-		{
-			pending.Set(true);
-		}
-		pendingState.Update();
-		pending.Set(false);
-		control.Update();
-	}
-	{
-		std::scoped_lock lk(dataRegMutex);
-		data.Update();
-	}
+	InternalUpdate();
 
 	outServicedRequest.Update();
 }
 
-void DeviceController::DisconnectFromBus()
+KeyboardController::~KeyboardController()
 {
-	pSystemBus->DisconnectData(control.Out());
-	pSystemBus->DisconnectData(data.Out());
-	pSystemBus->DisconnectCtrl(outServicedRequest.Out(), SystemBus::CtrlBit::Ack);
+	StopUpdating();
+	if (pSystemBus)
+	{
+		pSystemBus->DisconnectData(data.Out());
+	}
 }
 
 void KeyboardController::Connect(SystemBus& bus)
@@ -66,7 +68,6 @@ void KeyboardController::Connect(SystemBus& bus)
 	pSystemBus->ConnectData(data.Out());
 
 	incomingRequest.Connect({ &isMemMappedIo.Out(), &addrBit3Inv.Out(), &pSystemBus->OutCtrl().Req() });
-	pendingState.Connect(pending, incomingDataRequest.Out());
 
 	Bundle<32> dataBundle = Bundle<32>::OFF;
 	dataBundle.Connect(0, c_in);
@@ -75,19 +76,26 @@ void KeyboardController::Connect(SystemBus& bus)
 	Bundle<32> controlBundle = Bundle<32>::OFF;
 	controlBundle.Connect(0, pendingState.Q());
 	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());	
+
+	pendingState.Connect(pending, incomingDataNow.Rise());
 }
 
-bool KeyboardController::InternalControlUpdate()
+void KeyboardController::InternalUpdate()
 {
 	if (_kbhit())
 	{
 		if (int c = _getch())
 		{
 			c_in.Write(c);
-			return true;
+			pending.Set(true);
 		}
 	}
-	return false;
+
+	pendingState.Update();
+	pending.Set(false);
+
+	control.Update();
+	data.Update();
 }
 
 void TerminalController::Connect(SystemBus& bus)
@@ -97,20 +105,23 @@ void TerminalController::Connect(SystemBus& bus)
 	incomingRequest.Connect({ &isMemMappedIo.Out(), &pSystemBus->OutAddr()[3], &pSystemBus->OutCtrl().Req() });
 
 	Bundle<32> controlBundle = Bundle<32>::OFF;
-	controlBundle.Connect(0, Wire::ON);
+	controlBundle.Connect(0, pendingState.Q());
 	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());
 
 	data.Connect(pSystemBus->OutData().Range<32>(), incomingDataRequest.Out(), Wire::OFF);
 
-	pendingState.Connect(pending, incomingDataRequest.Out());
+	pendingState.Connect(pendingState.NotQ(), incomingDataNow.Rise());
+	pendingState.Update();
 }
 
-bool TerminalController::InternalControlUpdate()
+void TerminalController::InternalUpdate()
 {
+ 	data.Update();
+	pendingState.Update();
+
 	if (pendingState.NotQ().On())
 	{
 		std::cout << (unsigned char)data.ReadReg().Range<8>().UnsignedRead();
-		return true;
 	}
-	return false;
+	control.Update();
 }

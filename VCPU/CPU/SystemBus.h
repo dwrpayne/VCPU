@@ -61,6 +61,7 @@ public:
 		std::cout << std::dec << std::endl;
 	}
 
+	std::mutex mBusMutex;
 	
 private:
 
@@ -68,7 +69,6 @@ private:
 	Bus<Naddr> addr;
 	ControlBundle ctrl;
 
-	static std::mutex mBusMutex;
 
 	friend class ProgramLoader;
 	friend class Debugger;
