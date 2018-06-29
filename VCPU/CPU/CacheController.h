@@ -18,48 +18,9 @@
 #include "SystemBus.h"
 #include "TriStateBuffer.h"
 
-template <unsigned int N>
-class CacheLineMasker : public Component
-{
-public:
-	typedef Bundle<N> CacheLine;
-	void Connect(const Bundle<2> byteindex, const Bundle<bits(N)-5> wordoffset, const Bundle<32>& dataword, const CacheLine& dataline,
-		const Wire& bytewrite, const Wire& halfwrite, const Wire& wordwrite)
-	{
-		maskedDataWord.Connect(byteindex, dataword, bytewrite, halfwrite, wordwrite);
-		lineDataShifter.Connect(maskedDataWord.Word().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
-		lineMaskShifter.Connect(maskedDataWord.WordMask().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
-		maskedCacheLine.Connect(lineDataShifter.Out(), dataline, lineMaskShifter.Out());
-		lineFullMask.Connect({ CacheLine::ON, lineMaskShifter.Out() }, wordwrite)
-	}
-	void Update()
-	{
-		maskedDataWord.Update();
-		lineDataShifter.Update();
-		lineMaskShifter.Update();
-		maskedCacheLine.Update();
-	}
-	const Bundle<32>& WordMask() const { return maskedDataWord.WordMask(); }
-	const Bundle<32>& Word() const { return maskedDataWord.Word(); }
-	const CacheLine& Line() const { return maskedCacheLine.Out(); }
-	const CacheLine& LineMask() const { return lineFullMask.Out(); }
-
-private:
-	WordMasker maskedDataWord;
-	LeftShifter<N> lineDataShifter;
-	LeftShifter<N> lineMaskShifter;
-	MuxBundle<N> lineFullMask;
-	Masker<N> maskedCacheLine;
-};
-
-class CacheBase : public Component
-{
-protected:
-	std::mutex mBusMutex;
-};
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
-class Cache : public CacheBase
+class CacheController : public Component
 {
 public:
 	static const int WORD_SIZE = 32;

@@ -18,8 +18,7 @@ public:
 	typedef Bundle<NTag> TagBundle;
 
 	CacheLine();
-	void Connect(const TagBundle& tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask,
-		const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable, const Wire& dirty);
+	void Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable);
 	void Update();
 
 	const TagBundle& Tag() { return tag.Out(); }
@@ -29,6 +28,7 @@ public:
 	const Wire& Valid() { return valid.Q(); }
 
 private:
+	AndGateN<N> writeLine;
 	AndGate writeTag;
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
@@ -61,8 +61,7 @@ inline CacheLine<N, Nwords, NTag>::CacheLine()
 }
 
 template<unsigned int N, unsigned int Nwords, unsigned int NTag>
-void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const OffsetBundle& wordoffset, const WordBundle& writewordmask,
-										const WordBundle& dataword, const Wire& writeline, const LineBundle& dataline, const Wire& enable, const Wire& dirty)
+void CacheLine<N, Nwords, NTag>::Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable)
 {
 	writeTag.Connect(writeline, enable);
 	tag.Connect(tagin, writeTag.Out());
