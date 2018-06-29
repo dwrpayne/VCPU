@@ -5,6 +5,7 @@
 #include "CPU/SystemBus.h"
 #include "Register.h"
 #include "JKFlipFlop.h"
+#include "EdgeDetector.h"
 
 class DeviceController : public ThreadedAsyncComponent
 {
@@ -12,6 +13,7 @@ public:
 	typedef Bundle<32> DataBundle;
 	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 
+	virtual ~DeviceController();
 	virtual void Connect(SystemBus& bus);
 
 	const DataBundle& GetControl() { return control.Out(); }
@@ -19,7 +21,6 @@ public:
 
 protected:
 	virtual void Update();
-	virtual void DisconnectFromBus();
 	virtual void InternalUpdate() = 0;
 
 	AndGateN<3> incomingRequest;
@@ -35,6 +36,8 @@ protected:
 	AndGate incomingControlRequest;
 	AndGate incomingDataRequest;
 	AndGate incomingWriteRequest;
+	EdgeDetector incomingDataNow;
+
 	AndGate outServicedRequest;
 
 	Wire pending;
@@ -47,6 +50,7 @@ public:
 	KeyboardController()
 		: DeviceController(L"Keyboard Controller Thread")
 	{}
+	virtual ~KeyboardController();
 	virtual void Connect(SystemBus& bus);
 	virtual void InternalUpdate();
 	
@@ -61,6 +65,7 @@ public:
 	TerminalController()
 		: DeviceController(L"Terminal Controller Thread")
 	{}
+	virtual ~TerminalController() {}
 	virtual void Connect(SystemBus& bus);
 	virtual void InternalUpdate();
 };

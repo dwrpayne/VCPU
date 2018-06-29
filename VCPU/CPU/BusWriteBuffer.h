@@ -17,6 +17,7 @@ class BusWriteBuffer : Component
 {
 public:
 	typedef Bundle<N + Naddr> FullBundle;
+	~BusWriteBuffer();
 	void Connect(SystemBus& bus, const Bundle<N>& data, const Bundle<Naddr>& addr, const Wire& write);
 	void Update();
 
@@ -38,15 +39,17 @@ private:
 
 	EdgeDetector shouldPopEdge;
 	CircularBuffer<N+Naddr, Nbuf> circbuf;
-	
+
+	Inverter noAckOnBus;
+	TriState shouldOutputOnBus;
+
 	NorGate busIsFree;
 	OrGate busIsFreeOrMine;
 	AndGate wantTakeBus;
 	AndGate wantReleaseBus;
 	JKFlipFlop haveBusOwnership;
 
-	TriState shouldOutputOnBus;
-	TriStateN<Naddr> addrRequestBuf;
+	TriStateN<32> addrRequestBuf;
 	TriStateN<N> dataRequestBuf;
 	TriState busRequestBuf;
 };
@@ -68,16 +71,22 @@ inline void BusWriteBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Bundle
 	bundle.Connect(Naddr, data);
 	circbuf.Connect(bundle, shouldPopEdge.Rise(), newWrite.Out());
 
+	noAckOnBus.Connect(pSystemBus->OutCtrl().Ack());
+	shouldOutputOnBus.Connect(noAckOnBus.Out(), haveBusOwnership.Q());
+
 	busIsFree.Connect(pSystemBus->OutCtrl().BusReq(), pSystemBus->OutCtrl().Ack());
 	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
 	wantTakeBus.Connect(busIsFree.Out(), circbuf.NonEmpty());
 	wantReleaseBus.Connect(haveBusOwnership.Q(), pSystemBus->OutCtrl().Ack());
-	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out());
+	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out()); 
 
-	shouldOutputOnBus.Connect(circbuf.DidPop(), haveBusOwnership.Q());
-	addrRequestBuf.Connect(circbuf.Out().Range<Naddr>(), shouldOutputOnBus.Out());
+	Bundle<32> a(0xffff000CU);
+	addrRequestBuf.Connect(a, shouldOutputOnBus.Out());
+	//addrRequestBuf.Connect(circbuf.Out().Range<Naddr>(), shouldOutputOnBus.Out());
 	dataRequestBuf.Connect(circbuf.Out().Range<N>(Naddr), shouldOutputOnBus.Out());
 	busRequestBuf.Connect(Wire::ON, shouldOutputOnBus.Out());	
+	
+	haveBusOwnership.Update();
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
@@ -92,6 +101,9 @@ inline void BusWriteBuffer<N, Naddr, Nbuf>::Update()
 	shouldPopEdge.Update();
 	circbuf.Update();
 
+	noAckOnBus.Update();
+	shouldOutputOnBus.Update();
+
 	{
 		std::scoped_lock lk(pSystemBus->mBusMutex);
 		busIsFree.Update();
@@ -101,23 +113,15 @@ inline void BusWriteBuffer<N, Naddr, Nbuf>::Update()
 		haveBusOwnership.Update();
 	}
 
-	shouldOutputOnBus.Update();
 	addrRequestBuf.Update();
 	dataRequestBuf.Update();
 	busRequestBuf.Update();
+}
 
-	//if (haveBusOwnership.Q().On())
-	//{
-	//	std::stringstream ss;
-	//	ss << "Buffer tick: Have bus ownership." << std::endl;
-	//	std::cout << ss.str();
-	//}
-	//if (busRequestBuf.Out().On())
-	//{
-	//	std::stringstream ss;
-	//	ss << "----- buffer put " << dataRequestBuf.Out().Range<32>().Read() << " on bus" << std::endl;
-	//	std::cout << ss.str();
-	//}
+template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
+inline BusWriteBuffer<N, Naddr, Nbuf>::~BusWriteBuffer()
+{
+	DisconnectFromBus();
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
@@ -138,8 +142,8 @@ inline void BusWriteBuffer<N, Naddr, Nbuf>::DisconnectFromBus()
 	{
 		pSystemBus->DisconnectAddr(addrRequestBuf.Out());
 		pSystemBus->DisconnectData(dataRequestBuf.Out());
-		pSystemBus->DisconnectCtrl(writeBusRequestBuf.Out(), SystemBus::CtrlBit::Write);
-		pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
+		pSystemBus->DisconnectCtrl(shouldOutputOnBus.Out(), SystemBus::CtrlBit::Write);
+		pSystemBus->DisconnectCtrl(shouldOutputOnBus.Out(), SystemBus::CtrlBit::Req);
 		pSystemBus->DisconnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 	}
 }

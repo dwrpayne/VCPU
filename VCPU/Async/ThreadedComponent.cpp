@@ -47,8 +47,10 @@ void ThreadedAsyncComponent::WaitUntilDone()
 
 void ThreadedAsyncComponent::Exit()
 {
+	mUpdatingUntilExit = false;
 	mExit = true;
 	mCV.notify_one();
+	WaitUntilDone();
 	mThread.join();
 }
 

@@ -69,6 +69,10 @@ private:
 	std::array<std::chrono::microseconds, 4> GetStageTiming();
 
 private:
+	// Declare first so it gets destroyed last 
+	// Give components a chance to disconnect cleanly first
+	SystemBus systemBus;
+
 	class Stage1;
 	class Stage2;
 	class Stage3;
@@ -88,7 +92,6 @@ private:
 	HazardUnit hazardIFID;
 	Interlock interlock;
 
-	SystemBus systemBus;
 
 	bool exit;
 
