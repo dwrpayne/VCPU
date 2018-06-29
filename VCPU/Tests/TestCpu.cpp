@@ -8,6 +8,7 @@
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
 #include "Controllers/DeviceController.h"
+#include "CPU/BusWriteBuffer.h"
 
 class SystemBusTest : public SystemBus
 {
