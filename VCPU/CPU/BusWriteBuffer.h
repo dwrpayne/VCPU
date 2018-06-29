@@ -80,9 +80,7 @@ inline void BusWriteBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Bundle
 	wantReleaseBus.Connect(haveBusOwnership.Q(), pSystemBus->OutCtrl().Ack());
 	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out()); 
 
-	Bundle<32> a(0xffff000CU);
-	addrRequestBuf.Connect(a, shouldOutputOnBus.Out());
-	//addrRequestBuf.Connect(circbuf.Out().Range<Naddr>(), shouldOutputOnBus.Out());
+	addrRequestBuf.Connect(circbuf.Out().Range<Naddr>(), shouldOutputOnBus.Out());
 	dataRequestBuf.Connect(circbuf.Out().Range<N>(Naddr), shouldOutputOnBus.Out());
 	busRequestBuf.Connect(Wire::ON, shouldOutputOnBus.Out());	
 	
