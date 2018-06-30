@@ -249,7 +249,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::ConnectToBus(SystemBus& bus)
 	pSystemBus->ConnectData(dataRequestBuf.Out());
 	pSystemBus->ConnectCtrl(readRequestBuf.Out(), SystemBus::CtrlBit::Read);
 	pSystemBus->ConnectCtrl(writeRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	pSystemBus->ConnectCtrl(shouldOutputOnBus.Out(), SystemBus::CtrlBit::Req);
+	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
 	pSystemBus->ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 }
 
@@ -262,7 +262,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::DisconnectFromBus()
 		pSystemBus->DisconnectData(dataRequestBuf.Out());
 		pSystemBus->DisconnectCtrl(readRequestBuf.Out(), SystemBus::CtrlBit::Read);
 		pSystemBus->DisconnectCtrl(writeRequestBuf.Out(), SystemBus::CtrlBit::Write);
-		pSystemBus->DisconnectCtrl(shouldOutputOnBus.Out(), SystemBus::CtrlBit::Req);
+		pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
 		pSystemBus->DisconnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
 	}
 }
