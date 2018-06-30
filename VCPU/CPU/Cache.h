@@ -307,8 +307,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	evictedDirty.Update();
 	notEvictedDirty.Update();
 
-	// We do write-before-read because writes aren't buffered to the bus yet.
-	// This needs to change to a read first, write buffer, query the buffer first on cache miss, architecture.
 	shouldSendWriteReq.Update();
 	shouldSendReadReq.Update();
 

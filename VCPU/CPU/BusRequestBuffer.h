@@ -153,7 +153,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 
 	// Status flags
 	didNotWrite.Connect(writeBuffer.DidPush());
-	writeFailed.Connect(didNotWrite.Out(), write);
+	writeFailed.Connect(didNotWrite.Out(), newWrite.Out());
 	busy.Connect(haveBusOwnership.Q(), havePendingRequests.Out());
 
 	// Output buffers

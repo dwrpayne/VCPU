@@ -241,6 +241,7 @@ void Debugger::PrintMemory()
 	{
 		if (mLastCycleMemory[i] != GetMemoryByte(i))
 		{
+			std::cout << "Byte " << i << ": Last cycle was " << (int)mLastCycleMemory[i] << ", now it's " << (int)GetMemoryByte(i) << std::endl;
 			diff = true;
 		}
 		mLastCycleMemory[i] = GetMemoryByte(i);
