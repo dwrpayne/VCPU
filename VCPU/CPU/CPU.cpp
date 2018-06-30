@@ -290,7 +290,7 @@ CPU::CPU()
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
 
-	interlock.Connect(InstructionCache().NeedStall(), GetMainCache().NeedStall(), 
+	interlock.Connect(InstructionCache().NeedStall(), GetMainCache().NeedStall(), stage3->Out().OpcodeControl().Halt(),
 		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(), stage1->Out().IR.Function(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
 
@@ -403,7 +403,7 @@ bool CPU::Halt()
 { 
 	// TODO: This should implement a pipeline freeze that can only be 
 	// woken up by an interrupt. We are hijacking this to stop the debugger.
-	return stage2->Out().OpcodeControl().Halt().On();
+	return stage3->Out().OpcodeControl().Halt().On() && !stage4->cache.PendingOps().On();
 }
 
 bool CPU::Break()

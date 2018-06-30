@@ -61,9 +61,12 @@ public:
 		std::cout << std::dec << std::endl;
 	}
 
-	std::mutex mBusMutex;
+	// This is a hack, need a bus arbitrator.
+	void LockForBusRequest();
+	void UnlockForBusRequest();
 	
 private:
+	std::mutex mBusMutex;
 
 	Bus<Ndata> data;
 	Bus<Naddr> addr;
@@ -108,4 +111,16 @@ inline void SystemBus::DisconnectAddr(const Bundle<N>& b, int start)
 inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
 {
 	ctrl.Remove(Bundle<1>(wire), start);
+}
+
+inline void SystemBus::LockForBusRequest()
+{
+	mBusMutex.lock();
+	//PrintBus();
+}
+
+inline void SystemBus::UnlockForBusRequest()
+{
+	//PrintBus();
+	mBusMutex.unlock();
 }

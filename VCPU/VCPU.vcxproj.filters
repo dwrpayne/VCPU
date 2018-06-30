@@ -1,328 +1,112 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
     <Natvis Include="VCPU.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Gates\AndGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\Inverter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\NandGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\NorGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\OrGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory\DFlipFlop.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory\JKFlipFlop.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory\SRLatch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\XorGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Functional\FullAdder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\Wire.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CPU\CPU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\TestCPU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CPU\OpcodeDecoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\TestHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tools\Debugger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tools\ProgramLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tools\Assembler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Gates\XNorGate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CPU\HazardUnit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CPU\Interlock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CPU\BranchControl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory\DFlipFlopReset.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tools\Program.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Async\ThreadedComponent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Controllers\DeviceController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Control\TriStateBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory\EdgeDetector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CPU\CacheController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="Async\ThreadedComponent.cpp" />
+    <ClCompile Include="Controllers\DeviceController.cpp" />
+    <ClCompile Include="Control\TriStateBuffer.cpp" />
+    <ClCompile Include="Control\Wire.cpp" />
+    <ClCompile Include="CPU\BranchControl.cpp" />
+    <ClCompile Include="CPU\CacheController.cpp" />
+    <ClCompile Include="CPU\CPU.cpp" />
+    <ClCompile Include="CPU\HazardUnit.cpp" />
+    <ClCompile Include="CPU\Interlock.cpp" />
+    <ClCompile Include="CPU\OpcodeDecoder.cpp" />
+    <ClCompile Include="Functional\FullAdder.cpp" />
+    <ClCompile Include="Gates\AndGate.cpp" />
+    <ClCompile Include="Gates\Inverter.cpp" />
+    <ClCompile Include="Gates\NandGate.cpp" />
+    <ClCompile Include="Gates\NorGate.cpp" />
+    <ClCompile Include="Gates\OrGate.cpp" />
+    <ClCompile Include="Gates\XNorGate.cpp" />
+    <ClCompile Include="Gates\XorGate.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Memory\DFlipFlop.cpp" />
+    <ClCompile Include="Memory\DFlipFlopReset.cpp" />
+    <ClCompile Include="Memory\EdgeDetector.cpp" />
+    <ClCompile Include="Memory\JKFlipFlop.cpp" />
+    <ClCompile Include="Memory\SRLatch.cpp" />
+    <ClCompile Include="Tests\TestCPU.cpp" />
+    <ClCompile Include="Tests\TestHelpers.cpp" />
+    <ClCompile Include="Tools\Assembler.cpp" />
+    <ClCompile Include="Tools\Debugger.cpp" />
+    <ClCompile Include="Tools\Program.cpp" />
+    <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Gates\AndGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\Inverter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\NandGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\NorGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\OrGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\DFlipFlop.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\JKFlipFlop.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\Register.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\SRLatch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\TestHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\Tests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\XorGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\ALU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\FullAdder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Adder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Multiplexer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Component.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Wire.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Bundle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\MultiGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\MuxBundle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\RegisterFile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\Memory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\InsRegister.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\TestCPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\OpcodeDecoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\CPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tools\Debugger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tools\ProgramLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tools\Utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tools\Assembler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\PipelineBuffers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tools\MagicBundle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\Instructions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\OverflowDetector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\ComponentCost.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\CacheLine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gates\XNorGate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\Cache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\HazardUnit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Matcher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Comparator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Shifter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\Interlock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Encoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\SelectBundle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\BranchControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Extender.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\SubWordSelector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\DFlipFlopReset.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tools\Program.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Multiplier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\CircularBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\RequestBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Masker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\GrayCounter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\GrayCode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\Counter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Async\ThreadedComponent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Controllers\DeviceController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\ByteMask.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Functional\ByteExtractor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Bus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\SystemBus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\TriStateBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Control\Junction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-<<<<<<< HEAD
-    <ClInclude Include="CPU\CacheController.h">
-=======
-    <ClInclude Include="CPU\BusWriteBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory\EdgeDetector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\BusRequestBuffer.h">
->>>>>>> dev
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="Async\ThreadedComponent.h" />
+    <ClInclude Include="Controllers\DeviceController.h" />
+    <ClInclude Include="Control\Bundle.h" />
+    <ClInclude Include="Control\Bus.h" />
+    <ClInclude Include="Control\Component.h" />
+    <ClInclude Include="Control\Decoder.h" />
+    <ClInclude Include="Control\Encoder.h" />
+    <ClInclude Include="Control\Extender.h" />
+    <ClInclude Include="Control\Junction.h" />
+    <ClInclude Include="Control\Multiplexer.h" />
+    <ClInclude Include="Control\MuxBundle.h" />
+    <ClInclude Include="Control\SelectBundle.h" />
+    <ClInclude Include="Control\SubWordSelector.h" />
+    <ClInclude Include="Control\TriStateBuffer.h" />
+    <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\BranchControl.h" />
+    <ClInclude Include="CPU\BusRequestBuffer.h" />
+    <ClInclude Include="CPU\BusWriteBuffer.h" />
+    <ClInclude Include="CPU\Cache.h" />
+    <ClInclude Include="CPU\CacheController.h" />
+    <ClInclude Include="CPU\CPU.h" />
+    <ClInclude Include="CPU\HazardUnit.h" />
+    <ClInclude Include="CPU\InsRegister.h" />
+    <ClInclude Include="CPU\Interlock.h" />
+    <ClInclude Include="CPU\OpcodeDecoder.h" />
+    <ClInclude Include="CPU\PipelineBuffers.h" />
+    <ClInclude Include="CPU\SystemBus.h" />
+    <ClInclude Include="Functional\Adder.h" />
+    <ClInclude Include="Functional\ALU.h" />
+    <ClInclude Include="Functional\ByteExtractor.h" />
+    <ClInclude Include="Functional\ByteMask.h" />
+    <ClInclude Include="Functional\Comparator.h" />
+    <ClInclude Include="Functional\Counter.h" />
+    <ClInclude Include="Functional\FullAdder.h" />
+    <ClInclude Include="Functional\GrayCode.h" />
+    <ClInclude Include="Functional\GrayCounter.h" />
+    <ClInclude Include="Functional\Masker.h" />
+    <ClInclude Include="Functional\Matcher.h" />
+    <ClInclude Include="Functional\Multiplier.h" />
+    <ClInclude Include="Functional\OverflowDetector.h" />
+    <ClInclude Include="Functional\Shifter.h" />
+    <ClInclude Include="Gates\AndGate.h" />
+    <ClInclude Include="Gates\Inverter.h" />
+    <ClInclude Include="Gates\MultiGate.h" />
+    <ClInclude Include="Gates\NandGate.h" />
+    <ClInclude Include="Gates\NorGate.h" />
+    <ClInclude Include="Gates\OrGate.h" />
+    <ClInclude Include="Gates\XNorGate.h" />
+    <ClInclude Include="Gates\XorGate.h" />
+    <ClInclude Include="Memory\CacheLine.h" />
+    <ClInclude Include="Memory\DFlipFlop.h" />
+    <ClInclude Include="Memory\DFlipFlopReset.h" />
+    <ClInclude Include="Memory\EdgeDetector.h" />
+    <ClInclude Include="Memory\JKFlipFlop.h" />
+    <ClInclude Include="Memory\Memory.h" />
+    <ClInclude Include="Memory\Register.h" />
+    <ClInclude Include="Memory\RegisterFile.h" />
+    <ClInclude Include="Memory\SRLatch.h" />
+    <ClInclude Include="Memory\CircularBuffer.h" />
+    <ClInclude Include="Memory\RequestBuffer.h" />
+    <ClInclude Include="Tests\ComponentCost.h" />
+    <ClInclude Include="Tests\Instructions.h" />
+    <ClInclude Include="Tests\TestCPU.h" />
+    <ClInclude Include="Tests\TestHelpers.h" />
+    <ClInclude Include="Tests\Tests.h" />
+    <ClInclude Include="Tools\Assembler.h" />
+    <ClInclude Include="Tools\Debugger.h" />
+    <ClInclude Include="Tools\MagicBundle.h" />
+    <ClInclude Include="Tools\Program.h" />
+    <ClInclude Include="Tools\ProgramLoader.h" />
+    <ClInclude Include="Tools\Utils.h" />
+    <ClInclude Include="Functional\ChangeDetector.h" />
   </ItemGroup>
 </Project>

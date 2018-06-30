@@ -14,7 +14,7 @@ public:
 	static const int ADDR = 5;
 	typedef Bundle<ADDR> RegBundle;
 
-	void Connect(const Wire& inscachemiss, const Wire& cachemiss,									// todo: replace this with a dedicated jumpreg/branch circuit in cpu.
+	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const Wire& haltExOp,								// todo: replace this with a dedicated jumpreg/branch circuit in cpu.
 		const RegBundle& readR1IFID, const RegBundle& readR2IFID, const RegBundle& writingRegIDEX, const Bundle<6>& opcodeIF, const Bundle<6>& funcIF,
 		const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM);
 	void Update();
@@ -40,7 +40,7 @@ private:
 	OrGate branchOrJumpReg;
 	AndGate branchandload;
 	OrGateN<3> bubble;
-	OrGate freeze;
+	OrGateN<3> freeze;
 	Inverter freezeInv;
 	AndGate bubbleID;
 	OrGate exmemMatchEither;

@@ -5,7 +5,7 @@
 #include "CircularBuffer.h"
 #include "SystemBus.h"
 #include "TriStateBuffer.h"
-#include "Matcher.h"
+#include "ChangeDetector.h"
 #include "EdgeDetector.h"
 
 // This takes read and write requests.
@@ -17,7 +17,7 @@
 // Read requests are served from the buffer.
 
 template <unsigned int N, unsigned int Naddr, unsigned int Nbuf>
-class BusRequestBuffer : Component
+class BusRequestBuffer : public Component
 {
 public:
 	typedef Bundle<N + Naddr> FullBundle;
@@ -33,25 +33,17 @@ public:
 	int WriteBufferCount() const { return (Nbuf + writeBuffer.size()) % Nbuf; }
 #endif
 
-	const Wire& PendingRead() const { return havePendingReadRequest.Out(); }
-	const Wire& WriteSuccess() const { return writeBuffer.DidPush(); }
+	const Wire& WriteFailed() const { return writeFailed.Out(); }
 	const Wire& ReadSuccess() const { return receivedReadAck.Out(); }
-	const Wire& WaitingForResponse() const { return haveBusOwnership.Q(); }
+	const Wire& Busy() const { return busy.Out(); }
 
 private:
 	void ConnectToBus(SystemBus& bus);
 	void DisconnectFromBus();
 
 	SystemBus* pSystemBus;
-	Matcher<N> lastMatchData;
-	Matcher<Naddr> lastMatchWriteAddr;
-	Matcher<Naddr> lastMatchReadAddr;
-	Register<N> lastWriteData;
-	Register<Naddr> lastWriteAddr;
-	Register<Naddr> lastReadAddr;
-	OrGate newWriteValue;
-	AndGate newWrite;
-	AndGate newRead;
+	ChangeDetector<Naddr> newRead;
+	ChangeDetector2<N, Naddr> newWrite;
 
 	Inverter noAckOnBus;
 	Inverter ackBuffer;
@@ -78,6 +70,10 @@ private:
 	AndGate wantTakeBus;
 	AndGate wantReleaseBus;
 	JKFlipFlop haveBusOwnership;
+
+	Inverter didNotWrite;
+	AndGate writeFailed;
+	OrGate busy;
 
 	MuxBundle<Naddr, 2> addrMux;
 	TriStateN<Naddr> addrRequestBuf;
@@ -113,15 +109,8 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 	assert(!(read.On() && write.On()));
 #endif
 	// Matchers to make sure we don't push the same request twice
-	lastMatchData.Connect(data, lastWriteData.Out());
-	lastMatchWriteAddr.Connect(writeaddr, lastWriteAddr.Out());
-	lastMatchReadAddr.Connect(readaddr, lastReadAddr.Out());
-	lastWriteData.Connect(data, write);
-	lastWriteAddr.Connect(writeaddr, write);
-	lastReadAddr.Connect(readaddr, read);
-	newWriteValue.Connect(lastMatchData.NoMatch(), lastMatchWriteAddr.NoMatch());
-	newWrite.Connect(newWriteValue.Out(), write);
-	newRead.Connect(read, lastMatchReadAddr.NoMatch());
+	newRead.Connect(readaddr, read);
+	newWrite.Connect(data, writeaddr, write);
 
 	// Read data buffer
 	noAckOnBus.Connect(pSystemBus->OutCtrl().Ack());
@@ -158,7 +147,12 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
 	wantTakeBus.Connect(busIsFree.Out(), havePendingRequests.Out());
 	wantReleaseBus.Connect(haveBusOwnership.Q(), ackBuffer.Out());
-	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out()); 
+	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out());
+
+	// Status flags
+	didNotWrite.Connect(writeBuffer.DidPush());
+	writeFailed.Connect(didNotWrite.Out(), write);
+	busy.Connect(haveBusOwnership.Q(), havePendingRequests.Out());
 
 	// Output buffers
 	addrMux.Connect({ writeBuffer.Out().Range<Naddr>(), readBuffer.Out() }, waitingForRead.Q());
@@ -174,15 +168,8 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
 inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 {
-	lastMatchData.Update();
-	lastMatchWriteAddr.Update();
-	lastMatchReadAddr.Update();
-	lastWriteData.Update();
-	lastWriteAddr.Update();
-	lastReadAddr.Update();
-	newWriteValue.Update();
-	newWrite.Update();
 	newRead.Update();
+	newWrite.Update();
 	
 	noAckOnBus.Update();
 	ackBuffer.Update();
@@ -205,13 +192,19 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 	shouldOutputOnDataBus.Update();
 
 	{
-		std::scoped_lock lk(pSystemBus->mBusMutex);
-		busIsFree.Update();
-		busIsFreeOrMine.Update();
-		wantTakeBus.Update();
-		wantReleaseBus.Update();
-		haveBusOwnership.Update();
+		// Bus locking is a hack to get around my lack of bus arbitration.
+		pSystemBus->LockForBusRequest();
+			busIsFree.Update();
+			busIsFreeOrMine.Update();
+			wantTakeBus.Update();
+			wantReleaseBus.Update();
+			haveBusOwnership.Update();
+		pSystemBus->UnlockForBusRequest();
 	}
+
+	didNotWrite.Update();
+	writeFailed.Update();
+	busy.Update();
 
 	addrMux.Update();
 	addrRequestBuf.Update();

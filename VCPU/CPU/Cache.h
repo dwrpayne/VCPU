@@ -19,19 +19,27 @@
 #include "TriStateBuffer.h"
 #include "BusRequestBuffer.h"
 
+// This takes a byteindex/bytewrite/halfwrite to extract a byte/halfword from the incoming word and shift it appropriately.
+// It also takes a wordoffset to shift the whole word across the cache line appropriately.
+// It this maskes the word into the provided dataline
+
+// wordwrite = false, linewrite=true -> return dataline, all 1s.
+// wordwrite = true, linewrite=false -> return dataline?+dataword, mask mostly 0s with shifted 1s. Expected to be masked into the existing cache
+// wordwrite = true, linewrite=true -> return dataline+dataword, all 1s, expect to be written to cache as is
+
 template <unsigned int N>
 class CacheLineMasker : public Component
 {
 public:
 	typedef Bundle<N> CacheLine;
 	void Connect(const Bundle<2> byteindex, const Bundle<bits(N)-5> wordoffset, const Bundle<32>& dataword, const CacheLine& dataline,
-		const Wire& bytewrite, const Wire& halfwrite, const Wire& wordwrite)
+		const Wire& bytewrite, const Wire& halfwrite, const Wire& wordwrite, const Wire& linewrite)
 	{
 		maskedDataWord.Connect(byteindex, dataword, bytewrite, halfwrite, wordwrite);
 		lineDataShifter.Connect(maskedDataWord.Word().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
 		lineMaskShifter.Connect(maskedDataWord.WordMask().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
 		maskedCacheLine.Connect(lineDataShifter.Out(), dataline, lineMaskShifter.Out());
-		lineFullMask.Connect({ CacheLine::ON, lineMaskShifter.Out() }, wordwrite);
+		lineFullMask.Connect({ lineMaskShifter.Out(), CacheLine::ON }, linewrite);
 	}
 	void Update()
 	{
@@ -88,6 +96,7 @@ public:
 	const Wire& CacheHit() { return cacheHitMux.Out(); }
 	const Wire& NeedStall() { return needStall.Out(); }
 	const Wire& NoStall() { return needStallInv.Out(); }
+	const Wire& PendingOps() { return busBuffer.Busy(); }
 
 	
 private:
@@ -128,13 +137,11 @@ private:
 	Inverter cacheableAddr;
 	AndGate uncachedWrite;
 	AndGate uncachedRead;
-	OrGate uncachedReadOrWrite;
 	OrGate cachedReadOrWrite;
 	Matcher<ADDR_BITS> addrReadMatcher;
 	AndGate gotCacheableDataFromMemory;
 	AndGate gotResponseFromMemory;
 	Inverter gotResponseFromMemoryInv;
-	AndGate waitingForUncachedData;
 	AndGate cachelinewrite;
 
 	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
@@ -201,13 +208,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	cacheableAddr.Connect(unCacheableAddr.Out());
 	uncachedWrite.Connect(unCacheableAddr.Out(), write);
 	uncachedRead.Connect(unCacheableAddr.Out(), read);
-	uncachedReadOrWrite.Connect(uncachedRead.Out(), uncachedWrite.Out());
-	waitingForUncachedData.Connect(busBuffer.WaitingForResponse(), uncachedReadOrWrite.Out());
 			
-	// If we got data from memory, mask it in with the data we want to write.
+	// Mask in the write word with the line we got from memory
 	// This produces either the buffer read line with "data", if write is true, and a 32-bit shifted mask
 	// Or just the buffer read line, if write is false, and a mask of all ones.
-	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, busBuffer.OutRead(), bytewrite, halfwrite, write);
+	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, busBuffer.OutRead(), bytewrite, halfwrite, write, busBuffer.ReadSuccess());
 
 	// Temp Bundles for the cache line array
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
@@ -228,13 +233,12 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 		cacheDirtyCollector.Connect(i, cachelines[i].Dirty());
 	}
-	uncachedBuffer.Connect(busBuffer.OutRead().Range<32>(), unCacheableAddr.Out());
+	uncachedBuffer.Connect(busBuffer.OutRead().Range<32>(), uncachedRead.Out());
 
 	// Evicted tag collector and addr calculation
 	lineTagMux.Connect(cacheLineTagOuts, index);
 	CacheAddrBundle evictedCacheAddr(addr);
 	evictedCacheAddr.SetTag(lineTagMux.Out());
-	memAddrMux.Connect({ addr, evictedCacheAddr }, evictedDirty.Out());
 
 	// Status Flags
 	cacheHitMux.Connect(cacheHitCollector, index);
@@ -247,11 +251,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	// This logic will need to change when I have a write buffer.
 	evictedDirty.Connect(cacheableAddrCacheMiss.Out(), cacheDirtyMux.Out());
 	notEvictedDirty.Connect(evictedDirty.Out());
-	needStall.Connect(busBuffer.WaitingForResponse(), waitingForUncachedData.Out());
-	needStallInv.Connect(needStall.Out());
 
-	shouldSendReadReq.Connect(cacheableAddrCacheMiss.Out(), uncachedRead.Out());
 	shouldSendWriteReq.Connect(evictedDirty.Out(), uncachedWrite.Out());
+	shouldSendReadReq.Connect(cacheableAddrCacheMiss.Out(), uncachedRead.Out());
 
 	// Output 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
@@ -263,20 +265,23 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	}
 	outCacheDataMux.Connect(dataWordBundles, address.WordOffsetInLine());
 	outDataMux.Connect({ outCacheDataMux.Out(), uncachedBuffer.Out() }, unCacheableAddr.Out());
+	memAddrMux.Connect({ addr, evictedCacheAddr }, evictedDirty.Out());
 
 	busBuffer.Connect(bus, outDataToBusMux.Out(), memAddrMux.Out(), addr, shouldSendWriteReq.Out(), shouldSendReadReq.Out());
+	
+	needStall.Connect(busBuffer.WriteFailed(), shouldSendReadReq.Out());
+	needStallInv.Connect(needStall.Out());
 }
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 {
 	readOrWrite.Update();
+
 	unCacheableAddr.Update();
 	cacheableAddr.Update();
 	uncachedWrite.Update();
 	uncachedRead.Update();
-	uncachedReadOrWrite.Update();
-	waitingForUncachedData.Update();
 
 	lineWriteMasker.Update();
 	cachelinewrite.Update();
@@ -297,8 +302,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	cacheableAddrCacheMiss.Update();
 	evictedDirty.Update();
 	notEvictedDirty.Update();
-	needStall.Update();
-	needStallInv.Update();
 
 	// We do write-before-read because writes aren't buffered to the bus yet.
 	// This needs to change to a read first, write buffer, query the buffer first on cache miss, architecture.
@@ -312,6 +315,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	memAddrMux.Update();
 
 	busBuffer.Update();
+	needStall.Update();
+	needStallInv.Update();
+
+	if (needStall.Out().On())
+	{
+		std::cout << std::this_thread::get_id() << " requesting stall" << std::endl;
+	}
 	
 	cycles++;
 }
@@ -322,7 +332,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::UpdateUntilNoStall(bool flush)
 	do
 	{
 		Update();
-	} while (NeedStall().On());// || (flush && buffer.WritePending().On()));
+	} while (NeedStall().On() || (flush && busBuffer.Busy().On()));
 }
 
 template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>

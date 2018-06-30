@@ -31,6 +31,7 @@ std::vector<std::string> split(const char *str)
 Assembler::Assembler()
 {
 	pProgram = new Program();
+	ParseSourceLine("nop ;null address", pProgram);		// address 0x00000000 is empty.
 	ParseSourceLine("li $sp, 0x10003000", pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");

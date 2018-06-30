@@ -13,7 +13,7 @@ public:
 	typedef Bundle<N> LineBundle;
 	typedef Bundle<NTag> TagBundle;
 
-	void Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable, const Wire& dirty);
+	void Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& writeline, const Wire& writeword);
 	void Update();
 
 	const TagBundle& Tag() { return tag.Out(); }
@@ -23,16 +23,12 @@ public:
 	const Wire& Valid() { return valid.Q(); }
 
 private:
-	Inverter notDirty;
-	AndGate writeLine;
-	AndGate writeTag;
 	Register<NTag> tag;
 	Matcher<NTag> tagMatcher;
 	JKFlipFlop valid;
 	AndGate tagMatchAndValid;
-	AndGate cacheHitEnabled;
-	OrGate writing;
-	AndGate updateDirtyFlag;
+	AndGate canWriteWord;
+	OrGate writeEnable;
 	DFlipFlop dirtyFlag;
 	RegisterMasked<N> lineRegister;
 #ifdef DEBUG
@@ -41,37 +37,29 @@ private:
 };
 
 template<unsigned int N, unsigned int NTag>
-void CacheLine<N, NTag>::Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& enable, const Wire& dirty)
+void CacheLine<N, NTag>::Connect(const TagBundle& tagin, const LineBundle& linemask, const LineBundle& dataline, const Wire& writeline, const Wire& writeword)
 {
-	notDirty.Connect(dirty);
-	writeLine.Connect(enable, notDirty.Out());
-	writeTag.Connect(writeLine.Out(), enable);
-	tag.Connect(tagin, writeTag.Out());
+	tag.Connect(tagin, writeline);
 	tagMatcher.Connect(tag.Out(), tagin);
-	valid.Connect(writeTag.Out(), Wire::OFF);
+	valid.Connect(writeline, Wire::OFF);
 	tagMatchAndValid.Connect(tagMatcher.Out(), valid.Q());
-	cacheHitEnabled.Connect(tagMatchAndValid.Out(), enable );
-	writing.Connect(writeLine.Out(), dirty);
-	updateDirtyFlag.Connect(writing.Out(), cacheHitEnabled.Out());
-	dirtyFlag.Connect(dirty, updateDirtyFlag.Out());
 
-	lineRegister.Connect(dataline, linemask, writing.Out());
+	canWriteWord.Connect(tagMatchAndValid.Out(), writeword);
+	writeEnable.Connect(writeline, canWriteWord.Out());
+	dirtyFlag.Connect(writeword, writeEnable.Out());
+	lineRegister.Connect(dataline, linemask, writeEnable.Out());
 
 }
 
 template<unsigned int N, unsigned int NTag>
 inline void CacheLine<N, NTag>::Update()
 {
-	notDirty.Update();
-	writeLine.Update();
-	writeTag.Update();
 	tag.Update();
 	tagMatcher.Update();
 	valid.Update();
 	tagMatchAndValid.Update();
-	cacheHitEnabled.Update();
-	writing.Update();
-	updateDirtyFlag.Update();
+	canWriteWord.Update();
+	writeEnable.Update();
 	dirtyFlag.Update();
 	lineRegister.Update();
 }

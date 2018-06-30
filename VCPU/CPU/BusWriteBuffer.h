@@ -103,12 +103,14 @@ inline void BusWriteBuffer<N, Naddr, Nbuf>::Update()
 	shouldOutputOnBus.Update();
 
 	{
-		std::scoped_lock lk(pSystemBus->mBusMutex);
+		// Bus locking is a hack to get around my lack of bus arbitration.
+		pSystemBus->LockForBusRequest();
 		busIsFree.Update();
 		busIsFreeOrMine.Update();
 		wantTakeBus.Update();
 		wantReleaseBus.Update();
 		haveBusOwnership.Update();
+		pSystemBus->UnlockForBusRequest();
 	}
 
 	addrRequestBuf.Update();

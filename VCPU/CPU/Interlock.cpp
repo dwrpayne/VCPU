@@ -1,7 +1,7 @@
 #include "Interlock.h"
 
 
-void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss,
+void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss, const Wire& haltExOp,
 	const RegBundle& readR1IFID, const RegBundle& readR2IFID, const RegBundle& writingRegIDEX, const Bundle<6>& opcodeIF, const Bundle<6>& funcIF,
 	const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM)
 {
@@ -17,7 +17,7 @@ void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss,
 	exmemMatcher.Connect(readR1IDEX, readR2IDEX, writingRegEXMEM, loadopEXMEM);
 	idextoexmemMatcher.Connect(readR1IFID, readR2IFID, writingRegEXMEM, branchandload.Out());
 	bubble.Connect({ &idexMatcher.Match(), &exmemMatcher.Match(), &idextoexmemMatcher.Match() });
-	freeze.Connect(inscachemiss, cachemiss);
+	freeze.Connect({&inscachemiss, &cachemiss, &haltExOp});
 	freezeInv.Connect(freeze.Out());
 	bubbleID.Connect(idexMatcher.Match(), freezeInv.Out());
 	exmemMatchEither.Connect(exmemMatcher.Match(), idextoexmemMatcher.Match());

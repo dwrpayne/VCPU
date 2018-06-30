@@ -408,12 +408,13 @@ bool TestCacheLineMasker(Verbosity verbosity)
 	MagicBundle<32> dataword;
 	MagicBundle<64> dataline;
 	MagicBundle<1> offset;
-	Wire wb, wh, ww;
+	Wire wb, wh, ww, wl;
 
-	test.Connect(index, offset, dataword, dataline, wb, wh, ww);
+	test.Connect(index, offset, dataword, dataline, wb, wh, ww, wl);
 	ww.Set(false);
 	wh.Set(false);
 	wb.Set(false);
+	wl.Set(false);
 	offset.Write(0);
 	index.Write(0);
 
@@ -816,7 +817,7 @@ bool RunCPUTests()
 	static const int NUM_TIMES_TO_TEST = 1;
 	bool success = true;
 	auto default_verb = Debugger::MINIMAL;
-	RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
+	//RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
 	RUN_TEST(TestBusRequestBuffer, FAIL_ONLY);
 	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
 	//RUN_TEST(TestTerminalController, FAIL_ONLY);
@@ -827,16 +828,16 @@ bool RunCPUTests()
 	//RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUCustom, FAIL_ONLY, Debugger::NORMAL);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
-		RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::NORMAL);
 		RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
 	}
+	RUN_TEST2(TestCPUCustom, FAIL_ONLY, Debugger::NORMAL);
 
 	return success;
 }

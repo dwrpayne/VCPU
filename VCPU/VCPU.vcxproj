@@ -187,6 +187,7 @@
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\ByteExtractor.h" />
     <ClInclude Include="Functional\ByteMask.h" />
+    <ClInclude Include="Functional\ChangeDetector.h" />
     <ClInclude Include="Functional\Comparator.h" />
     <ClInclude Include="Functional\Counter.h" />
     <ClInclude Include="Functional\FullAdder.h" />
