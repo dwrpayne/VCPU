@@ -129,7 +129,6 @@
     <ClCompile Include="Control\TriStateBuffer.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
-    <ClCompile Include="CPU\CacheController.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
     <ClCompile Include="CPU\HazardUnit.cpp" />
     <ClCompile Include="CPU\Interlock.cpp" />
@@ -175,7 +174,6 @@
     <ClInclude Include="CPU\BusRequestBuffer.h" />
     <ClInclude Include="CPU\BusWriteBuffer.h" />
     <ClInclude Include="CPU\Cache.h" />
-    <ClInclude Include="CPU\CacheController.h" />
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\HazardUnit.h" />
     <ClInclude Include="CPU\InsRegister.h" />
