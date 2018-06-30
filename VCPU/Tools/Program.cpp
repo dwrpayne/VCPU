@@ -91,7 +91,7 @@ void Program::ConvertLabels()
 	if (mLabelAddrNum.count("main") == 0)
 	{
 		// todo: need a better way to automatically determine this.
-		ReplaceLabel("main", 4);
+		ReplaceLabel("main", 6);
 	}
 }
 

@@ -34,6 +34,7 @@ Assembler::Assembler()
 	pProgram = new Program();
 	ParseSourceLine("nop ;null address", pProgram);		// address 0x00000000 is empty.
 	ParseSourceLine("li $sp, " + std::to_string(USER_STACK_START), pProgram);
+	ParseSourceLine("li $gp, " + std::to_string(USER_DATA_START), pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");
 }

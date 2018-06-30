@@ -270,8 +270,8 @@ void Debugger::PrintRegisters()
 			std::stringstream ss;
 			ss << "$" << pAssembler->GetRegName(num) << "(" << num << ") ";
 			std::cout << std::left << std::setw(8) << ss.str();
-			if (num >= 28 || val > 0x10000000) 
-				std::cout << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << GetRegisterVal(num);
+			if (num >= 28 || val >= 0x10000000) 
+				std::cout << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << GetRegisterVal(num) << "  ";
 			else
 				std::cout << std::setw(12) << GetRegisterVal(num);
 			if (num >= 28 || val > 0x10000000)

@@ -38,16 +38,17 @@ strcpy:	lb		$t0, 0($a0)
 
 ; getch blocks until a char is ready
 getch:			li		$t0, 0xffff0000U
-getch_check:	lb		$t1, 0($t0)
-				beqz	$t1, getch_check
+getch_poll:		lb		$v0, 0($t0)
+				andi	$v0, $v0, 0x01
+				beqz	$v0, getch_poll
 				nop
 				lb		$v0, 4($t0)
 				ret 
 
 ; putch takes the char to output in $a0	
 putch:			li		$t0, 0xffff0008U
-putch_check:	lb		$t1, 0($t0)
-				beqz	$t1, putch_check
+putch_poll:		lb		$t1, 0($t0)
+				beqz	$t1, putch_poll
 				nop
 				sb		$a0, 4($t0)				
 				ret 

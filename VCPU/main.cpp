@@ -18,7 +18,7 @@ void Test()
 
 void RunCPU(std::string filename)
 {
-	Debugger debugger(filename, Debugger::MINIMAL);
+	Debugger debugger(filename, Debugger::NORMAL);
 	debugger.Start();
 }
 
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	if (argc == 1)
 	{
 		//Test();
-		RunCPU("testecho.vasm");
+		RunCPU("testsqrt.vasm");
 	}
 	else
 	{
