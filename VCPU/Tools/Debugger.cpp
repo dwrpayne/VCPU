@@ -365,15 +365,30 @@ void Debugger::PrintStack()
 
 void Debugger::PrintTiming()
 {	
-	if (pCPU->cycles % 10000 == 0)
+	if (pCPU->cycles % 1000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
-		std::cout << pCPU->cycles << " cycles in " << ms / 1000.0 << "sec.";
-		std::cout << " Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
-		std::cout << "Time(us)  Count" << std::endl;
+		std::cout << pCPU->cycles << " cycles and " << pCPU->instructions << "instructions  in " << ms / 1000.0 << "sec.";
+		std::cout << "Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
+		std::cout << "Average of " << (1.0 * pCPU->cycles) / pCPU->instructions << " cycles / instructions." << std::endl;
+		if (pCPU->ins_cachemisses)
+		{
+			std::cout << "Instruction Cache Misses" << std::endl;
+			std::cout << "\t\tTotal count: " << pCPU->ins_cachemisses << std::endl;
+			std::cout << "\t\tCycles per miss: " << pCPU->ins_cachemiss_cycles / pCPU->ins_cachemisses << std::endl;
+			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->ins_cachemisses) / pCPU->instructions << std::endl;
+		}
+		if (pCPU->data_cachemisses)
+		{
+			std::cout << "Data Cache Misses" << std::endl;
+			std::cout << "\t\tTotal count: " << pCPU->data_cachemisses << std::endl;
+			std::cout << "\t\tCycles per miss: " << pCPU->data_cachemiss_cycles / pCPU->data_cachemisses << std::endl;
+			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
+		}
 
 		if (bPrintTiming)
 		{
+			std::cout << "Time(us)  Count" << std::endl;
 			for (int i = 0; i < NUM_BUCKETS; i++)
 			{
 				std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
@@ -389,6 +404,8 @@ void Debugger::PrintTiming()
 			long long mmemus = pCPU->GetMainMemory().GetElapsedTime().count();
 			std::cout << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (avg time spent: " << imemus / imemcycle << "us)" << std::endl;
 			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (avg time spent: " << mmemus / mmemcycle << "us)" << std::endl;
+
+			
 		}
 	}
 }

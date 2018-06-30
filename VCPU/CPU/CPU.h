@@ -30,6 +30,12 @@ public:
 	virtual ~CPU();
 
 	int cycles;
+	int instructions;
+	int ins_cachemisses;
+	int ins_cachemiss_cycles;
+	int data_cachemisses;
+	int data_cachemiss_cycles;
+
 	static const int WORD_SIZE = 32;
 	static const int CACHE_LINE_BITS = 256;
 	static const int NUM_REGISTERS = 32;
@@ -92,7 +98,9 @@ private:
 	HazardUnit hazardIFID;
 	Interlock interlock;
 
-
+	bool mIsMissingInsCache;
+	bool mIsMissingDataCache;
+	
 	bool exit;
 
 	friend class ProgramLoader;

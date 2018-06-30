@@ -354,10 +354,39 @@ void CPU::Update()
 	mMainMemory->DoOneUpdate();
 	mKeyboard.DoOneUpdate();
 	mTerminal.DoOneUpdate();
-
-	if (!PipelineFreeze() && !PipelineBubbleID() && !PipelineBubbleEX())
+	
+	cycles++;
+	if (!PipelineFreeze())
 	{
-		cycles++;
+		instructions++;
+	}
+
+	if (InstructionCache().NeedStall().On())
+	{
+		if (!mIsMissingInsCache)
+		{
+			mIsMissingInsCache = true;
+			ins_cachemisses++;
+		}
+		ins_cachemiss_cycles++;
+	}
+	else 
+	{
+		mIsMissingInsCache = false;
+
+		if (MainCache().NeedStall().On())
+		{
+			if (!mIsMissingDataCache)
+			{
+				mIsMissingDataCache = true;
+				data_cachemisses++;
+			}
+			data_cachemiss_cycles++;
+		}
+		else
+		{
+			mIsMissingDataCache = false;
+		}
 	}
 }
 
