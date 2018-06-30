@@ -28,7 +28,9 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	pProgram = pAssembler->Assemble(source_filename);
 	
 	ProgramLoader loader(*pCPU);
+	pCPU->InstructionMemory().mIsLoadingProgram = true;
 	loader.Load(pProgram);
+	pCPU->InstructionMemory().mIsLoadingProgram = false;
 	pCPU->Connect();
 }
 
@@ -227,7 +229,7 @@ void Debugger::SaveMemoryToDisk()
 		if (ifs.is_open()) continue;
 
 		std::ofstream of(filename);
-		for (int i = 500; i < CPU::MainMemory::BYTES; i++)
+		for (int i = USER_DATA_START; i < KERNEL_DATA_END; i++)
 		{
 			of << GetCacheByte(i);
 		}

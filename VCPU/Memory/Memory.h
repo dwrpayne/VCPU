@@ -58,6 +58,9 @@ private:
 	std::mutex mMutex;
 	bool mIsMainMemory;
 
+	// A bit of a hack to enable writes to code-only memory.
+	bool mIsLoadingProgram;
+
 	friend class Debugger;
 };
 
@@ -135,6 +138,11 @@ inline void Memory<N, BYTES>::Update()
 #endif
 	servicedRead.Update();
 	servicedWrite.Update();
+
+	if (servicedWrite.Out().On())
+	{
+		assert((mIsLoadingProgram || mIsMainMemory) && "Attempting to write to code memory");
+	}
 #if DEBUG
 	if (servicedWrite.Out().On())
 	{
