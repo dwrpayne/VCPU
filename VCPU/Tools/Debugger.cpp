@@ -239,6 +239,7 @@ void Debugger::SaveMemoryToDisk()
 
 void Debugger::PrintInstruction()
 {
+	assert(pCPU->IR().UnsignedRead() == pProgram->GetInstruction(mLastInstructions[0])->mBinary);
 	std::cout << "Current IR: " << std::bitset<32>(pCPU->IR().UnsignedRead()) << std::endl;
 	std::cout << "Address  Stage   Assembled Instruction      Source Instruction  " << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
