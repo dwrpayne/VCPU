@@ -99,7 +99,6 @@ itoa_write:		pop		$v1
 print_int:		push	$ra
 				li		$a1, 0x10003ff0
 				call itoa
-				brk
 				li		$a0, 0x10003ff0
 				call printf
 				pop		$ra
