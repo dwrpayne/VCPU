@@ -30,6 +30,7 @@ std::vector<std::string> split(const char *str)
 }
 
 Assembler::Assembler()
+	: mCurSection(Section::CODE)
 {
 	pProgram = new Program();
 	ParseSourceLine("nop ;null address", pProgram);		// address 0x00000000 is empty.
@@ -73,6 +74,12 @@ void Assembler::ParseFile(const std::string & filename, Program * program)
 
 void Assembler::ParseSourceLine(const std::string &line, Program * program)
 {
+	if (line.find(".text") != std::string::npos)
+	{
+		mCurSection = Section::TEXT;
+		return;
+	}
+
 	// Get code line without comment
 	std::string code_line = line.substr(0, line.find(';'));
 
@@ -89,15 +96,47 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 		code_line = code_line.substr(colon_pos + 1);
 	}
 
-	unsigned int source_line = program->AddSourceLine(label, code_line, comment);
-
 	std::vector<std::string> words = split(code_line.c_str());
-	if (words[0].size() > 0)
+
+	if (mCurSection == Section::CODE)
 	{
-		for (auto& line : GetInstructionsForLine(code_line))
+		unsigned int source_line = program->AddSourceLine(label, code_line, comment);
+		if (words[0].size() > 0)
 		{
-			program->AddInstruction(source_line, line);
+			for (auto& line : GetInstructionsForLine(code_line))
+			{
+				program->AddInstruction(source_line, line);
+			}
 		}
+	}
+	else if (mCurSection == Section::TEXT)
+	{
+		if (words[0].size() > 2 && words[0][0] == '.')
+		{
+			std::vector<unsigned char> bytes;
+			if (code_line.find("ascii") != std::string::npos)
+			{
+				bool in_string = false;
+				for (unsigned char c : code_line)
+				{
+					if (c == '"') 
+					{
+						if (in_string) break;
+						in_string = true;
+						continue;
+					}
+					if (in_string)
+					{
+						bytes.push_back(c);
+					}
+				}
+				program->AddTextField(label, bytes.size(), bytes);
+			}
+		}
+	}
+	else
+	{
+		assert(false);
 	}
 }
 

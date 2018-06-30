@@ -1,4 +1,5 @@
 #include "Program.h"
+#include "CPU/Addresses.h"
 #include <sstream>
 #include <iomanip>
 #include <assert.h>
@@ -6,6 +7,7 @@
 #include <regex>
 
 Program::Program()
+	: mTextStartAddr(USER_TEXT_START)
 {
 }
 
@@ -19,8 +21,7 @@ unsigned int Program::AddSourceLine(const std::string& label, std::string source
 
 	if (label.size() > 0)
 	{
-		assert(mLabelAddrNum.count(label) == 0 && "Found two instances of the label.");
-		mLabelAddrNum[label] = codeline.mFirstInstructionNum;
+		AddLabel(label, codeline.mFirstInstructionNum);
 	}
 
 	return line_num;
@@ -30,6 +31,13 @@ void Program::AddInstruction(unsigned int source_line, const std::string& text)
 {
 	mSourceLines[source_line].mFirstInstructionNum = mInstructions.size();
 	mInstructions.push_back(Instruction(TrimWhitespace(text), 0, source_line));
+}
+
+void Program::AddTextField(const std::string & label, int size, const std::vector<unsigned char>& bytes)
+{
+	assert(label.size() > 0);
+	AddLabel(label, mTextBytes.size() + mTextStartAddr);
+	mTextBytes.insert(mTextBytes.end(), bytes.begin(), bytes.end());
 }
 
 const Instruction * Program::GetInstruction(unsigned int addr) const
@@ -72,6 +80,12 @@ const std::string Program::GetAssembledLine(unsigned int addr)  const
 		return ins->mText;
 	}
 	return "";
+}
+
+void Program::AddLabel(const std::string & label, unsigned int addr)
+{
+	assert(mLabelAddrNum.count(label) == 0 && "Found two instances of the label.");
+	mLabelAddrNum[label] = addr;
 }
 
 // Turns all the labels in the instructions into actual number offsets

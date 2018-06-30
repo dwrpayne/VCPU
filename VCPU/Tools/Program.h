@@ -39,6 +39,8 @@ public:
 	Program();
 	unsigned int AddSourceLine(const std::string& label, std::string source, const std::string& comment);
 	void AddInstruction(unsigned int source_line, const std::string& text);
+	void AddTextField(const std::string& label, int size, const std::vector<unsigned char>& bytes);
+
 	const Instruction* GetInstruction(unsigned int addr) const;	
 	const CodeLine* GetLine(unsigned int addr) const;
 
@@ -47,14 +49,21 @@ public:
 
 	std::vector<Instruction>& Instructions() { return mInstructions; }
 	const std::vector<Instruction>& Instructions() const { return mInstructions; }
+
+	const std::vector<unsigned char> TextBytes() const { return mTextBytes; }
+	unsigned int GetTextStartAddr() const { return mTextStartAddr; }
 	
 	void ConvertLabels();
 	void ReplaceLabel(const std::string & label, unsigned int addr);
 
 private:
+	void AddLabel(const std::string& label, unsigned int addr);
+
 	std::string TrimWhitespace(const std::string& s);
 	std::vector<CodeLine> mSourceLines;
 	std::vector<Instruction> mInstructions;
 
+	unsigned int mTextStartAddr;
+	std::vector<unsigned char> mTextBytes;
 	std::map<std::string, unsigned int> mLabelAddrNum;
 };

@@ -13,6 +13,13 @@ enum InstType
 	X_TYPE,
 };
 
+enum Section
+{
+	CODE,
+	TEXT,
+	SECTION_NONE
+};
+
 
 class Assembler
 {
@@ -35,6 +42,8 @@ private:
 	static const std::vector<std::pair<std::regex, std::string>> instructionMnemonics;
 	static const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> opcodeInfo;
 	static const std::array<std::string, 32> reg_names;
+
+	Section mCurSection;
 
 	Program* pProgram;
 };
