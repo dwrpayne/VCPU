@@ -677,11 +677,11 @@ bool TestCPUBranch(Verbosity verbosity, Debugger::Verbosity dverb)
 	Debugger debugger("testbranch.vasm", dverb);
 	debugger.Start();
 	success &= TestState(i++, 12, debugger.GetRegisterVal(8), verbosity);
-	success &= TestState(i++, 7, debugger.GetRegisterVal(9), verbosity);
-	success &= TestState(i++, 308, debugger.GetRegisterVal(10), verbosity);
-	success &= TestState(i++, 376, debugger.GetRegisterVal(11), verbosity);
-	success &= TestState(i++, 340, debugger.GetRegisterVal(31), verbosity);
-	success &= TestState(i++, 392, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 8, debugger.GetRegisterVal(9), verbosity);
+	success &= TestState(i++, 312, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, 380, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, 344, debugger.GetRegisterVal(31), verbosity);
+	success &= TestState(i++, 400, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -693,7 +693,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testhazards.vasm", dverb);
 	debugger.Start();
-	success &= TestState(i++, 1234, debugger.GetRegisterVal(1), verbosity);
+	success &= TestState(i++, 1234, debugger.GetRegisterVal(23), verbosity);
 	success &= TestState(i++, 1357, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 1603, debugger.GetRegisterVal(3), verbosity);
 	success &= TestState(i++, 2591, debugger.GetRegisterVal(4), verbosity);
@@ -709,7 +709,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
-	success &= TestState(i++, 176, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 184, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -795,8 +795,6 @@ bool TestCPUPrintf(Verbosity verbosity, Debugger::Verbosity dverb)
 	Debugger debugger("testprintf.vasm", dverb);
 
 	debugger.Start();
-	success &= TestState(i++, 127, debugger.GetRegisterVal(2), verbosity);
-	success &= TestState(i++, 7, debugger.GetRegisterVal(3), verbosity);
 
 	return success;
 }
@@ -827,16 +825,16 @@ bool RunCPUTests()
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
 	RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPURot13, FAIL_ONLY, Debugger::VERBOSE);
+	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
 		RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
-		RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
-		RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
-		RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUBranch, FAIL_ONLY, Debugger::VERBOSE);
+		//RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
+		//RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
 	}
 	RUN_TEST2(TestCPUCustom, FAIL_ONLY, Debugger::NORMAL);
 

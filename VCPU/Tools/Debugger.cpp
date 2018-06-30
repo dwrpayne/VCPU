@@ -39,7 +39,7 @@ void Debugger::Start(int cycles)
 	while (cycles != 0)
 	{
 		Step();
-		if (bSingleStep)// && !pCPU->PipelineFreeze())
+		if (bSingleStep && !pCPU->PipelineFreeze())
 		{
 			__debugbreak();
 		}
