@@ -824,8 +824,8 @@ bool RunCPUTests()
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPUPutch, FAIL_ONLY, Debugger::VERBOSE);
-	RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPURot13, FAIL_ONLY, Debugger::VERBOSE);
 	RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)

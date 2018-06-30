@@ -38,10 +38,11 @@ public:
 private:
 	void DisconnectFromBus();
 	SystemBus * pSystemBus;
-	AndGate servicedRead;
 	NorGateN<4> usercodeBusAddr;
 	Inverter notAckOnBus;
 	AndGateN<3> incomingRequest;
+	AndGate servicedRead;
+	AndGate servicedWrite;
 	NorGate userdataBusAddr;
 
 	Decoder<NUM_LINES> addrDecoder;
@@ -93,10 +94,11 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 		incomingRequest.Connect({ &usercodeBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
 	}
 	servicedRead.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Read());
+	servicedWrite.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Write());
 
 	auto cachelineAddr = pSystemBus->OutAddr().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 
-	addrDecoder.Connect(cachelineAddr, pSystemBus->OutCtrl().Write());
+	addrDecoder.Connect(cachelineAddr, servicedWrite.Out());
 	
 	auto* lineOuts = new std::array<CacheLineBundle, NUM_LINES>();
 
@@ -132,6 +134,7 @@ inline void Memory<N, BYTES>::Update()
 	}
 #endif
 	servicedRead.Update();
+	servicedWrite.Update();
 	addrDecoder.Update();
 	for (auto& reg : cachelines)
 	{
