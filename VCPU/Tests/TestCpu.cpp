@@ -329,6 +329,7 @@ bool TestBusRequestBuffer(Verbosity verbosity)
 		{
 			data.Write(a);
 			waddr.Write(b);
+			test.PreUpdate();
 			test.Update(); // Push some values into memory
 			memory.DoOneUpdate();
 		}
@@ -340,6 +341,7 @@ bool TestBusRequestBuffer(Verbosity verbosity)
 		raddr.Write(72);
 		do
 		{
+			test.PreUpdate();
 			test.Update(); // Push some values into memory
 			memory.DoOneUpdate();
 		} while (!test.ReadSuccess().On());

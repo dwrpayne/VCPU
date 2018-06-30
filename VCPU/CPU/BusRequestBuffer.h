@@ -26,6 +26,7 @@ public:
 
 	~BusRequestBuffer();
 	void Connect(SystemBus& bus, const DataBundle& data, const AddrBundle& writeaddr, const AddrBundle& readaddr, const Wire& write, const Wire& read);
+	void PreUpdate();
 	void Update();
 
 	const DataBundle& OutRead() const { return readDataReg.Out(); }
@@ -167,15 +168,19 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
-inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
+inline void BusRequestBuffer<N, Naddr, Nbuf>::PreUpdate()
 {
-	newRead.Update();
-	newWrite.Update();
-	
 	noAckOnBus.Update();
 	ackBuffer.Update();
 	receivedReadAck.Update();
 	readDataReg.Update();
+}
+
+template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
+inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
+{
+	newRead.Update();
+	newWrite.Update();
 
 	shouldPopEdge.Update();
 	shouldPopRead.Update();

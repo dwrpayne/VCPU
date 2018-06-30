@@ -136,14 +136,13 @@ private:
 	Inverter cacheableAddr;
 	AndGate uncachedWrite;
 	AndGate uncachedRead;
-	AndGate receivedReadAck;
 
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
 	AndGate cachelinewrite;
 	Decoder<NUM_CACHE_LINES> indexDecoder;
 	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
-	Inverter notReadSuccess;
+	Inverter readSuccessInv;
 	AndGate pendingUncachedRead;
 	Register<WORD_SIZE> uncachedBuffer;
 
@@ -201,14 +200,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	cacheableAddr.Connect(unCacheableAddr.Out());
 	uncachedWrite.Connect(unCacheableAddr.Out(), write);
 	uncachedRead.Connect(unCacheableAddr.Out(), read);
-
-	// Get the read data from the bus if we're waiting 
-	receivedReadAck.Connect(busBuffer.WaitingForRead(), pSystemBus->OutCtrl().Ack());
-			
+		
 	// Mask in the write word with the line we got from memory
 	// This produces either the buffer read line with "data", if write is true, and a 32-bit shifted mask
 	// Or just the buffer read line, if write is false, and a mask of all ones.
-	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, pSystemBus->OutData(), bytewrite, halfwrite, write, receivedReadAck.Out());
+	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, busBuffer.OutRead(), bytewrite, halfwrite, write, busBuffer.ReadSuccess());
 
 	// Temp Bundles for the cache line array
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
@@ -216,7 +212,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
 	Bundle<NUM_CACHE_LINES> cacheDirtyCollector;
 	
-	cachelinewrite.Connect(cacheableAddr.Out(), receivedReadAck.Out());
+	cachelinewrite.Connect(cacheableAddr.Out(), busBuffer.ReadSuccess());
 	CacheIndexBundle index = address.CacheLineIndex();
 	indexDecoder.Connect(index, cachelinewrite.Out());
 
@@ -229,8 +225,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 		cacheDirtyCollector.Connect(i, cachelines[i].Dirty());
 	}
-	notReadSuccess.Connect(receivedReadAck.Out());
-	pendingUncachedRead.Connect(uncachedRead.Out(), notReadSuccess.Out());
+	readSuccessInv.Connect(busBuffer.ReadSuccess());
+	pendingUncachedRead.Connect(uncachedRead.Out(), readSuccessInv.Out());
 	uncachedBuffer.Connect(busBuffer.OutRead().Range<32>(), uncachedRead.Out());
 
 	// Evicted tag collector and addr calculation
@@ -287,7 +283,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	uncachedWrite.Update();
 	uncachedRead.Update();
 
-	receivedReadAck.Update();
+	busBuffer.PreUpdate();
 
 	lineWriteMasker.Update();
 	cachelinewrite.Update();
@@ -300,7 +296,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	{
 		line.Update();
 	}
-	notReadSuccess.Update();
+	readSuccessInv.Update();
 	pendingUncachedRead.Update();
 	uncachedBuffer.Update();
 	cacheHitMux.Update();
