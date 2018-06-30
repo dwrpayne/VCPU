@@ -139,7 +139,7 @@ private:
 
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
 	AndGate cachelinewrite;
-	Decoder<NUM_CACHE_LINES> indexDecoder;
+	Decoder<NUM_CACHE_LINES> lineWriteDecoder;
 	Decoder<NUM_CACHE_LINES> wordWriteDecoder;
 	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
@@ -171,8 +171,7 @@ private:
 	Inverter needStallInv;
 	int cycles;
 
-#ifdef DEBUG
-#if DEBUG || 1
+#if DEBUG
 	CacheAddrBundle DEBUG_addr;
 #endif
 
@@ -190,7 +189,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
-#if DEBUG || 1
+#if DEBUG
 	DEBUG_addr = address;
 #endif
 
