@@ -368,7 +368,8 @@ void Debugger::PrintTiming()
 	if (pCPU->cycles % 1000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
-		std::cout << pCPU->cycles << " cycles and " << pCPU->instructions << "instructions  in " << ms / 1000.0 << "sec.";
+		std::cout << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;
+		std::cout << pCPU->cycles << " cycles and " << pCPU->instructions << " instructions  in " << ms / 1000.0 << "sec." << std::endl;
 		std::cout << "Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
 		std::cout << "Average of " << (1.0 * pCPU->cycles) / pCPU->instructions << " cycles / instructions." << std::endl;
 		if (pCPU->ins_cachemisses)

@@ -1,7 +1,0 @@
-left shift 2 the jump addresses
-
-multiplier
-
-interrupts
-
-BRK
