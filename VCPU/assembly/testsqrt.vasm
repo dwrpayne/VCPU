@@ -6,7 +6,10 @@ main:	li $a0, 7
 		call get_print_sqrt
 		li $a0, 12398628
 		call get_print_sqrt
-		brk
+		nop
+		nop
+		hlt
+		
 
 get_print_sqrt:		push	$ra
 					move	$s0, $a0

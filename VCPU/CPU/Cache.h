@@ -140,6 +140,7 @@ private:
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
 	AndGate cachelinewrite;
 	Decoder<NUM_CACHE_LINES> indexDecoder;
+	Decoder<NUM_CACHE_LINES> wordWriteDecoder;
 	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
 
 	Inverter readSuccessInv;
@@ -171,6 +172,7 @@ private:
 	int cycles;
 
 #ifdef DEBUG
+#if DEBUG || 1
 	CacheAddrBundle DEBUG_addr;
 #endif
 
@@ -188,7 +190,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
-#ifdef DEBUG
+#if DEBUG || 1
 	DEBUG_addr = address;
 #endif
 
@@ -214,12 +216,13 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	
 	cachelinewrite.Connect(cacheableAddr.Out(), busBuffer.ReadSuccess());
 	CacheIndexBundle index = address.CacheLineIndex();
-	indexDecoder.Connect(index, cachelinewrite.Out());
+	lineWriteDecoder.Connect(index, cachelinewrite.Out());
+	wordWriteDecoder.Connect(index, write);
 
 	// Cache Lines
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(address.Tag(), lineWriteMasker.LineMask(), lineWriteMasker.Line(), indexDecoder.Out()[i], write);
+		cachelines[i].Connect(address.Tag(), lineWriteMasker.LineMask(), lineWriteMasker.Line(), lineWriteDecoder.Out()[i], wordWriteDecoder.Out()[i]);
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheLineTagOuts[i] = cachelines[i].Tag();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
@@ -287,7 +290,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 
 	lineWriteMasker.Update();
 	cachelinewrite.Update();
-	indexDecoder.Update();
+	lineWriteDecoder.Update();
+	wordWriteDecoder.Update();
 
 	// Must update the line tag mux *before* the registers, as their tags get stomped on write
 	lineTagMux.Update();

@@ -7,6 +7,7 @@
 #include "Program.h" 
 #include "ProgramLoader.h" 
 #include "Assembler.h"
+#include "CPU/Addresses.h"
 
 
 Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
@@ -18,6 +19,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintMemory = verbosity >= MEMORY;
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
+	bPrintStack = verbosity >= NORMAL;
 	bPrintBus = verbosity >= NORMAL; 
 
 	pAssembler = new Assembler();
@@ -123,6 +125,11 @@ void Debugger::PrintCycle()
 			PrintRegisters();
 		}
 
+		if (bPrintStack)
+		{
+			PrintStack();
+		}
+
 		if (bPrintMemory)
 		{
 			PrintMemory();
@@ -144,32 +151,56 @@ int Debugger::GetRegisterVal(int reg)
 	return pCPU->Registers().registers[reg].Out().Read();
 }
 
+#pragma optimize( "", off )  
 unsigned char Debugger::GetCacheByte(int addr)
 {
 	auto& cache = pCPU->GetMainCache();
 	unsigned int cacheline = addr / cache.CACHE_LINE_BYTES;
 	cacheline %= cache.NUM_CACHE_LINES;
-	auto line = cache.cachelines[cacheline].OutLine();
-	return line.Range<8>(8 * (addr % cache.CACHE_LINE_BYTES)).Read();
+	auto tag = cache.cachelines[cacheline].Tag();
+	auto valid = cache.cachelines[cacheline].Valid();
+
+	if (valid.On() && (tag.UnsignedRead() == Bundle<32>(addr).Range<CPU::MainCache::TAG_BITS>(CPU::MainCache::ADDR_BITS - CPU::MainCache::TAG_BITS).UnsignedRead()))
+	{
+		auto line = cache.cachelines[cacheline].OutLine();
+		return line.Range<8>(8 * (addr % cache.CACHE_LINE_BYTES)).Read();
+	}
+
+	return GetMemoryByte(addr);
 }
 
 unsigned char Debugger::GetMemoryByte(int addr)
 {
+	if (addr >= USER_DATA_START)
+	{
+		addr -= USER_DATA_START;
+	}
 	auto& mem = pCPU->GetMainMemory();
 	unsigned int cacheline = addr / mem.CACHELINE_BYTES;
 	auto line = mem.cachelines[cacheline].Out();
 	return line.Range<8>(8 * (addr % mem.CACHELINE_BYTES)).Read();
 }
 
-int Debugger::GetMemoryWord(int addr)
+unsigned int Debugger::GetCacheWord(int addr)
 {
-	int word = 0;
+	unsigned int word = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		word |= (GetMemoryByte(addr + i) << (i * 8));
+		word |= (unsigned int)(GetCacheByte(addr + i) << (i * 8));
 	}
 	return word;
 }
+
+unsigned int Debugger::GetMemoryWord(int addr)
+{
+	unsigned int word = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		word |= (unsigned int)(GetMemoryByte(addr + i) << (i * 8));
+	}
+	return word;
+}
+#pragma optimize( "", on )  
 
 std::string Debugger::GetMemoryString(int addr)
 {
@@ -307,6 +338,32 @@ void Debugger::PrintDataForward()
 		}
 	}
 }
+
+#pragma optimize( "", off )  
+void Debugger::PrintStack()
+{
+	unsigned int cur_stack = pCPU->Registers().registers[29].Out().UnsignedRead();
+	if (USER_DATA_START <= cur_stack && cur_stack <= USER_STACK_START)
+	{
+		if (cur_stack != mLastStackPointer)
+		{
+			mLastStackPointer = cur_stack;
+			std::cout << "----- Stack print: top 0x" << std::hex << cur_stack << " ------------------" << std::endl;
+			for (int addr = cur_stack; addr < USER_STACK_START; addr += 4)
+			{
+				unsigned int val = GetCacheWord(addr);
+				std::cout << "0x" << std::hex << addr << "\t";
+				if (val < USER_DATA_START)
+				{
+					std::cout << std::dec;
+				}
+				std::cout << val << std::dec << "\t" << pProgram->GetSourceLine(val/4 - 2) << std::endl;
+			}
+			std::cout << "-------------------------------" << std::endl << std::endl;
+		}
+	}
+}
+#pragma optimize( "", on )  
 
 void Debugger::PrintTiming()
 {	

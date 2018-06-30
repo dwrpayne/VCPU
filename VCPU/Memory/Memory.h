@@ -135,6 +135,17 @@ inline void Memory<N, BYTES>::Update()
 #endif
 	servicedRead.Update();
 	servicedWrite.Update();
+#if DEBUG
+	if (servicedWrite.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " writing at  " << std::hex << (int)(pSystemBus->OutAddr().UnsignedRead()/32)*32 << ", data: " << std::dec;
+		pSystemBus->OutData().print(ss);
+		ss << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	addrDecoder.Update();
 	for (auto& reg : cachelines)
 	{

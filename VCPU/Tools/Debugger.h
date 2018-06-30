@@ -27,7 +27,8 @@ public:
 	int GetRegisterVal(int reg);
 	unsigned char GetCacheByte(int addr);
 	unsigned char GetMemoryByte(int addr);
-	int GetMemoryWord(int addr);
+	unsigned int GetCacheWord(int addr);
+	unsigned int GetMemoryWord(int addr);
 	std::string GetMemoryString(int addr);
 	int GetNextPCAddr();
 	
@@ -36,6 +37,7 @@ private:
 	void PrintRegisters();
 	void PrintMemory();
 	void PrintDataForward();
+	void PrintStack();
 	void PrintTiming();
 	void PrintBus();
 	
@@ -46,10 +48,12 @@ private:
 	bool bPrintMemory;
 	bool bPrintDataForward;
 	bool bPrintTiming;
+	bool bPrintStack;
 	bool bPrintBus;
 
 	std::deque<int> mLastInstructions;
 	std::array<unsigned char, 16384> mLastCycleMemory;
+	unsigned int mLastStackPointer;
 
 	long long last_output_reg;
 

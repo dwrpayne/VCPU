@@ -106,5 +106,6 @@
     <ClInclude Include="Tools\ProgramLoader.h" />
     <ClInclude Include="Tools\Utils.h" />
     <ClInclude Include="Functional\ChangeDetector.h" />
+    <ClInclude Include="CPU\Addresses.h" />
   </ItemGroup>
 </Project>

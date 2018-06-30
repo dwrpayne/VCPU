@@ -1,0 +1,4 @@
+#pragma once
+
+#define USER_DATA_START 0x10000000
+#define USER_STACK_START 0x10003000

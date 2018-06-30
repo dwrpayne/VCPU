@@ -212,8 +212,9 @@ public:
 		for (int i = N - 32; i >= 0; i -= 32)
 		{
 			const auto& b = Range<32>(i);
-			os << std::hex << b.UnsignedRead() << " ";
+			os << std::hex << std::setfill('0') << std::setw(8) << b.UnsignedRead() << " ";
 		}
+		os << std::setfill(' ');
 	}
 
 	template <unsigned int N>

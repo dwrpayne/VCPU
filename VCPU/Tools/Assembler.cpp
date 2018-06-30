@@ -9,6 +9,7 @@
 #include <regex>
 #include <assert.h>
 #include "Program.h"
+#include "CPU/Addresses.h"
 
 std::vector<std::string> split(const char *str)
 {
@@ -32,7 +33,7 @@ Assembler::Assembler()
 {
 	pProgram = new Program();
 	ParseSourceLine("nop ;null address", pProgram);		// address 0x00000000 is empty.
-	ParseSourceLine("li $sp, 0x10003000", pProgram);
+	ParseSourceLine("li $sp, " + std::to_string(USER_STACK_START), pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");
 }

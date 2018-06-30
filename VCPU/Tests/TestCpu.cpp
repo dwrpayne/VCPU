@@ -654,7 +654,7 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 0x10000004, debugger.GetRegisterVal(18), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(19), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
-	success &= TestState(i++, 1887, debugger.GetMemoryWord(16), verbosity);
+	success &= TestState(i++, 1887U, debugger.GetCacheWord(16), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 1879070428, debugger.GetRegisterVal(23), verbosity);
@@ -708,7 +708,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
-	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
+	success &= TestState(i++, 1234U, debugger.GetCacheWord(4), verbosity);
 	success &= TestState(i++, 184, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
@@ -721,7 +721,7 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testmemops.vasm", dverb);
 	debugger.Start();
-	success &= TestState(i++, 0x11aadd33, debugger.GetMemoryWord(4), verbosity);
+	success &= TestState(i++, 0x11aadd33U, debugger.GetCacheWord(4), verbosity);
 	success &= TestState(i++, 0x11aadd33, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 0x33, debugger.GetRegisterVal(3), verbosity);
 	success &= TestState(i++, 0xdd, debugger.GetRegisterVal(4), verbosity);
@@ -736,7 +736,7 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 0x11, debugger.GetRegisterVal(13), verbosity);
 	success &= TestState(i++, -8909, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 0x11aa, debugger.GetRegisterVal(15), verbosity);
-	success &= TestState(i++, 4, debugger.GetMemoryWord(8), verbosity);
+	success &= TestState(i++, 4U, debugger.GetCacheWord(8), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(16), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(17), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(18), verbosity);
@@ -745,11 +745,11 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 98765, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 98765, debugger.GetRegisterVal(25), verbosity);
 
-	success &= TestState(i++, (int)0xaaaadd33, debugger.GetMemoryWord(12), verbosity);
-	success &= TestState(i++, 0x33333333, debugger.GetMemoryWord(16), verbosity);
-	success &= TestState(i++, 0x0033dd33, debugger.GetMemoryWord(20), verbosity);
-	success &= TestState(i++, 0x11aadddd, debugger.GetMemoryWord(24), verbosity);
-	success &= TestState(i++, 98765, debugger.GetMemoryWord(32), verbosity);
+	success &= TestState(i++, 0xaaaadd33U, debugger.GetCacheWord(12), verbosity);
+	success &= TestState(i++, 0x33333333U, debugger.GetCacheWord(16), verbosity);
+	success &= TestState(i++, 0x0033dd33U, debugger.GetCacheWord(20), verbosity);
+	success &= TestState(i++, 0x11aaddddU, debugger.GetCacheWord(24), verbosity);
+	success &= TestState(i++, 98765U, debugger.GetCacheWord(32), verbosity);
 	return success;
 }
 

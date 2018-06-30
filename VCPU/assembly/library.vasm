@@ -49,7 +49,7 @@ putch:			li		$t0, 0xffff0008U
 putch_check:	lb		$t1, 0($t0)
 				beqz	$t1, putch_check
 				nop
-				sb		$a0, 4($t0)
+				sb		$a0, 4($t0)				
 				ret 
 								
 ; newline just outputs a newline
@@ -84,7 +84,6 @@ itoa_pos:		li 		$a1, 10				; divisor
 				addiu	$t4, $t4, 1
 				bgtz	$v0, itoa_pos
 				move 	$a0, $v0
-				brk
 itoa_write:		pop		$v1
 				addiu	$v1, $v1, 48				; convert to ascii
 				sb		$v1, 0($t3)
@@ -100,6 +99,7 @@ itoa_write:		pop		$v1
 print_int:		push	$ra
 				li		$a1, 0x10003ff0
 				call itoa
+				brk
 				li		$a0, 0x10003ff0
 				call printf
 				pop		$ra
