@@ -1,0 +1,16 @@
+main:	li 		$s0, 5				; number of lines to do.
+		li		$s1, 0x10000000		; base address
+		li		$s2, 64				; max line length
+loop:	move	$a0, $s1
+		move	$a1, $s2			
+		call 	readline			; read a line
+		call 	newline	
+		move	$a0, $s1			; echo the line back
+		call 	printf	
+		call 	newline
+		addiu	$s0, $s0, -1
+		bgtz	$s0, loop
+		addu	$s1, $s1, $s2
+		nop
+		brk
+		hlt

@@ -54,7 +54,7 @@ putch_check:	lb		$t1, 0($t0)
 								
 ; newline just outputs a newline
 newline:		push	$ra
-				li		$a0, 10			;10 is newline
+				li		$a0, 0xa			;0xa is newline
 				call 	putch
 				pop		$ra
 				ret
@@ -101,5 +101,18 @@ print_int:		push	$ra
 				call itoa
 				li		$a0, 0x10003fa0
 				call printf
+				pop		$ra
+				ret
+
+; readline takes the start of the buffer in $a0 and the length in $a1
+; it reads chars from stdin until the buffer is empty or a newline is encountered
+readline:		push 	$ra
+				li 		$t2, 0xD			; 0xD = \n
+readline_loop: 	call 	getch
+				beq		$v0, $t2, readline_end
+				sb		$v0, 0($a0)
+				bne		$a0, $a1, readline_loop
+				addiu 	$a0, $a0, 1
+readline_end:	sb		$r0, 0($a0)			; null-terminate
 				pop		$ra
 				ret

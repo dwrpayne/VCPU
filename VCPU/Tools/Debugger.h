@@ -35,7 +35,7 @@ public:
 private:
 	void PrintInstruction();
 	void PrintRegisters();
-	void PrintMemory();
+	void PrintMemory(bool force=false);
 	void PrintDataForward();
 	void PrintStack();
 	void PrintTiming();
@@ -52,7 +52,7 @@ private:
 	bool bPrintBus;
 
 	std::deque<int> mLastInstructions;
-	std::array<unsigned char, 16384> mLastCycleMemory;
+	std::array<unsigned char, 16*1024> mLastCycleMemory;
 	unsigned int mLastStackPointer;
 
 	long long last_output_reg;

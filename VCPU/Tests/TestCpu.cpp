@@ -799,7 +799,7 @@ bool TestCPUPrintf(Verbosity verbosity, Debugger::Verbosity dverb)
 	return success;
 }
 
-bool TestCPUCustom(Verbosity verbosity, Debugger::Verbosity dverb)
+bool TestCPUSqrt(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
 	bool success = true;
@@ -827,6 +827,7 @@ bool RunCPUTests()
 	RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
 	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
 	RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
+	//RUN_TEST2(TestCPUSqrt, FAIL_ONLY, default_verb);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
@@ -836,7 +837,6 @@ bool RunCPUTests()
 		//RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
 		//RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
 	}
-	RUN_TEST2(TestCPUCustom, FAIL_ONLY, default_verb);
 
 	return success;
 }

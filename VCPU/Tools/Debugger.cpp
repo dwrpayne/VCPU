@@ -18,7 +18,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintRegisters = verbosity >= NORMAL;
 	bPrintMemory = verbosity >= MEMORY;
 	bPrintDataForward = verbosity >= VERBOSE;
-	bPrintTiming = verbosity >= TIMING;
+	bPrintTiming = verbosity >= NORMAL;
 	bPrintStack = verbosity >= NORMAL;
 	bPrintBus = verbosity >= NORMAL; 
 
@@ -50,6 +50,7 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Halt())
 		{
+			PrintMemory(true);
 			break;
 		}
 		cycles--;
@@ -135,7 +136,7 @@ void Debugger::PrintCycle()
 			PrintMemory();
 		}
 
-		//if (bPrintTiming)
+		if (bPrintTiming)
 		{
 			PrintTiming();
 		}
@@ -243,21 +244,22 @@ void Debugger::PrintRegisters()
 		for (int j = 0; j < 4; j++)
 		{
 			int num = i + 8 * j;
+			unsigned int val = GetRegisterVal(num);
 			std::stringstream ss;
 			ss << "$" << pAssembler->GetRegName(num) << "(" << num << ") ";
 			std::cout << std::left << std::setw(8) << ss.str();
-			if (num >= 28) 
+			if (num >= 28 || val > 0x10000000) 
 				std::cout << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << GetRegisterVal(num);
 			else
 				std::cout << std::setw(12) << GetRegisterVal(num);
-			if (num >= 28) 
+			if (num >= 28 || val > 0x10000000)
 				std::cout << std::setw(12) << std::setfill(' ') << std::dec;
 		}
 		std::cout << std::endl;
 	}
 }
 
-void Debugger::PrintMemory()
+void Debugger::PrintMemory(bool force)
 {
 	bool diff = false;
 	for (unsigned int i = 0; i < mLastCycleMemory.size(); i++)
@@ -269,7 +271,7 @@ void Debugger::PrintMemory()
 		}
 		mLastCycleMemory[i] = GetMemoryByte(i);
 	}
-	if (diff)
+	if (diff || force)
 	{
 		std::cout << "Memory: " << std::hex << std::setfill('0');
 		int i = 0;
