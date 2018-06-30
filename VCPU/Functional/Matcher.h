@@ -39,6 +39,45 @@ inline void Matcher<N>::Update()
 }
 
 
+template <unsigned int N, unsigned int Nreg>
+class MatcherN : public Component
+{
+public:
+	void Connect(const Bundle<N>& a, const std::array<Bundle<N>, Nreg>& candidates);
+	void Update();
+
+	const Bundle<Nreg>& Out() const { return out; }
+	const Wire& AnyMatch() const { return and.Out(); }
+
+private:
+	std::array<Matcher<N>, Nreg> matchers;
+	Bundle<Nreg> out;
+	AndGateN<Nreg> and;
+};
+
+template<unsigned int N, unsigned int Nreg>
+inline void MatcherN<N, Nreg>::Connect(const Bundle<N>& a, const std::array<Bundle<N>, Nreg>& candidates)
+{
+	for (int i = 0; i < Nreg; i++)
+	{
+		matchers[i].Connect(a, candidates[i]);
+		out.Connect(i, matchers[i].Out());
+	}
+	and.Connect(out);
+}
+
+template<unsigned int N, unsigned int Nreg>
+inline void MatcherN<N, Nreg>::Update()
+{
+	for (auto& m : matchers)
+	{
+		m.Update();
+	}
+	and.Update();
+}
+
+
+
 template <unsigned int N>
 class NonZeroMatcher : public Component
 {

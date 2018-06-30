@@ -1,0 +1,9 @@
+main:	li	$a0, 315472
+		li	$a1, 10
+		call div
+		nop
+		nop
+		nop
+		nop
+		brk
+		hlt

@@ -1,0 +1,9 @@
+main:	li 		$a0, 97
+		li		$t8, 103
+out:	call 	putch
+		bne		$a0, $t8, out
+		addiu	$a0, $a0, 1
+		li		$a0, 10
+		call	putch
+		nop
+		hlt

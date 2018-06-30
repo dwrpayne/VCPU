@@ -1,5 +1,5 @@
 
-*This project is in active development and may or may not compile/work at any given time.*
+*This project follows the git-flow branching model. Master is always releasable. Dev is likely working but possibly unstable, while feature branches (if they exist) are in-progress work.*
 
 Virtual CPU
 ---------
@@ -25,20 +25,31 @@ A `Component` is the base class for all elements of the VCPU, from logic gates t
 Philosophy
 ----------
 
-* VCPU is unclocked, but the `Update()` functions are called in such a way to propagate the "leading edge" of the data around the chip.
-* Update() is always called unconditionally by every `Component`. Conditionally updating subcomponents based on the state of a `Wire` is cheating. Those decisions must be implemented in "hardware".
+* `Update()` is called in such a way to propagate the "leading edge" of the data around the chip. In a sense, all components are synchronous as they store state.
+* `Update()` is always called unconditionally by every `Component`. Conditionally updating subcomponents based on the state of a `Wire` is cheating. No `Update()` can ever have an if statement in it. That decision must be implemented in "hardware".
 
-Feature Set
+Current Feature Set
 ------------
 
 * 32-bit words, 32-bit fixed instruction size
 * 32 general purpose registers.
 * 5-stage RISC pipeline (IF, ID, EX, MEM, WB). Pipeline stages are stepped concurrently by `CPU::Update()`.
-* 512 bytes of instruction memory, 64bytes of instruction cache
-* 8K of main memory, 512bytes of L1 cache.
+* 2K bytes of instruction memory, 128 bytes of L1 instruction cache
+* 16K of main memory, 128 bytes of L1 data cache.
 * Memory is all byte-addressable.
-* Runs at ~6Khz on my desktop.
-* Planned full implementation of the MIPS I instruction set (division not yet supported).
+* Runs at ~1.5Khz on my desktop.
+* Mostly full implementation of the MIPS I instruction set, except division.
 * Single branch delay slot.
 * Circuitry handles load stalls and cache miss stalls, no need for the assembler to handle these.
 * Single-cycle step debugger with memory, register, and pipeline state output.
+* Asynchronous system bus to communicate with memory and mem-mapped IO keyboard and terminal.
+* Simple library of assembly functions.
+* Full test suite
+
+Future Work
+---------------
+* Exception Handling
+* Interrupts
+* Virtual Memory with TLB
+* L2 cache
+* Kernel mode / User mode

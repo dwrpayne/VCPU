@@ -7,7 +7,63 @@
 #include "Instructions.h"
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
- 
+#include "Controllers/DeviceController.h"
+#include "CPU/BusWriteBuffer.h"
+#include "CPU/BusRequestBuffer.h"
+
+class SystemBusTest : public SystemBus
+{
+public:
+	SystemBusTest(const Bundle<Ndata>& data, const Bundle<Naddr>& addr)
+	{
+		ConnectData(data);
+		ConnectAddr(addr);
+		ConnectCtrl(req, CtrlBit::Req);
+		ConnectCtrl(read, CtrlBit::Read);
+		ConnectCtrl(write, CtrlBit::Write);
+		databuffer.Connect(OutData(), Wire::ON);
+	}
+	const Bundle<Ndata>& SendReadAndWaitForAck(ThreadedAsyncComponent& target)
+	{
+		read.Set(true);
+		Send(target);
+		databuffer.Update();
+		ClearAck(target);
+		return databuffer.Out();
+	}
+	void SendWriteAndWaitForAck(ThreadedAsyncComponent& target)
+	{
+		write.Set(true);
+		Send(target);
+		ClearAck(target);
+	}
+
+private:
+	Wire req, read, write;
+	Register<256> databuffer;
+	void Send(ThreadedAsyncComponent& target)
+	{
+		req.Set(true);
+		while (!OutCtrl().Ack().On())
+		{
+			target.DoOneUpdate();
+			target.WaitUntilDone();
+		}
+	}
+
+	void ClearAck(ThreadedAsyncComponent& target)
+	{
+		req.Set(false);
+		read.Set(false);
+		write.Set(false);
+		while (OutCtrl().Ack().On())
+		{
+			target.DoOneUpdate();
+			target.WaitUntilDone();
+		}
+	}
+};
+
 bool TestOpcodeDecoder(Verbosity verbosity)
 {
 	int i = 0;
@@ -216,6 +272,85 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 	return success;
 }
 
+bool TestBusWriteBuffer(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+	SystemBus bus;
+
+	BusWriteBuffer<32, 32, 8> test;
+	MagicBundle<32> data;
+	MagicBundle<32> addr;
+	Wire write(false);
+	test.Connect(bus, data, addr, write);
+	{
+		TerminalController terminal;
+		terminal.Connect(bus);
+		terminal.UpdateForever();
+
+		addr.Write(0xffff000c);
+		write.Set(true);
+		for (int i = 64; i < 127; i++)
+		{
+			data.Write(i);
+			test.Update();
+			while (test.Full().On())
+			{
+				test.Update();
+			}
+		}
+	}
+	std::cout << std::endl;
+
+	return success;
+}
+
+bool TestBusRequestBuffer(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+	SystemBus bus;
+
+	BusRequestBuffer<16, 16, 8> test;
+	MagicBundle<16> data;
+	MagicBundle<16> raddr;
+	MagicBundle<16> waddr;
+	Wire write(false);
+	Wire read(false);
+	test.Connect(bus, data, waddr, raddr, write, read);
+	{
+		Memory<32, 256> memory(false);
+		memory.Connect(bus);
+
+
+		write.Set(true);
+
+		for (const auto&[a, b] : std::map<int, int>({ { 0x111, 4}, {0x222, 8}, {0x333, 12}, {0x444, 36}, {0x555, 60}, {0x666, 72}, {0x777, 100} }))
+		{
+			data.Write(a);
+			waddr.Write(b);
+			test.PreUpdate();
+			test.Update(); // Push some values into memory
+			memory.DoOneUpdate();
+		}
+
+		write.Set(false);
+		read.Set(true);
+		data.Write(2);
+		waddr.Write(16);
+		raddr.Write(72);
+		do
+		{
+			test.PreUpdate();
+			test.Update(); // Push some values into memory
+			memory.DoOneUpdate();
+		} while (!test.ReadSuccess().On());
+
+		std::cout << "Read Data: " << test.OutRead().UnsignedRead() << std::endl;
+	}
+	return success;
+}
+
 bool TestByteMask(Verbosity verbosity)
 {
 	int i = 0;
@@ -274,58 +409,59 @@ bool TestCacheLineMasker(Verbosity verbosity)
 	MagicBundle<32> dataword;
 	MagicBundle<64> dataline;
 	MagicBundle<1> offset;
-	Wire wb, wh, ww;
+	Wire wb, wh, ww, wl;
 
-	test.Connect(index, offset, dataword, dataline, wb, wh, ww);
+	test.Connect(index, offset, dataword, dataline, wb, wh, ww, wl);
 	ww.Set(false);
 	wh.Set(false);
 	wb.Set(false);
+	wl.Set(false);
 	offset.Write(0);
 	index.Write(0);
 
 	dataword.Write(0x6eadbeefU);
 	dataline.Write(0x123456789abcdef);
 	test.Update();
-	success &= TestState(i++, 0, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0xffffffffffffffff, test.LineMask().UnsignedReadLong(), verbosity);
 	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
 
 	ww.Set(true);
 	test.Update();
-	success &= TestState(i++, 0x6eadbeef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x00000000ffffffffLL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x012345676eadbeef, test.Line().ReadLong(), verbosity);
 
 	offset.Write(1U);
 	test.Update();
-	success &= TestState(i++, 0x6eadbeef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0xffffffff00000000ULL, test.LineMask().UnsignedReadLong(), verbosity);
 	success &= TestState(i++, 0x6eadbeef89abcdef, test.Line().ReadLong(), verbosity);
 
 	wb.Set(true);
 	test.Update();
-	success &= TestState(i++, 0xef, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x000000ff00000000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x012345ef89abcdef, test.Line().ReadLong(), verbosity);
 
 	index.Write(2U);
 	test.Update();
-	success &= TestState(i++, 0xef0000, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x00ff000000000000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x01ef456789abcdef, test.Line().ReadLong(), verbosity);
 
 	offset.Write(0);
 	test.Update();
-	success &= TestState(i++, 0xef0000, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0x0000000000ff0000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x0123456789efcdef, test.Line().ReadLong(), verbosity);
 
 	wh.Set(true);
 	wb.Set(false);
 	test.Update();
-	success &= TestState(i++, 0xbeef0000U, test.Word().UnsignedRead(), verbosity);
+	success &= TestState(i++, 0x00000000ffff0000LL, test.LineMask().ReadLong(), verbosity);
 	success &= TestState(i++, 0x01234567beefcdef, test.Line().ReadLong(), verbosity);
 
 	wh.Set(false);
 	ww.Set(false);
 	test.Update();
-	success &= TestState(i++, 0, test.Word().Read(), verbosity);
+	success &= TestState(i++, 0xffffffffffffffff, test.LineMask().UnsignedReadLong(), verbosity);
 	success &= TestState(i++, 0x0123456789abcdef, test.Line().ReadLong(), verbosity);
-		
+
 	return success;
 }
 
@@ -333,17 +469,18 @@ bool TestCache(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
+	SystemBus bus;
 
-	Cache<256, 256, 1024>* pCache = new Cache<256, 256, 1024>();
-	Cache<256, 256, 1024>& test = *pCache;
+	auto* pCache = new Cache<256, 256>();
+	auto& test = *pCache;
 
 	MagicBundle<32> data;
 	Wire write(true);
 	Wire read(false);
 	Wire writebyte(false);
 	Wire writehalf(false);
-	MagicBundle<10> addr;
-	test.Connect(addr, data, read, write, writebyte, writehalf);
+	MagicBundle<32> addr;
+	test.Connect(addr, data, read, write, writebyte, writehalf, bus);
 
 	for (int a = 0; a < 8; a++)
 	{
@@ -435,6 +572,62 @@ bool TestCache(Verbosity verbosity)
 	return success;
 }
 
+bool TestKeyboardController(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	static const unsigned int DATA_REG = 0xffff0004U;
+	static const unsigned int CONTROL_REG = 0xffff0000U;
+
+	MagicBundle<256> data;
+	MagicBundle<32> addr;
+	SystemBusTest bus(data, addr);
+	KeyboardController test;
+	test.Connect(bus);
+
+	for (int i = 0; i < 10; i++)
+	{
+		addr.Write(CONTROL_REG);
+		while (!bus.SendReadAndWaitForAck(test).Range<1>().UnsignedRead());
+
+		addr.Write(DATA_REG);
+		char key = bus.SendReadAndWaitForAck(test).Range<8>().UnsignedRead();
+
+		std::cout << "Got " << key << std::endl;
+	}
+
+	return success;
+}
+
+bool TestTerminalController(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	static const unsigned int DATA_REG = 0xffff000CU;
+	static const unsigned int CONTROL_REG = 0xffff0008U;
+
+	MagicBundle<256> data;
+	MagicBundle<32> addr;
+	SystemBusTest bus(data, addr);
+	TerminalController test;
+	test.Connect(bus);
+
+	for (int i = 0; i < 26; i++)
+	{
+		addr.Write(CONTROL_REG);
+		while (!bus.SendReadAndWaitForAck(test).Range<1>().UnsignedRead());
+
+		addr.Write(DATA_REG);
+		data.Write(65 + i);
+		bus.SendWriteAndWaitForAck(test);
+	}
+	std::cout << std::endl;
+
+	return success;
+}
+
 bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 {
 	int i = 0;
@@ -458,18 +651,18 @@ bool TestCPU(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 2, debugger.GetRegisterVal(15), verbosity);
 	success &= TestState(i++, 4063, debugger.GetRegisterVal(16), verbosity);
 	success &= TestState(i++, 2571, debugger.GetRegisterVal(17), verbosity);
-	success &= TestState(i++, 123456789, debugger.GetRegisterVal(18), verbosity);
+	success &= TestState(i++, 0x10000004, debugger.GetRegisterVal(18), verbosity);
 	success &= TestState(i++, 0, debugger.GetRegisterVal(19), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(22), verbosity);
-	success &= TestState(i++, 1887, debugger.GetMemoryWord(16), verbosity);
+	success &= TestState(i++, 1887U, debugger.GetCacheWord(16), verbosity);
 	success &= TestState(i++, 1887, debugger.GetRegisterVal(11), verbosity);
 	success &= TestState(i++, 4325, debugger.GetRegisterVal(20), verbosity);
-	success &= TestState(i++, -898477309, debugger.GetRegisterVal(23), verbosity);
-	success &= TestState(i++, 159, debugger.GetRegisterVal(24), verbosity);
-	success &= TestState(i++, 40704, debugger.GetRegisterVal(25), verbosity);
-	success &= TestState(i++, 636, debugger.GetRegisterVal(26), verbosity);
-	success &= TestState(i++, 19, debugger.GetRegisterVal(27), verbosity);
-	success &= TestState(i++, 39, debugger.GetRegisterVal(28), verbosity);
+	success &= TestState(i++, 1879070428, debugger.GetRegisterVal(23), verbosity);
+	success &= TestState(i++, 347, debugger.GetRegisterVal(24), verbosity);
+	success &= TestState(i++, 88832, debugger.GetRegisterVal(25), verbosity);
+	success &= TestState(i++, 1388, debugger.GetRegisterVal(26), verbosity);
+	success &= TestState(i++, 43, debugger.GetRegisterVal(27), verbosity);
+	success &= TestState(i++, 86, debugger.GetRegisterVal(28), verbosity);
 	success &= TestState(i++, -35, debugger.GetRegisterVal(29), verbosity);
 	success &= TestState(i++, -138, debugger.GetRegisterVal(30), verbosity);
 	return success;
@@ -484,11 +677,11 @@ bool TestCPUBranch(Verbosity verbosity, Debugger::Verbosity dverb)
 	Debugger debugger("testbranch.vasm", dverb);
 	debugger.Start();
 	success &= TestState(i++, 12, debugger.GetRegisterVal(8), verbosity);
-	success &= TestState(i++, 7, debugger.GetRegisterVal(9), verbosity);
-	success &= TestState(i++, 300, debugger.GetRegisterVal(10), verbosity);
-	success &= TestState(i++, 368, debugger.GetRegisterVal(11), verbosity);
-	success &= TestState(i++, 332, debugger.GetRegisterVal(31), verbosity);
-	success &= TestState(i++, 384, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 8, debugger.GetRegisterVal(9), verbosity);
+	success &= TestState(i++, 312, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, 380, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, 344, debugger.GetRegisterVal(31), verbosity);
+	success &= TestState(i++, 400, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -500,7 +693,7 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testhazards.vasm", dverb);
 	debugger.Start();
-	success &= TestState(i++, 1234, debugger.GetRegisterVal(1), verbosity);
+	success &= TestState(i++, 1234, debugger.GetRegisterVal(23), verbosity);
 	success &= TestState(i++, 1357, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 1603, debugger.GetRegisterVal(3), verbosity);
 	success &= TestState(i++, 2591, debugger.GetRegisterVal(4), verbosity);
@@ -515,8 +708,8 @@ bool TestCPUPipelineHazards(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 2468, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 166, debugger.GetRegisterVal(20), verbosity);
 	success &= TestState(i++, 123, debugger.GetRegisterVal(21), verbosity);
-	success &= TestState(i++, 1234, debugger.GetMemoryWord(4), verbosity);
-	success &= TestState(i++, 160, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 1234U, debugger.GetCacheWord(4), verbosity);
+	success &= TestState(i++, 184, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }
@@ -528,7 +721,7 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 
 	Debugger debugger("testmemops.vasm", dverb);
 	debugger.Start();
-	success &= TestState(i++, 0x11aadd33, debugger.GetMemoryWord(4), verbosity);
+	success &= TestState(i++, 0x11aadd33U, debugger.GetCacheWord(4), verbosity);
 	success &= TestState(i++, 0x11aadd33, debugger.GetRegisterVal(2), verbosity);
 	success &= TestState(i++, 0x33, debugger.GetRegisterVal(3), verbosity);
 	success &= TestState(i++, 0xdd, debugger.GetRegisterVal(4), verbosity);
@@ -543,7 +736,7 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 0x11, debugger.GetRegisterVal(13), verbosity);
 	success &= TestState(i++, -8909, debugger.GetRegisterVal(14), verbosity);
 	success &= TestState(i++, 0x11aa, debugger.GetRegisterVal(15), verbosity);
-	success &= TestState(i++, 4, debugger.GetMemoryWord(8), verbosity);
+	success &= TestState(i++, 4U, debugger.GetCacheWord(8), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(16), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(17), verbosity);
 	success &= TestState(i++, 4, debugger.GetRegisterVal(18), verbosity);
@@ -552,11 +745,11 @@ bool TestCPUMemory(Verbosity verbosity, Debugger::Verbosity dverb)
 	success &= TestState(i++, 98765, debugger.GetRegisterVal(21), verbosity);
 	success &= TestState(i++, 98765, debugger.GetRegisterVal(25), verbosity);
 
-	success &= TestState(i++, (int)0xaaaadd33, debugger.GetMemoryWord(12), verbosity);
-	success &= TestState(i++, 0x33333333, debugger.GetMemoryWord(16), verbosity);
-	success &= TestState(i++, 0x0033dd33, debugger.GetMemoryWord(20), verbosity);
-	success &= TestState(i++, 0x11aadddd, debugger.GetMemoryWord(24), verbosity);
-	success &= TestState(i++, 98765, debugger.GetMemoryWord(32), verbosity);
+	success &= TestState(i++, 0xaaaadd33U, debugger.GetCacheWord(12), verbosity);
+	success &= TestState(i++, 0x33333333U, debugger.GetCacheWord(16), verbosity);
+	success &= TestState(i++, 0x0033dd33U, debugger.GetCacheWord(20), verbosity);
+	success &= TestState(i++, 0x11aaddddU, debugger.GetCacheWord(24), verbosity);
+	success &= TestState(i++, 98765U, debugger.GetCacheWord(32), verbosity);
 	return success;
 }
 
@@ -572,19 +765,78 @@ bool TestCPUStrCpy(Verbosity verbosity, Debugger::Verbosity dverb)
 	return success;
 }
 
+bool TestCPUPutch(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testputch.vasm", dverb);
+	debugger.Start();
+
+	return success;
+}
+
+bool TestCPURot13(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testrot13.vasm", dverb);
+	debugger.Start();
+
+	return success;
+}
+
+bool TestCPUPrintf(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testprintf.vasm", dverb);
+
+	debugger.Start();
+
+	return success;
+}
+
+bool TestCPUSqrt(Verbosity verbosity, Debugger::Verbosity dverb)
+{
+	int i = 0;
+	bool success = true;
+
+	Debugger debugger("testsqrt.vasm", dverb);
+
+	debugger.Start();
+
+	return success;
+}
+
 bool RunCPUTests()
 {
+	static const int NUM_TIMES_TO_TEST = 1;
 	bool success = true;
-	auto default_verb = Debugger::MEMORY;
+	auto default_verb = Debugger::MINIMAL;
+	//RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
+	RUN_TEST(TestBusRequestBuffer, FAIL_ONLY);
+	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
+	RUN_TEST(TestTerminalController, FAIL_ONLY);
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
-	RUN_TEST(TestCache, FAIL_ONLY);
-	RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
-	RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
+	//RUN_TEST(TestCache, FAIL_ONLY);
+	RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
+	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
+	//RUN_TEST2(TestCPUSqrt, FAIL_ONLY, default_verb);
+
+	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
+	{
+		RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
+		RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
+		//RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
+		//RUN_TEST2(TestCPUStrCpy, FAIL_ONLY, default_verb);
+	}
 
 	return success;
 }

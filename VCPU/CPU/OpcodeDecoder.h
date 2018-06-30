@@ -50,11 +50,12 @@ public:
 	void Connect(const Bundle<6>& opcode, const Bundle<6>& func);
 	void Update();
 
-	static const int OUT_WIDTH = 24;
+	static const int OUT_WIDTH = 25;
 	
 	class OpcodeDecoderBundle : public Bundle<OUT_WIDTH>
 	{
 	public:
+		using Bundle<OUT_WIDTH>::Bundle;
 		OpcodeDecoderBundle() 
 			: Bundle<OUT_WIDTH>()
 		{}
@@ -87,6 +88,7 @@ public:
 		const Wire& JumpOrBranch() const { return Get(20); }
 		const Wire& MultOp() const { return Get(21); }		
 		const Bundle<2> MultMoveReg() const { return Range<2>(22); }
+		const Wire& Break() const { return Get(24); }
 	};
 
 	const OpcodeDecoderBundle& OutBundle() { return out; }
@@ -134,6 +136,7 @@ private:
 	MuxBundle<4, 2> control;
 	MuxBundle<4, 2> controlAll;
 	AndGateN<6> halt;
+	AndGateN<6> brk;
 
 	OpcodeDecoderBundle out;
 };

@@ -81,6 +81,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <StackReserveSize>4194304</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -105,6 +106,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <StackReserveSize>4194304</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -126,7 +128,7 @@
   <ItemGroup>
     <ClCompile Include="Async\ThreadedComponent.cpp" />
     <ClCompile Include="Controllers\DeviceController.cpp" />
-    <ClCompile Include="Controllers\MemoryController.cpp" />
+    <ClCompile Include="Control\TriStateBuffer.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
     <ClCompile Include="CPU\CPU.cpp" />
@@ -144,6 +146,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory\DFlipFlop.cpp" />
     <ClCompile Include="Memory\DFlipFlopReset.cpp" />
+    <ClCompile Include="Memory\EdgeDetector.cpp" />
     <ClCompile Include="Memory\JKFlipFlop.cpp" />
     <ClCompile Include="Memory\SRLatch.cpp" />
     <ClCompile Include="Tests\TestCPU.cpp" />
@@ -154,21 +157,25 @@
     <ClCompile Include="Tools\ProgramLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Async\AsyncFifo.h" />
     <ClInclude Include="Async\ThreadedComponent.h" />
     <ClInclude Include="Controllers\DeviceController.h" />
-    <ClInclude Include="Controllers\MemoryController.h" />
     <ClInclude Include="Control\Bundle.h" />
+    <ClInclude Include="Control\Bus.h" />
     <ClInclude Include="Control\Component.h" />
     <ClInclude Include="Control\Decoder.h" />
     <ClInclude Include="Control\Encoder.h" />
     <ClInclude Include="Control\Extender.h" />
+    <ClInclude Include="Control\Junction.h" />
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
     <ClInclude Include="Control\SelectBundle.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
+    <ClInclude Include="Control\TriStateBuffer.h" />
     <ClInclude Include="Control\Wire.h" />
+    <ClInclude Include="CPU\Addresses.h" />
     <ClInclude Include="CPU\BranchControl.h" />
+    <ClInclude Include="CPU\BusRequestBuffer.h" />
+    <ClInclude Include="CPU\BusWriteBuffer.h" />
     <ClInclude Include="CPU\Cache.h" />
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\HazardUnit.h" />
@@ -176,8 +183,12 @@
     <ClInclude Include="CPU\Interlock.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
+    <ClInclude Include="CPU\SystemBus.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
+    <ClInclude Include="Functional\ByteExtractor.h" />
+    <ClInclude Include="Functional\ByteMask.h" />
+    <ClInclude Include="Functional\ChangeDetector.h" />
     <ClInclude Include="Functional\Comparator.h" />
     <ClInclude Include="Functional\Counter.h" />
     <ClInclude Include="Functional\FullAdder.h" />
@@ -199,9 +210,9 @@
     <ClInclude Include="Memory\CacheLine.h" />
     <ClInclude Include="Memory\DFlipFlop.h" />
     <ClInclude Include="Memory\DFlipFlopReset.h" />
+    <ClInclude Include="Memory\EdgeDetector.h" />
     <ClInclude Include="Memory\JKFlipFlop.h" />
     <ClInclude Include="Memory\Memory.h" />
-    <ClInclude Include="Memory\MemoryWordWrite.h" />
     <ClInclude Include="Memory\Register.h" />
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />

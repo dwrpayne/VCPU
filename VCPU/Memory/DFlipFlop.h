@@ -9,8 +9,8 @@ public:
 	void Connect(const Wire& d, const Wire& e);
 	void Update();
 
-	const Wire& Q() { return nandR.Out(); }
-	const Wire& NotQ() { return nandS.Out(); }
+	const Wire& Q() const { return nandR.Out(); }
+	const Wire& NotQ() const { return nandS.Out(); }
 
 private:
 	Inverter invD;
@@ -19,4 +19,3 @@ private:
 	NandGate nandR;
 	NandGate nandS;
 };
-

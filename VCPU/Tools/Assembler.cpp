@@ -9,11 +9,31 @@
 #include <regex>
 #include <assert.h>
 #include "Program.h"
+#include "CPU/Addresses.h"
 
+std::vector<std::string> split(const char *str)
+{
+	std::vector<std::string> result;
+	do
+	{
+		while (*str && (*str == ' ' || *str == '\t'))
+			str++;
+
+		const char *begin = str;
+		while (*str != ' ' && *str != '\t' && *str)
+			str++;
+
+		result.push_back(std::string(begin, str));
+	} while (0 != *str++);
+
+	return result;
+}
 
 Assembler::Assembler()
 {
 	pProgram = new Program();
+	ParseSourceLine("nop ;null address", pProgram);		// address 0x00000000 is empty.
+	ParseSourceLine("li $sp, " + std::to_string(USER_STACK_START), pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");
 }
@@ -60,7 +80,7 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 	std::string comment = comment_pos == std::string::npos ? "" : line.substr(comment_pos);
 
 	// Get label
-	auto colon_pos = line.find(':');
+	auto colon_pos = code_line.find(':');
 	std::string label = "";
 	if (colon_pos != std::string::npos)
 	{
@@ -70,7 +90,8 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 
 	unsigned int source_line = program->AddSourceLine(label, code_line, comment);
 
-	if (code_line.size() >= 3)
+	std::vector<std::string> words = split(code_line.c_str());
+	if (words[0].size() > 0)
 	{
 		for (auto& line : GetInstructionsForLine(code_line))
 		{
@@ -84,24 +105,6 @@ const std::string Assembler::GetRegName(unsigned int reg) const
 	return reg_names[reg];
 }
 
-std::vector<std::string> split(const char *str)
-{
-	std::vector<std::string> result;
-	do
-	{
-		while (*str && (*str == ' ' || *str == '\t'))
-			str++;
-
-		const char *begin = str;
-		while (*str != ' ' && *str != '\t' && *str)
-			str++;
-
-		result.push_back(std::string(begin, str));
-	} while (0 != *str++);
-
-	return result;
-}
-
 std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 {
 	std::string line = l;
@@ -111,7 +114,7 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 	{
 		if (word.size() > 2 && word[0] == '0' && (word[1] == 'x' || word[1] == 'X'))
 		{
-			int hex = std::stoi(word, 0, 16);
+			unsigned int hex = std::stoul(word, 0, 16);
 			line = std::regex_replace(line, std::regex(word), std::to_string(hex));
 			break;
 		}
@@ -149,8 +152,6 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("^\\s*bge\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*ble\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*beqz\\s+(\\$.+), (\\S+)"),			"beq	$1, $$zero, $2");
-	line = std::regex_replace(line, std::regex("^\\s*beq\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
-	line = std::regex_replace(line, std::regex("^\\s*bne\\s+(\\$.+), (\\d+), (\\S+)"),		"ori	$$at, $$zero, $2\nbeq	$1, $$at, $3");
 	
 	// Pseudo-Instructions
 	// Logic and Data
@@ -340,14 +341,14 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	{ "srav"  , { 0,  7,  R_TYPE } } ,		// TESTED
 	{ "jr"    , { 0,  8,  R_TYPE } } ,		// TESTED
 	{ "jalr"  , { 0,  9,  R_TYPE } } ,		// TESTED
-	{ "mfhi"  , { 0,  16, R_TYPE } } ,
-	{ "mthi"  , { 0,  17, R_TYPE } } ,
-	{ "mflo"  , { 0,  18, R_TYPE } } ,
-	{ "mtlo"  , { 0,  19, R_TYPE } } ,
-	{ "mult"  , { 0,  24, R_TYPE } } ,
-	{ "multu" , { 0,  25, R_TYPE } } ,
-	{ "div"   , { 0,  26, R_TYPE } } ,
-	{ "divu"  , { 0,  27, R_TYPE } } ,
+	{ "mfhi"  , { 0,  16, R_TYPE } } ,		// TESTED
+	//{ "mthi"  , { 0,  17, R_TYPE } } ,		// WON'T IMPLEMENT
+	{ "mflo"  , { 0,  18, R_TYPE } } ,		// TESTED
+	//{ "mtlo"  , { 0,  19, R_TYPE } } ,		// WON'T IMPLEMENT
+	{ "mult"  , { 0,  24, R_TYPE } } ,		// TESTED
+	{ "multu" , { 0,  25, R_TYPE } } ,		// TESTED
+	//{ "div"   , { 0,  26, R_TYPE } } ,		// WON'T IMPLEMENT
+	//{ "divu"  , { 0,  27, R_TYPE } } ,		// WON'T IMPLEMENT
 	{ "add"   , { 0,  32, R_TYPE } } ,		// TESTED
 	{ "addu"  , { 0,  33, R_TYPE } } ,		// TESTED
 	{ "sub"   , { 0,  34, R_TYPE } } ,		// TESTED
@@ -384,7 +385,8 @@ const std::map<std::string, std::tuple<unsigned char, unsigned char, InstType>> 
 	//{ "swl"   , { 42, 0,  I_TYPE } } ,		// WON'T IMPLEMENT
 	{ "sw"    , { 43, 0,  I_TYPE } } ,		// TESTED
 	//{ "swr"   , { 46, 0,  I_TYPE } } ,		// WON'T IMPLEMENT
-	{ "hlt"   , { 63, 0,  X_TYPE } }		// TESTED
+	{ "brk"   , { 62, 0,  X_TYPE } },		// TESTED
+	{ "hlt"   , { 63, 0,  X_TYPE } },		// TESTED
 	});
 
 

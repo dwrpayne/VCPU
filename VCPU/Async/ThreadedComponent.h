@@ -1,29 +1,37 @@
 #pragma once
 #include <mutex>
 #include <condition_variable>
+#include <thread>
 
 #include "Component.h"
 
-class ThreadedComponent : public Component
+
+class ThreadedAsyncComponent : public Component
 {
 public:
-	ThreadedComponent(std::mutex& mutex, std::condition_variable& cv, bool& ready, bool& exit)
-		: mMutex(mutex)
-		, mCV(cv)
-		, mReady(ready)
-		, mExit(exit)
-		, numBeforeWires(Wire::WireCount())
-	{}
+	ThreadedAsyncComponent(const wchar_t* name);
 
-	void ThreadedUpdate();
-	virtual void Update() = 0;
+	virtual ~ThreadedAsyncComponent();
+
+	void DoOneUpdate();
+	void UpdateForever();
+	void StopUpdating();
+	void WaitUntilDone();
+	void Exit();
+	inline bool IsRunning() const { return mUpdating; }
+	virtual void Update() {} 
 	std::chrono::microseconds GetElapsedTime() { return mElapsedTime; }
+	void ThreadedUpdate();
+
+protected:
+	bool mExit;
 
 private:
-	std::condition_variable& mCV;
-	std::mutex& mMutex;
-	bool& mReady;
-	bool& mExit;
+	std::condition_variable mCV;
+	std::mutex mMutex;
+	bool mUpdating;
+	bool mUpdatingUntilExit;
+	std::thread mThread;
 	int numBeforeWires;
 
 	std::chrono::microseconds mElapsedTime;

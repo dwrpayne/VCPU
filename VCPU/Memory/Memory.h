@@ -13,38 +13,37 @@
 #include "SelectBundle.h"
 #include "RequestBuffer.h"
 #include "ThreadedComponent.h"
+#include "SystemBus.h"
 
 // Memory is read and written in cache lines
 template <unsigned int N, unsigned int BYTES>
-class Memory : public ThreadedComponent
+class Memory : public ThreadedAsyncComponent
 {
 public:
+	static const unsigned int BYTES = BYTES;
 	static const unsigned int CACHELINE_BYTES = N / 8;
 	static const unsigned int ADDR_BITS = bits(BYTES);
 	static const unsigned int CACHELINE_ADDR_BITS = bits(CACHELINE_BYTES);
 	static const unsigned int NUM_LINES = BYTES / CACHELINE_BYTES;
 	static const unsigned int CACHELINE_INDEX_LEN = bits(NUM_LINES);
-	static const unsigned int MEMORY_UPDATE_RATIO = 8;
-	static const unsigned int WRITE_BUFFER_LEN = 4;
 
 	typedef Bundle<N> CacheLineBundle;
 	typedef Bundle<ADDR_BITS> AddrBundle;
-	typedef RequestBuffer<N, ADDR_BITS, WRITE_BUFFER_LEN, MEMORY_UPDATE_RATIO> ReqBuffer;
 
-	using ThreadedComponent::ThreadedComponent;
-
-	void Connect(const AddrBundle& readaddr, const AddrBundle& writeaddr, const CacheLineBundle& data, const Wire& read, const Wire& write);
+	Memory(bool ismain);
+	~Memory();
+	void Connect(SystemBus & bus);
 	void Update();
-	void PostUpdate();
-
-	const AddrBundle& ReadAddr() const { return outAddr.Out(); }
-	const Wire& ServicedRead() const { return outServicedRead.Out(); }
-	const CacheLineBundle& OutLine() const { return outData.Out(); }
 
 private:
-
-	MuxBundle<ADDR_BITS, 2> addrRWMux;
+	void DisconnectFromBus();
+	SystemBus * pSystemBus;
+	NorGateN<4> usercodeBusAddr;
+	Inverter notAckOnBus;
+	AndGateN<3> incomingRequest;
 	AndGate servicedRead;
+	AndGate servicedWrite;
+	NorGate userdataBusAddr;
 
 	Decoder<NUM_LINES> addrDecoder;
 
@@ -53,56 +52,134 @@ private:
 
 	int cycle;
 
-	Register<N> outData;
-	Register<1> outServicedRead;
-	Register<ADDR_BITS> outAddr;
+	MultiGate<AndGate, N> outData;
+	DFlipFlop outServicedRequest;
 
 	std::mutex mMutex;
+	bool mIsMainMemory;
 
 	friend class Debugger;
 };
 
-template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::Connect(const AddrBundle& readaddr, const AddrBundle& writeaddr, const CacheLineBundle& data, const Wire& read, const Wire& write)
+template<unsigned int N, unsigned int BYTES>
+inline Memory<N, BYTES>::Memory(bool ismain)
+	: ThreadedAsyncComponent(ismain ? L"Main Memory Update" : L"Instruction Memory Update")
+	, mIsMainMemory(ismain)
 {
-	servicedRead.Connect(Wire::ON, read);
-	addrRWMux.Connect({ writeaddr, readaddr}, servicedRead.Out());
-	auto cachelineAddr = addrRWMux.Out().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
+}
+template<unsigned int N, unsigned int BYTES>
+inline Memory<N, BYTES>::~Memory()
+{
+	WaitUntilDone();
+	DisconnectFromBus();
+}
 
-	addrDecoder.Connect(cachelineAddr, write);
+template <unsigned int N, unsigned int BYTES>
+inline void Memory<N, BYTES>::Connect(SystemBus& bus)
+{
+	pSystemBus = &bus;
+
+	pSystemBus->ConnectData(outData.Out());
+	pSystemBus->ConnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
+
+	usercodeBusAddr.Connect(pSystemBus->OutAddr().Range<4>(-4));
+	userdataBusAddr.Connect(usercodeBusAddr.Out(), pSystemBus->OutAddr().Range<1>(-1));
+	notAckOnBus.Connect(pSystemBus->OutCtrl().Ack());
+	if (mIsMainMemory)
+	{
+		incomingRequest.Connect({ &userdataBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
+	}
+	else
+	{
+		incomingRequest.Connect({ &usercodeBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
+	}
+	servicedRead.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Read());
+	servicedWrite.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Write());
+
+	auto cachelineAddr = pSystemBus->OutAddr().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
+
+	addrDecoder.Connect(cachelineAddr, servicedWrite.Out());
 	
-	std::array<CacheLineBundle, NUM_LINES> lineOuts;
+	auto* lineOuts = new std::array<CacheLineBundle, NUM_LINES>();
+
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		cachelines[i].Connect(data, addrDecoder.Out()[i]);
-		lineOuts[i].Connect(0, cachelines[i].Out());
+		unsigned int line_bit_index = (NUM_LINES * N) % pSystemBus->Ndata;
+		cachelines[i].Connect(pSystemBus->OutData().Range<N>(line_bit_index), addrDecoder.Out()[i]);
+		lineOuts->at(i).Connect(0, cachelines[i].Out());
 	}
 
-	outMux.Connect(lineOuts, cachelineAddr);
+	outMux.Connect(*lineOuts, cachelineAddr);
 
-	outData.Connect(outMux.Out(), Wire::ON);
-	outServicedRead.Connect(Bundle<1>(servicedRead.Out()), Wire::ON);
-	outAddr.Connect(addrRWMux.Out(), Wire::ON);
+	outData.Connect(outMux.Out(), Bundle<N>(servicedRead.Out()));
+	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
 }
 
 template <unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::Update()
 {
 	cycle++;
+	usercodeBusAddr.Update();
+	userdataBusAddr.Update();
+	notAckOnBus.Update();
+	incomingRequest.Update();
+#if DEBUG
+	if (incomingRequest.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " starting to service a " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
+		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	servicedRead.Update();
-	addrRWMux.Update();
+	servicedWrite.Update();
+#if DEBUG
+	if (servicedWrite.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " writing at  " << std::hex << (int)(pSystemBus->OutAddr().UnsignedRead()/32)*32 << ", data: " << std::dec;
+		pSystemBus->OutData().print(ss);
+		ss << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	addrDecoder.Update();
 	for (auto& reg : cachelines)
 	{
 		reg.Update();
 	}
 	outMux.Update();
+	outData.Update();
+#if DEBUG
+	if (incomingRequest.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " just finished memory " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
+		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << ". Ack on!" << std::endl;
+		std::cout << ss.str();
+	}
+	else if (outServicedRequest.Q().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " finished servicing a " << (servicedRead.Out().On() ? "read" : "write") <<  ". Ack off: " << std::endl;
+		std::cout << ss.str();
+	}
+#endif
+	outServicedRequest.Update();
+
 }
 
-template <unsigned int N, unsigned int BYTES>
-inline void Memory<N, BYTES>::PostUpdate()
+template<unsigned int N, unsigned int BYTES>
+inline void Memory<N, BYTES>::DisconnectFromBus()
 {
-	outData.Update();
-	outServicedRead.Update();
-	outAddr.Update();
+	if (pSystemBus)
+	{
+		pSystemBus->DisconnectData(outData.Out());
+		pSystemBus->DisconnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
+	}
 }

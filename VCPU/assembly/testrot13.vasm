@@ -1,0 +1,8 @@
+main:	li 		$t3, 110 			; greater than or equal to "n" means sub 13 instead
+loop: 	call 	getch
+		blt		$v0, $t3, lochar
+		addiu 	$a0, $v0, 13
+		addiu 	$a0, $a0, -26
+lochar:	call	putch
+		b		loop
+		nop

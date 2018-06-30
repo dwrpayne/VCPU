@@ -51,6 +51,36 @@ inline void Register<N>::Connect(const Bundle<N>& data, const Wire & load)
 
 
 template <unsigned int N>
+class RegisterEnable : public Component
+{
+public:
+	static const int N = N;
+	void Connect(const Bundle<N>& data, const Wire& load, const Wire& enable);
+	void Update();
+
+	const Bundle<N>& Out() const { return out.Out(); }
+	const Bundle<N>& ReadReg() const { return reg.Out(); }
+
+private:
+	Register<N> reg;
+	MultiGate<AndGate, N> out;
+};
+
+template<unsigned int N>
+inline void RegisterEnable<N>::Connect(const Bundle<N>& data, const Wire & load, const Wire& enable)
+{
+	reg.Connect(data, load);
+	out.Connect(reg.Out(), Bundle<N>(enable));
+}
+
+template<unsigned int N>
+inline void RegisterEnable<N>::Update()
+{
+	reg.Update();
+	out.Update();
+}
+
+template <unsigned int N>
 class RegisterReset : public Component
 {
 public:

@@ -25,29 +25,39 @@ public:
 	void Step();
 	void PrintCycle();
 	int GetRegisterVal(int reg);
+	unsigned char GetCacheByte(int addr);
 	unsigned char GetMemoryByte(int addr);
-	int GetMemoryWord(int addr);
+	unsigned int GetCacheWord(int addr);
+	unsigned int GetMemoryWord(int addr);
 	std::string GetMemoryString(int addr);
 	int GetNextPCAddr();
 	
 private:
+	void SaveMemoryToDisk();
+
 	void PrintInstruction();
 	void PrintRegisters();
-	void PrintMemory();
-	void PrintOutputReg();
+	void PrintMemory(bool force=false);
 	void PrintDataForward();
+	void PrintStack();
 	void PrintTiming();
+	void PrintBus();
 	
 	CPU* pCPU;
+	bool bSingleStep;
 	bool bPrintInstruction;
 	bool bPrintRegisters;
 	bool bPrintMemory;
-	bool bPrintOutputReg;
 	bool bPrintDataForward;
 	bool bPrintTiming;
+	bool bPrintStack;
+	bool bPrintBus;
+
+	std::string cur_filename;
 
 	std::deque<int> mLastInstructions;
-	std::array<unsigned char, 64> mLastCycleMemory;
+	std::array<unsigned char, 16*1024> mLastCycleMemory;
+	unsigned int mLastStackPointer;
 
 	long long last_output_reg;
 

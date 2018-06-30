@@ -1,3 +1,4 @@
+; sqrt takes number in $a0 and returns in $v0
 sqrt:	li		$t5, 1
 		sub		$a0, $a0, $t5
 		bgtz	$a0, -8
@@ -5,24 +6,27 @@ sqrt:	li		$t5, 1
 		srl		$v0, $t5, 1
 		ret
 
-mul2:	clr		$v0
-		bgt		$a0, $a1, 12
-		move	$t5, $a0
-		move 	$a0, $a1
-		move 	$a1, $t5
-		addiu	$a1, $a1, -1
-		bgtz	$a1, -8
-		add		$v0, $v0, $a0
-		ret
-		
-mul3:	clr		$v0				; $v0 = 0
-		andi	$t5, $a1, 1		; if ($a1 & 1)
-		beqz	$t5, 8			; {
-		srl		$a1, $a1, 1		; 	$a1 <<= 1
-		add		$v0, $v0, $a0	; 	$v0 += $a0		
-		bgtz	$a1, -20		; }
-		sll		$a0, $a0, 1		; $a0 <<= 1
-		ret						; if ($a1 > 0) goto mul3st
+; div does $a0 / $a1
+; $v0: quotient
+; $v1: remainder 
+div:		clr		$v0
+			clr 	$v1
+			li		$t0, 1
+div_start:	blt		$t0, $a0, div_start
+			sll		$t0, $t0, 1
+div_loop:	srl		$t0, $t0, 1
+			beqz	$t0, div_end	
+			and		$t1, $a0, $t0		; $t1 = N(i)		
+			sll		$v1, $v1, 1			
+			beqz	$t1, div_no_add
+			nop
+			addiu	$v1, $v1, 1
+div_no_add:	blt		$v1, $a1, div_loop
+			nop
+			addu	$v0, $v0, $t0
+			b		div_loop
+			sub		$v1, $v1, $a1
+div_end:	ret		
 
 ; strcpy takes the src in $a0 and the dest in $a1
 strcpy:	lb		$t0, 0($a0)		
@@ -31,3 +35,84 @@ strcpy:	lb		$t0, 0($a0)
 		bgtz	$t0, strcpy
 		addi	$a1, $a1, 1
 		ret
+
+; getch blocks until a char is ready
+getch:			li		$t0, 0xffff0000U
+getch_check:	lb		$t1, 0($t0)
+				beqz	$t1, getch_check
+				nop
+				lb		$v0, 4($t0)
+				ret 
+
+; putch takes the char to output in $a0	
+putch:			li		$t0, 0xffff0008U
+putch_check:	lb		$t1, 0($t0)
+				beqz	$t1, putch_check
+				nop
+				sb		$a0, 4($t0)				
+				ret 
+								
+; newline just outputs a newline
+newline:		push	$ra
+				li		$a0, 0xa			;0xa is newline
+				call 	putch
+				pop		$ra
+				ret
+
+; printf takes the address of the string in $a0
+printf:			move 	$t2, $a0
+				push	$ra
+printf_loop:	lb		$a0, 0($t2)		
+				call 	putch
+				bgtz	$a0, printf_loop
+				addi	$t2, $t2, 1
+				pop 	$ra
+				ret
+
+; itoa takes an int in $a0, and the address to store the string in $a1
+itoa:			push	$ra
+				clr		$t4					; strlen counter
+				bge		$a0, $r0, itoa_pos
+				move	$t3, $a1			; str* to $t3
+				li		$t0, 45				; 45 is '-'
+				sb		$t0, 0($t3)			
+				addiu 	$t3, $t3, 1
+				subu	$a0, $r0, $a0		; negate
+itoa_pos:		li 		$a1, 10				; divisor
+				call	div					; now quotient in $v0, remainder in $v1
+				push	$v1
+				addiu	$t4, $t4, 1
+				bgtz	$v0, itoa_pos
+				move 	$a0, $v0
+itoa_write:		pop		$v1
+				addiu	$v1, $v1, 48				; convert to ascii
+				sb		$v1, 0($t3)
+				addiu	$t4, $t4, -1						
+				bgtz	$t4, itoa_write
+				addiu	$t3, $t3, 1
+				pop		$ra
+				sb		$r0, 0($t3)
+				ret
+
+;	print_int takes an integer in $a0 and prints it to stdout
+;	use a fixed buffer at 0x10003fa0
+print_int:		push	$ra
+				li		$a1, 0x10003fa0
+				call itoa
+				li		$a0, 0x10003fa0
+				call printf
+				pop		$ra
+				ret
+
+; readline takes the start of the buffer in $a0 and the length in $a1
+; it reads chars from stdin until the buffer is empty or a newline is encountered
+readline:		push 	$ra
+				li 		$t2, 0xD			; 0xD = \n
+readline_loop: 	call 	getch
+				beq		$v0, $t2, readline_end
+				sb		$v0, 0($a0)
+				bne		$a0, $a1, readline_loop
+				addiu 	$a0, $a0, 1
+readline_end:	sb		$r0, 0($a0)			; null-terminate
+				pop		$ra
+				ret

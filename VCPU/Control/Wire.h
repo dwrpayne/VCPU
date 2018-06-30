@@ -8,7 +8,7 @@ public:
 
 	inline void Set(bool new_state) { state = new_state; }
 	
-	bool On() const { return state; }
+	virtual bool On() const { return state; }
 
 	friend std::ostream& operator<<(std::ostream& os, const Wire& dt);
 
@@ -17,9 +17,9 @@ public:
 	static int WireCount() { return id_counter; }
 
 private:
-	static int id_counter;
-	int id;
-	bool state;
+	static unsigned int id_counter;
+	unsigned int id : 24;
+	bool state : 8;
 };
 
 std::ostream& operator<<(std::ostream& os, const Wire& dt);

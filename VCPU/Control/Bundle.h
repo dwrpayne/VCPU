@@ -16,12 +16,17 @@ public:
 	static const unsigned int N = N;
 	static const Bundle<N> OFF;
 	static const Bundle<N> ON;
-	static const Bundle<N> ERROR;
+	static const Bundle<N> ERR;
 
 	Bundle() {}
 	Bundle(std::initializer_list<const Wire*> list)
 	{
 		Connect(list);
+	}
+
+	Bundle(const Bundle<N>& other)
+	{
+		Connect(0, other);
 	}
 
 	// Splits a single wire into an n-way Bundle.
@@ -89,8 +94,13 @@ public:
 	}
 
 	template <unsigned int TO>
-	const Bundle<TO> Range(unsigned int start=0) const
+	const Bundle<TO> Range(int start=0) const
 	{
+		// Python-esque negative index means take the top '-start' bits
+		if (start < 0)
+		{
+			start = N + start;
+		}
 		int shiftby = -(int)start;
 		return Bundle<TO>(*this, shiftby);
 	}
@@ -191,6 +201,22 @@ public:
 		return (negative ? -1 : 1) * n - (int)negative;
 	}
 
+	unsigned long long UnsignedReadLong() const
+	{
+		long long val = ReadLong();
+		return val >= 0 ? val : pow2ll(N) + val;
+	}
+
+	void print(std::ostream& os) const
+	{
+		for (int i = N - 32; i >= 0; i -= 32)
+		{
+			const auto& b = Range<32>(i);
+			os << std::hex << std::setfill('0') << std::setw(8) << b.UnsignedRead() << " ";
+		}
+		os << std::setfill(' ');
+	}
+
 	template <unsigned int N>
 	friend std::ostream& operator<<(std::ostream& os, const Bundle<N>& b);
 
@@ -233,7 +259,7 @@ std::ostream& operator<<(std::ostream& os, const Bundle<N>& b)
 template<unsigned int N> const Bundle<N> Bundle<N>::OFF(Wire::OFF);
 template<unsigned int N> const Bundle<N> Bundle<N>::ON(Wire::ON);
 
-template<> const Bundle<8> Bundle<8>::ERROR(0xaaU);
-template<> const Bundle<16> Bundle<16>::ERROR(0xdeadU);
-template<> const Bundle<32> Bundle<32>::ERROR(0xdeadbeefU);
+template<> const Bundle<8> Bundle<8>::ERR(0xaaU);
+template<> const Bundle<16> Bundle<16>::ERR(0xdeadU);
+template<> const Bundle<32> Bundle<32>::ERR(0xdeadbeefU);
 

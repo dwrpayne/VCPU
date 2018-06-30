@@ -1,94 +1,94 @@
-addi 	$1, $0, 12
-addi 	$2, $0, 12
-beq		$1, $2, 12
-add		$4, $2, $0
-add		$4, $4, $2
-hlt
-add		$0, $0, $0
-bne		$1, $2, -12
-add		$0, $0, $0
-add		$0, $0, $0
-addi 	$2, $2, 12
-beq		$1, $2, -28
-add		$0, $0, $0
-add		$0, $0, $0
-bne		$1, $2, 12
-add		$0, $0, $0
-add		$0, $0, $0
-hlt
-addiu	$4, $0, -123
-addiu	$6, $0, 123
-blez	$4, 12
-add		$0, $0, $0
-add		$0, $0, $0
-hlt
-blez	$5, 12
-add		$0, $0, $0
-add		$0, $0, $0
-hlt
-add		$0, $0, $0
-blez	$6, -12
-add		$0, $0, $0
-add		$0, $0, $0
-bgtz	$4, -24
-add		$0, $0, $0
-add		$0, $0, $0
-bgtz	$5, -36
-add		$0, $0, $0
-add		$0, $0, $0
-bgtz	$6, 16
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-j		jump1
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-add		$0, $0, $0
-jump1: addiu	$8, $8, 1
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-jal		jump2
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-hlt
-hlt
-hlt
-hlt
-jump2: addiu	$8, $8, 1
-addiu	$8, $8, 1
-addiu	$10, $0, 300
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-addiu	$8, $8, 1
-jr		$10
-add		$0, $0, $0
-add		$0, $0, $0
-hlt
-addiu	$9, $9, 1
-addiu	$11, $0, 368
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-jalr	$11
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-hlt
-hlt
-hlt
-hlt
-hlt
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-addiu	$9, $9, 1
-hlt
+main:	addi 	$21, $0, 12
+		addi 	$2, $0, 12
+		beq		$21, $2, 12
+		add		$4, $2, $0
+		add		$4, $4, $2
+		hlt
+		add		$0, $0, $0
+		bne		$21, $2, -12
+		add		$0, $0, $0
+		add		$0, $0, $0
+		addi 	$2, $2, 12
+		beq		$21, $2, -28
+		add		$0, $0, $0
+		add		$0, $0, $0
+		bne		$21, $2, 12
+		add		$0, $0, $0
+		add		$0, $0, $0
+		hlt
+		addiu	$4, $0, -123
+		addiu	$6, $0, 123
+		blez	$4, 12
+		add		$0, $0, $0
+		add		$0, $0, $0
+		hlt
+		blez	$5, 12
+		add		$0, $0, $0
+		add		$0, $0, $0
+		hlt
+		add		$0, $0, $0
+		blez	$6, -12
+		add		$0, $0, $0
+		add		$0, $0, $0
+		bgtz	$4, -24
+		add		$0, $0, $0
+		add		$0, $0, $0
+		bgtz	$5, -36
+		add		$0, $0, $0
+		add		$0, $0, $0
+		bgtz	$6, 16
+		add		$0, $0, $0
+		add		$0, $0, $0
+		add		$0, $0, $0
+		add		$0, $0, $0
+		j		jump1
+		add		$0, $0, $0
+		add		$0, $0, $0
+		add		$0, $0, $0
+		add		$0, $0, $0
+		add		$0, $0, $0
+		add		$0, $0, $0
+jump1: 	addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		jal		jump2
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		hlt
+		hlt
+		hlt
+		hlt
+jump2: 	addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		addiu	$10, $0, 312
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		addiu	$8, $8, 1
+		jr		$10
+		add		$0, $0, $0
+		add		$0, $0, $0
+		hlt
+		addiu	$9, $9, 1
+		addiu	$11, $0, 380
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		jalr	$11
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		hlt
+		hlt
+		hlt
+		hlt
+		hlt
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		addiu	$9, $9, 1
+		hlt

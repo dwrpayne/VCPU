@@ -79,9 +79,6 @@ public:
 	{
 	public:
 		using WriteBufBundle::Bundle;
-		WriteReqBundle(const WriteBufBundle& other)
-			: WriteBufBundle(other)
-		{}
 		WriteReqBundle(const AddrBundle& addr, const DataBundle& data)
 			: WriteBufBundle()
 		{
@@ -95,10 +92,11 @@ public:
 
 	void Connect(const AddrBundle & readaddr, const AddrBundle & writeaddr, const DataBundle & data, const Wire& writereq, const Wire& readreq);
 	void Update();
-	const WriteReqBundle OutWrite() { return writeOut.Out(); }
+	const WriteReqBundle& OutWrite() { return static_cast<const WriteReqBundle&>(writeOut.Out()); }
 	const AddrBundle& OutRead() { return readOut.Out(); }
 	const Wire& PoppedWrite() { return writebuffer.Popped(); }
 	const Wire& PoppedRead() { return readbuffer.Popped(); }
+	const Wire& PoppedRequest() { return popped.Out(); }
 	
 	const Wire& WriteFull() { return writebuffer.Full(); }
 	const Wire& WritePending() { return writebuffer.NonEmpty(); }
@@ -107,6 +105,8 @@ public:
 private:
 	PulsedPopBuffer<BUF_WIDTH, Nreg, POP_EVERY> writebuffer;
 	PulsedPopBuffer<ADDR_LEN, 1, POP_EVERY> readbuffer;
+
+	OrGate popped;
 
 	MultiGate<AndGate,BUF_WIDTH> writeOut;
 	MultiGate<AndGate, ADDR_LEN> readOut;
@@ -117,6 +117,8 @@ inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Connect(const AddrBundl
 {	
 	writebuffer.Connect(WriteReqBundle(writeaddr, data), writereq, readbuffer.Empty());
 	readbuffer.Connect(readaddr, readreq, readbuffer.NonEmpty());
+
+	popped.Connect(writebuffer.Popped(), readbuffer.Popped());
 	
 	writeOut.Connect(writebuffer.Out(), WriteBufBundle(writebuffer.Popped()));
 	readOut.Connect(readbuffer.Out(), AddrBundle(readbuffer.Popped()));
@@ -127,6 +129,8 @@ inline void RequestBuffer<N, ADDR_LEN, Nreg, POP_EVERY>::Update()
 { 
 	writebuffer.Update();
 	readbuffer.Update();
+
+	popped.Update();
 		
 	writeOut.Update();
 	readOut.Update();
