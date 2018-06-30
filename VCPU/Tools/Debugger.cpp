@@ -151,7 +151,6 @@ int Debugger::GetRegisterVal(int reg)
 	return pCPU->Registers().registers[reg].Out().Read();
 }
 
-#pragma optimize( "", off )  
 unsigned char Debugger::GetCacheByte(int addr)
 {
 	auto& cache = pCPU->GetMainCache();
@@ -200,7 +199,6 @@ unsigned int Debugger::GetMemoryWord(int addr)
 	}
 	return word;
 }
-#pragma optimize( "", on )  
 
 std::string Debugger::GetMemoryString(int addr)
 {

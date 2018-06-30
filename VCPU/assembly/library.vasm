@@ -95,11 +95,11 @@ itoa_write:		pop		$v1
 				ret
 
 ;	print_int takes an integer in $a0 and prints it to stdout
-;	use a fixed buffer at 0x10003ff0
+;	use a fixed buffer at 0x10003fa0
 print_int:		push	$ra
-				li		$a1, 0x10003ff0
+				li		$a1, 0x10003fa0
 				call itoa
-				li		$a0, 0x10003ff0
+				li		$a0, 0x10003fa0
 				call printf
 				pop		$ra
 				ret

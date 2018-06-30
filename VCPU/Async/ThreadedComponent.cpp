@@ -77,6 +77,7 @@ void ThreadedAsyncComponent::ThreadedUpdate()
 		auto t1 = std::chrono::high_resolution_clock::now();
 		Update();
 		auto t2 = std::chrono::high_resolution_clock::now();
+		mElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 		if (!mUpdatingUntilExit)
 		{
 			{
