@@ -33,6 +33,8 @@ public:
 	int GetNextPCAddr();
 	
 private:
+	void SaveMemoryToDisk();
+
 	void PrintInstruction();
 	void PrintRegisters();
 	void PrintMemory(bool force=false);
@@ -50,6 +52,8 @@ private:
 	bool bPrintTiming;
 	bool bPrintStack;
 	bool bPrintBus;
+
+	std::string cur_filename;
 
 	std::deque<int> mLastInstructions;
 	std::array<unsigned char, 16*1024> mLastCycleMemory;

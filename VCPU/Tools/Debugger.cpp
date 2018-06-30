@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <sstream>
 #include <bitset>
@@ -11,6 +12,7 @@
 
 
 Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
+	: cur_filename(source_filename)
 {
 	pCPU = new CPU();
 	bSingleStep = verbosity >= NORMAL;
@@ -50,7 +52,7 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Halt())
 		{
-			PrintMemory(true);
+			SaveMemoryToDisk();
 			break;
 		}
 		cycles--;
@@ -214,6 +216,23 @@ std::string Debugger::GetMemoryString(int addr)
 int Debugger::GetNextPCAddr()
 {
 	return pCPU->PC().UnsignedRead();
+}
+
+void Debugger::SaveMemoryToDisk()
+{
+	for (int i = 0; i < 1000; i++)
+	{
+		std::string filename = cur_filename + std::to_string(i) + ".bin";
+		std::ifstream ifs(filename);
+		if (ifs.is_open()) continue;
+
+		std::ofstream of(filename);
+		for (int i = 500; i < CPU::MainMemory::BYTES; i++)
+		{
+			of << GetCacheByte(i);
+		}
+		break;
+	}
 }
 
 void Debugger::PrintInstruction()

@@ -1,6 +1,6 @@
 main:	li 		$s0, 5				; number of lines to do.
 		li		$s1, 0x10000000		; base address
-		li		$s2, 64				; max line length
+		li		$s2, 0x80			; max line length
 loop:	move	$a0, $s1
 		move	$a1, $s2			
 		call 	readline			; read a line
