@@ -34,6 +34,7 @@ public:
 #endif
 
 	const Wire& WriteFailed() const { return writeFailed.Out(); }
+	const Wire& WaitingForRead() const { return waitingForRead.Q(); }
 	const Wire& ReadSuccess() const { return receivedReadAck.Out(); }
 	const Wire& Busy() const { return busy.Out(); }
 
@@ -206,12 +207,32 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 	writeFailed.Update();
 	busy.Update();
 
+
+#if DEBUG
+	if (haveBusOwnership.Q().On())
+	{
+		std::stringstream ss;
+		ss << "Cache " << std::this_thread::get_id();
+		ss << " has the bus for a " << (readRequestBuf.Out().On() ? "read" : (writeRequestBuf.Out().On() ? "write" : "hold"));
+		ss << " at " << std::hex << addrRequestBuf.Out().UnsignedRead() << std::endl;
+		std::cout << ss.str();
+	}
+	else if (busRequestBuf.Out().On())
+	{
+		std::stringstream ss;
+		ss << "Cache " << std::this_thread::get_id();
+		ss << " just released the bus. Request off. " << std::endl;
+		std::cout << ss.str();
+	}
+#endif
+
 	addrMux.Update();
 	addrRequestBuf.Update();
 	dataRequestBuf.Update();
 	readRequestBuf.Update();
 	writeRequestBuf.Update();
 	busRequestBuf.Update();
+
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>

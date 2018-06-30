@@ -1443,10 +1443,19 @@ bool TestCircularBuffer1(Verbosity verbosity)
 
 	test.Connect(reg, read, write);
 
+	write.Set(true);
 	reg.Write(123456);
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, false, test.Full().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+
+	read.Set(true);
+	write.Set(false);
+	reg.Write(123456);
+	test.Update();
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, true, test.Full().On(), verbosity);
+
 
 	write.Set(true);
 	test.Update();

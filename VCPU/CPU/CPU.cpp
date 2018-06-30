@@ -11,6 +11,8 @@
 #include "BranchControl.h"
 #include "ByteExtractor.h"
 #include "SystemBus.h"
+#include "Cache.h"
+#include "Memory.h"
 
 class CPU::Stage1 : public ThreadedAsyncComponent
 {

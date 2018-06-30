@@ -131,52 +131,44 @@ private:
 	void DisconnectFromBus();
 	SystemBus * pSystemBus;
 
-	//ReqBuffer buffer;
-
+	OrGate readOrWrite;
 	AndGateN<16> unCacheableAddr; // Replace this with a lookup table of some kind, or a tag!
 	Inverter cacheableAddr;
 	AndGate uncachedWrite;
 	AndGate uncachedRead;
-	OrGate cachedReadOrWrite;
-	Matcher<ADDR_BITS> addrReadMatcher;
-	AndGate gotCacheableDataFromMemory;
-	AndGate gotResponseFromMemory;
-	Inverter gotResponseFromMemoryInv;
-	AndGate cachelinewrite;
-
-	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
-	Register<WORD_SIZE> uncachedBuffer;
-	RegisterEnable<WORD_SIZE> uncachedWriteBuffer;
-
-	Decoder<NUM_CACHE_LINES> indexDecoder;
+	AndGate receivedReadAck;
 
 	CacheLineMasker<CACHE_LINE_BITS> lineWriteMasker;
+	AndGate cachelinewrite;
+	Decoder<NUM_CACHE_LINES> indexDecoder;
+	std::array<CacheLine<CACHE_LINE_BITS, TAG_BITS>, NUM_CACHE_LINES> cachelines;
+
+	Inverter notReadSuccess;
+	AndGate pendingUncachedRead;
+	Register<WORD_SIZE> uncachedBuffer;
+
+	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	
 	Multiplexer<NUM_CACHE_LINES> cacheHitMux;
 	Multiplexer<NUM_CACHE_LINES> cacheDirtyMux;
-	AndGate evictedDirty;
-	Inverter notEvictedDirty;
 	Inverter cacheMissInternal;
-	OrGate readOrWrite;
 	AndGate cacheMiss;
 	AndGate cacheableAddrCacheMiss;
-	AndGate writeBufferFull;
-	OrGate needStall;
-	Inverter needStallInv;
-	AndGateN<3> cachedReadReqOkay;
-	OrGate shouldSendReadReq;
+	AndGate evictedDirty;
+	Inverter notEvictedDirty;
 	OrGate shouldSendWriteReq;
+	OrGate shouldSendReadReq;
 
 	MuxBundle<CACHE_LINE_BITS, NUM_CACHE_LINES> outCacheLineMux;
 	MuxBundle<CACHE_LINE_BITS, 2> outDataToBusMux;
 	MuxBundle<WORD_SIZE, CACHE_WORDS> outCacheDataMux;
 	MuxBundle<WORD_SIZE, 2> outDataMux;
-
-	MuxBundle<TAG_BITS, NUM_CACHE_LINES> lineTagMux;
 	MuxBundle<ADDR_BITS, 2> memAddrMux;
 
 	BusRequestBuffer<CACHE_LINE_BITS, ADDR_BITS, 8> busBuffer;
 
+	OrGate needStall;
+	Inverter needStallInv;
 	int cycles;
 
 #ifdef DEBUG
@@ -204,15 +196,19 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	pSystemBus = &bus;	
 	readOrWrite.Connect(read, write);
 
+	// Determine if the address is cacheable
 	unCacheableAddr.Connect(addr.Range<16>(16));
 	cacheableAddr.Connect(unCacheableAddr.Out());
 	uncachedWrite.Connect(unCacheableAddr.Out(), write);
 	uncachedRead.Connect(unCacheableAddr.Out(), read);
+
+	// Get the read data from the bus if we're waiting 
+	receivedReadAck.Connect(busBuffer.WaitingForRead(), pSystemBus->OutCtrl().Ack());
 			
 	// Mask in the write word with the line we got from memory
 	// This produces either the buffer read line with "data", if write is true, and a 32-bit shifted mask
 	// Or just the buffer read line, if write is false, and a mask of all ones.
-	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, busBuffer.OutRead(), bytewrite, halfwrite, write, busBuffer.ReadSuccess());
+	lineWriteMasker.Connect(address.ByteIndex(), address.WordOffsetInLine(), data, pSystemBus->OutData(), bytewrite, halfwrite, write, receivedReadAck.Out());
 
 	// Temp Bundles for the cache line array
 	std::array<Bundle<CACHE_LINE_BITS>, NUM_CACHE_LINES> cacheLineDataOuts;
@@ -220,19 +216,21 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	Bundle<NUM_CACHE_LINES> cacheHitCollector;
 	Bundle<NUM_CACHE_LINES> cacheDirtyCollector;
 	
-	cachelinewrite.Connect(cacheableAddr.Out(), busBuffer.ReadSuccess());
+	cachelinewrite.Connect(cacheableAddr.Out(), receivedReadAck.Out());
 	CacheIndexBundle index = address.CacheLineIndex();
 	indexDecoder.Connect(index, cachelinewrite.Out());
 
 	// Cache Lines
 	for (int i = 0; i < NUM_CACHE_LINES; ++i)
 	{
-		cachelines[i].Connect(address.Tag(),  lineWriteMasker.LineMask(), lineWriteMasker.Line(), indexDecoder.Out()[i], write);
+		cachelines[i].Connect(address.Tag(), lineWriteMasker.LineMask(), lineWriteMasker.Line(), indexDecoder.Out()[i], write);
 		cacheLineDataOuts[i] = cachelines[i].OutLine();
 		cacheLineTagOuts[i] = cachelines[i].Tag();
 		cacheHitCollector.Connect(i, cachelines[i].CacheHit());
 		cacheDirtyCollector.Connect(i, cachelines[i].Dirty());
 	}
+	notReadSuccess.Connect(receivedReadAck.Out());
+	pendingUncachedRead.Connect(uncachedRead.Out(), notReadSuccess.Out());
 	uncachedBuffer.Connect(busBuffer.OutRead().Range<32>(), uncachedRead.Out());
 
 	// Evicted tag collector and addr calculation
@@ -246,14 +244,10 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	cacheMissInternal.Connect(cacheHitMux.Out());
 	cacheMiss.Connect(cacheMissInternal.Out(), readOrWrite.Out());
 	cacheableAddrCacheMiss.Connect(cacheMiss.Out(), cacheableAddr.Out());
-
-	// We need to know when we have finished writing back the evicted dirty line. If we had a response from memory by now, the write succeeded.
-	// This logic will need to change when I have a write buffer.
 	evictedDirty.Connect(cacheableAddrCacheMiss.Out(), cacheDirtyMux.Out());
 	notEvictedDirty.Connect(evictedDirty.Out());
-
 	shouldSendWriteReq.Connect(evictedDirty.Out(), uncachedWrite.Out());
-	shouldSendReadReq.Connect(cacheableAddrCacheMiss.Out(), uncachedRead.Out());
+	shouldSendReadReq.Connect(cacheableAddrCacheMiss.Out(), pendingUncachedRead.Out());
 
 	// Output 
 	outCacheLineMux.Connect(cacheLineDataOuts, index);
@@ -269,6 +263,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 
 	busBuffer.Connect(bus, outDataToBusMux.Out(), memAddrMux.Out(), addr, shouldSendWriteReq.Out(), shouldSendReadReq.Out());
 	
+	// Stall the whole CPU pipeline if we have to.
 	needStall.Connect(busBuffer.WriteFailed(), shouldSendReadReq.Out());
 	needStallInv.Connect(needStall.Out());
 }
@@ -276,12 +271,23 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 {
+#if DEBUG
+	if (needStall.Out().On())
+	{
+		std::stringstream ss;
+		ss << "Cache " << std::this_thread::get_id();
+		ss << " is still stalling from the previous request (write buffered could mean it's a while)" << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	readOrWrite.Update();
 
 	unCacheableAddr.Update();
 	cacheableAddr.Update();
 	uncachedWrite.Update();
 	uncachedRead.Update();
+
+	receivedReadAck.Update();
 
 	lineWriteMasker.Update();
 	cachelinewrite.Update();
@@ -294,6 +300,8 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	{
 		line.Update();
 	}
+	notReadSuccess.Update();
+	pendingUncachedRead.Update();
 	uncachedBuffer.Update();
 	cacheHitMux.Update();
 	cacheDirtyMux.Update();
@@ -318,11 +326,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	needStall.Update();
 	needStallInv.Update();
 
-	if (needStall.Out().On())
-	{
-		std::cout << std::this_thread::get_id() << " requesting stall" << std::endl;
-	}
-	
 	cycles++;
 }
 

@@ -38,9 +38,10 @@ public:
 private:
 	void DisconnectFromBus();
 	SystemBus * pSystemBus;
-	AndGate incomingRequest;
 	AndGate servicedRead;
 	NorGateN<4> usercodeBusAddr;
+	Inverter notAckOnBus;
+	AndGateN<3> incomingRequest;
 	NorGate userdataBusAddr;
 
 	Decoder<NUM_LINES> addrDecoder;
@@ -82,13 +83,14 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 
 	usercodeBusAddr.Connect(pSystemBus->OutAddr().Range<4>(-4));
 	userdataBusAddr.Connect(usercodeBusAddr.Out(), pSystemBus->OutAddr().Range<1>(-1));
+	notAckOnBus.Connect(pSystemBus->OutCtrl().Ack());
 	if (mIsMainMemory)
 	{
-		incomingRequest.Connect(userdataBusAddr.Out(), pSystemBus->OutCtrl().Req());
+		incomingRequest.Connect({ &userdataBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
 	}
 	else
 	{
-		incomingRequest.Connect(usercodeBusAddr.Out(), pSystemBus->OutCtrl().Req());
+		incomingRequest.Connect({ &usercodeBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
 	}
 	servicedRead.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Read());
 
@@ -117,7 +119,18 @@ inline void Memory<N, BYTES>::Update()
 	cycle++;
 	usercodeBusAddr.Update();
 	userdataBusAddr.Update();
+	notAckOnBus.Update();
 	incomingRequest.Update();
+#if DEBUG
+	if (incomingRequest.Out().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " starting to service a " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
+		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 	servicedRead.Update();
 	addrDecoder.Update();
 	for (auto& reg : cachelines)
@@ -126,20 +139,25 @@ inline void Memory<N, BYTES>::Update()
 	}
 	outMux.Update();
 	outData.Update();
-#if DEBUG ||1
+#if DEBUG
 	if (incomingRequest.Out().On())
 	{
 		std::stringstream ss;
-		ss << (mIsMainMemory ? "Main Mem " : "Ins Mem ");
-		ss << "servicing a " << (servicedRead.Out().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
-		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
-		ss << "Returned data ";
-		pSystemBus->OutData().print(ss);
-		ss << std::endl;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " just finished memory " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
+		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << ". Ack on!" << std::endl;
+		std::cout << ss.str();
+	}
+	else if (outServicedRequest.Q().On())
+	{
+		std::stringstream ss;
+		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
+		ss << " finished servicing a " << (servicedRead.Out().On() ? "read" : "write") <<  ". Ack off: " << std::endl;
 		std::cout << ss.str();
 	}
 #endif
 	outServicedRequest.Update();
+
 }
 
 template<unsigned int N, unsigned int BYTES>

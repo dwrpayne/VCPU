@@ -25,7 +25,7 @@ public:
 		lastInMatcher.Connect(lastIn.Out(), in);
 		lastIn.Connect(in, Wire::ON);
 		onRise.Connect(on);
-		eitherChange.Connect(lastInMatcher.Out(), onRise.Rise());
+		eitherChange.Connect(lastInMatcher.NoMatch(), onRise.Rise());
 		onAndChange.Connect(eitherChange.Out(), on);
 	}
 	void Update()
@@ -59,7 +59,7 @@ public:
 		lastInMatcher2.Connect(lastIn2.Out(), in2);
 		lastIn2.Connect(in2, Wire::ON);
 		onRise.Connect(on);
-		eitherChange.Connect({ &lastInMatcher1.Out(), &lastInMatcher2.Out(), &onRise.Rise() });
+		eitherChange.Connect({ &lastInMatcher1.NoMatch(), &lastInMatcher2.NoMatch(), &onRise.Rise() });
 		onAndChange.Connect(eitherChange.Out(), on);
 	}
 	void Update()

@@ -355,12 +355,5 @@ void Debugger::PrintTiming()
 
 void Debugger::PrintBus()
 {
-	std::cout << "--- Addr | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (first 100 bits) ----------" << std::endl;
-	std::cout << std::hex << std::left << std::setw(8) << pCPU->GetSystemBus().OutAddr().UnsignedRead() << "    |    ";
-	std::cout << std::bitset<SystemBus::Nctrl>(pCPU->GetSystemBus().OutCtrl().UnsignedRead()) << "     |    ";
-	for (int i = 0; i < 100; i++)
-	{
-		std::cout << pCPU->GetSystemBus().OutData()[i];
-	}
-	std::cout << std::dec << std::endl;
+	pCPU->GetSystemBus().PrintBus();
 }

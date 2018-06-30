@@ -294,7 +294,6 @@ bool TestBusWriteBuffer(Verbosity verbosity)
 		{
 			data.Write(i);
 			test.Update();
-			std::cout << std::endl << "Wrote " << (unsigned char)i << std::endl;
 			while (test.Full().On())
 			{
 				test.Update();
@@ -468,6 +467,7 @@ bool TestCache(Verbosity verbosity)
 {
 	bool success = true;
 	int i = 0;
+	SystemBus bus;
 
 	auto* pCache = new Cache<256, 256>();
 	auto& test = *pCache;
@@ -478,7 +478,6 @@ bool TestCache(Verbosity verbosity)
 	Wire writebyte(false);
 	Wire writehalf(false);
 	MagicBundle<32> addr;
-	SystemBus bus;
 	test.Connect(addr, data, read, write, writebyte, writehalf, bus);
 
 	for (int a = 0; a < 8; a++)
@@ -579,10 +578,10 @@ bool TestKeyboardController(Verbosity verbosity)
 	static const unsigned int DATA_REG = 0xffff0004U;
 	static const unsigned int CONTROL_REG = 0xffff0000U;
 
-	KeyboardController test;
 	MagicBundle<256> data;
 	MagicBundle<32> addr;
 	SystemBusTest bus(data, addr);
+	KeyboardController test;
 	test.Connect(bus);
 
 	for (int i = 0; i < 10; i++)
@@ -593,7 +592,7 @@ bool TestKeyboardController(Verbosity verbosity)
 		addr.Write(DATA_REG);
 		char key = bus.SendReadAndWaitForAck(test).Range<8>().UnsignedRead();
 
-		std::cout << "Got a " << key << std::endl;
+		std::cout << "Got " << key << std::endl;
 	}
 
 	return success;
@@ -607,10 +606,10 @@ bool TestTerminalController(Verbosity verbosity)
 	static const unsigned int DATA_REG = 0xffff000CU;
 	static const unsigned int CONTROL_REG = 0xffff0008U;
 
-	TerminalController test;
 	MagicBundle<256> data;
 	MagicBundle<32> addr;
 	SystemBusTest bus(data, addr);
+	TerminalController test;
 	test.Connect(bus);
 
 	for (int i = 0; i < 26; i++)
@@ -820,18 +819,18 @@ bool RunCPUTests()
 	//RUN_TEST(TestBusWriteBuffer, FAIL_ONLY);
 	RUN_TEST(TestBusRequestBuffer, FAIL_ONLY);
 	//RUN_TEST(TestKeyboardController, FAIL_ONLY);
-	//RUN_TEST(TestTerminalController, FAIL_ONLY);
+	RUN_TEST(TestTerminalController, FAIL_ONLY);
 	RUN_TEST(TestOpcodeDecoder, FAIL_ONLY);
 	RUN_TEST(TestByteMask, FAIL_ONLY);
 	RUN_TEST(TestCacheLineMasker, FAIL_ONLY);
 	//RUN_TEST(TestCache, FAIL_ONLY);
-	//RUN_TEST2(TestCPUPutch, FAIL_ONLY, default_verb);
-	//RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
-	//RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPutch, FAIL_ONLY, Debugger::VERBOSE);
+	RUN_TEST2(TestCPURot13, FAIL_ONLY, default_verb);
+	RUN_TEST2(TestCPUPrintf, FAIL_ONLY, default_verb);
 
 	for (int test = 0; test < NUM_TIMES_TO_TEST; test++)
 	{
-		RUN_TEST2(TestCPU, FAIL_ONLY, Debugger::NORMAL);
+		RUN_TEST2(TestCPU, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUPipelineHazards, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUBranch, FAIL_ONLY, default_verb);
 		RUN_TEST2(TestCPUMemory, FAIL_ONLY, default_verb);
