@@ -16,7 +16,6 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintInstruction = verbosity >= NORMAL;
 	bPrintRegisters = verbosity >= NORMAL;
 	bPrintMemory = verbosity >= MEMORY;
-	bPrintOutputReg = verbosity >= MINIMAL;
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
 	bPrintBus = verbosity >= NORMAL; 
@@ -122,11 +121,6 @@ void Debugger::PrintCycle()
 		if (bPrintRegisters)
 		{
 			PrintRegisters();
-		}
-
-		if (bPrintOutputReg)
-		{
-			PrintOutputReg();
 		}
 
 		if (bPrintMemory)
@@ -263,16 +257,6 @@ void Debugger::PrintMemory()
 			}
 		}
 		std::cout << std::dec << std::setfill(' ') << std::endl;
-	}
-}
-
-void Debugger::PrintOutputReg()
-{
-	long long output = GetRegisterVal(28);
-	if (output != last_output_reg)
-	{
-		last_output_reg = output;
-		std::cout << "OUTPUT: " << output << " at cycle " << pCPU->cycles << std::endl;
 	}
 }
 

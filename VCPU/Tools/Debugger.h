@@ -35,7 +35,6 @@ private:
 	void PrintInstruction();
 	void PrintRegisters();
 	void PrintMemory();
-	void PrintOutputReg();
 	void PrintDataForward();
 	void PrintTiming();
 	void PrintBus();
@@ -45,7 +44,6 @@ private:
 	bool bPrintInstruction;
 	bool bPrintRegisters;
 	bool bPrintMemory;
-	bool bPrintOutputReg;
 	bool bPrintDataForward;
 	bool bPrintTiming;
 	bool bPrintBus;
