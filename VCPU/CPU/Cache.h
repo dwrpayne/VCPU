@@ -171,7 +171,7 @@ private:
 	Inverter needStallInv;
 	int cycles;
 
-#if DEBUG
+#if DEBUG || 1
 	CacheAddrBundle DEBUG_addr;
 #endif
 
@@ -189,7 +189,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
-#if DEBUG
+#if DEBUG || 1
 	DEBUG_addr = address;
 #endif
 
@@ -292,6 +292,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	lineWriteDecoder.Update();
 	wordWriteDecoder.Update();
 
+	if (cachelinewrite.Out().On())
+	{
+		std::cout << "Writing cache line at addr " << DEBUG_addr.UnsignedRead() << std::endl;
+	}
+
 	// Must update the line tag mux *before* the registers, as their tags get stomped on write
 	lineTagMux.Update();
 
@@ -318,6 +323,15 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	outCacheDataMux.Update();
 	outDataMux.Update();
 	memAddrMux.Update();
+
+	if (evictedDirty.Out().On())
+	{
+		std::stringstream ss;
+		ss << "Evicted from 0x" << std::hex << std::setw(8) << std::setfill('0') << memAddrMux.Out().UnsignedRead() << std::dec << std::setfill(' ') << ", data ";
+		outDataToBusMux.Out().print(ss);
+		ss << std::endl;
+		std::cout << ss.str();
+	}
 
 	busBuffer.Update();
 	needStall.Update();

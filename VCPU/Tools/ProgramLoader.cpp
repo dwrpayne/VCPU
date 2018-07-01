@@ -1,6 +1,7 @@
 #include "ProgramLoader.h"
 #include "Program.h"
 #include "CPU/CPU.h" 
+#include "CPU/Addresses.h" 
 
 ProgramLoader::ProgramLoader(CPU & cpu)
 	: systembus(cpu.GetSystemBus())
@@ -36,7 +37,7 @@ void ProgramLoader::Load(const Program * program)
 void ProgramLoader::LoadInstructions(const Program * program)
 {
 	int num_ins = program->Instructions().size();
-	assert(num_ins < (memory.BYTES / 4));
+	assert(num_ins < (USER_TEXT_START - USER_CODE_START) / 4);
 	write.Set(true);
 	for (int i = 0; i < num_ins; i += 8)
 	{
@@ -78,10 +79,10 @@ void ProgramLoader::LoadText(const Program * program)
 		addrBundle.Write(curAddr);
 		for (int j = 0; j < memory.CACHELINE_BYTES && (i + j < num_bytes); j+=4)
 		{
-			unsigned char byte1 = program->TextBytes()[i + j];
-			unsigned char byte2 = program->TextBytes()[i + j + 1];
-			unsigned char byte3 = program->TextBytes()[i + j + 2];
-			unsigned char byte4 = program->TextBytes()[i + j + 3];
+			unsigned char byte1 = textbytes[i + j];
+			unsigned char byte2 = textbytes[i + j + 1];
+			unsigned char byte3 = textbytes[i + j + 2];
+			unsigned char byte4 = textbytes[i + j + 3];
 			unsigned int byte = (byte1) | (byte2 << 8) | (byte3 << 16) | (byte4 << 24);
 
 			wordBundles[j/4].Write(byte);

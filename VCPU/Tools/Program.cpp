@@ -21,7 +21,7 @@ unsigned int Program::AddSourceLine(const std::string& label, std::string source
 
 	if (label.size() > 0)
 	{
-		AddLabel(label, codeline.mFirstInstructionNum);
+		AddLabel(label, codeline.mFirstInstructionNum * 4);
 	}
 
 	return line_num;
@@ -117,14 +117,14 @@ void Program::ReplaceLabel(const std::string& label, unsigned int addr)
 		if (label_pos != std::string::npos)
 		{
 			auto first_alpha = mInstructions[i].mText.find_first_not_of(" \t\r\n");
-			int mem_addr = addr * 4;
+			int mem_addr = addr;
 			if (mInstructions[i].mText[first_alpha] == 'b')
 			{
 				mem_addr -= 4 * (i + 1);
 			}
 			else
 			{
-				assert(mInstructions[i].mText[first_alpha] == 'j' && "Labels must be on J or B instructions");
+				//assert((mInstructions[i].mText[first_alpha] == 'j' || mInstructions[i].mText[first_alpha] == 'l') && "Labels must be on J or B or L instructions");
 			}
 			mInstructions[i].mText.replace(label_pos, label.size(), std::to_string(mem_addr));
 		}

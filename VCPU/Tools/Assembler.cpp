@@ -48,6 +48,7 @@ void Assembler::IncludeLib(const std::string & filename)
 const Program* Assembler::Assemble(const std::string& filename)
 {
 	ParseFile(filename, pProgram);
+	mCurSection = Section::CODE;
 	for (auto inc : mIncludeFiles)
 	{
 		ParseFile(inc, pProgram);
@@ -192,6 +193,7 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("^\\s*bge\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*ble\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*beqz\\s+(\\$.+), (\\S+)"),			"beq	$1, $$zero, $2");
+	line = std::regex_replace(line, std::regex("^\\s*bnez\\s+(\\$.+), (\\S+)"),			"bne	$1, $$zero, $2");
 	
 	// Pseudo-Instructions
 	// Logic and Data

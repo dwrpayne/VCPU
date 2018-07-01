@@ -192,6 +192,15 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 	writeBuffer.Update();
 	readBuffer.Update();
 
+	if (writeBuffer.DidPop().On())
+	{
+		std::stringstream ss;
+		ss << "Write buffer popped ";
+		writeBuffer.Out().print(ss);
+		ss << std::endl;
+		std::cout << ss.str();
+	}
+
 	havePendingReadRequest.Update();
 	havePendingRequests.Update();
 	shouldOutputOnBus.Update();

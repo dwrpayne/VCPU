@@ -54,13 +54,11 @@ public:
 
 	void PrintBus(bool lock=true)
 	{
-#if DEBUG
 		std::cout << (lock ? "L: " : "U: ") << " Addr | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (by word) ----------" << std::endl;
 		std::cout << std::hex << std::left << std::setw(8) << OutAddr().UnsignedRead() << "    |    ";
 		std::cout << std::bitset<Nctrl>(OutCtrl().UnsignedRead()) << "     |    ";
 		OutData().print(std::cout);
 		std::cout << std::dec << std::endl;
-#endif
 	}
 
 	// This is a hack, need a bus arbitrator.
