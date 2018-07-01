@@ -30,19 +30,15 @@ cell_loop:	lb		$t0, 0($s5)
 done_nb_c:	move	$s5, $s0				; $s5 is the current cell addr.				
 next_loop:	lb		$v0, 256($s5)			; $v0 is the neighbor count
 			sb		$r0, 256($s5)			; clear working board
-			beq		$v0, $t6, next_set   	; =3? alive for sure
-			move 	$t0, $s3				; set alive, 	
-			bne 	$v0, $t7, next_set		; !=2? dead for sure
-			move 	$t0, $s2				; set dead, 
-			bne		$s5, $s1, next_loop
 			addiu	$s5, $s5, 1
-			b		next_done
-			nop
-next_set:	sb		$t0, 0($s5)
-			bne		$s5, $s1, next_loop
-			addiu	$s5, $s5, 1			
-next_done:	b		cycle			
-			addiu	$s7, $s7, 1
+			beq		$v0, $t7, next_loop		; if 2 neighbors, next loop. no change.
+			beq		$s5, $s1, next_done		; if done, go to end
+			beq		$v0, $t6, next_loop   	; =3? alive for sure
+			sb		$s3, -1($s5)
+			b		next_loop				; definitely dead now.
+			sb		$s2, -1($s5)
+next_done:	b		cycle						
+			addiu	$s7, $s7, 1					
 			nop
 			nop
 
