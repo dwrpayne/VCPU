@@ -18,7 +18,7 @@ void Test()
 
 void RunCPU(std::string filename)
 {
-	Debugger debugger(filename, Debugger::NORMAL);
+	Debugger debugger(filename, Debugger::MINIMAL);
 	debugger.Start();
 }
 

@@ -12,15 +12,18 @@ main:		move 	$s0, $gp		; board pos start.
 			clr		$s7				; generation count in $s7
 			ori		$a0, $r0, boardstart
 			call 	copy_board
-			brk
 
 ; board is filled, start a cycle
-cycle:		call	print_b
+			
+cycle:		brk
+			call	print_b
 			move	$s5, $s0		; $s5 is the current cell.
 cell_loop:	move	$a0, $s5
 			call	count_nb
 			move	$a0, $s5
+			li		$t0, 0x10000200
 			move 	$a1, $v0
+			sb		$v0, 0($t0)
 			call	next_state
 			addu	$t0, $s5, $s6	; $t0 is the parallel addr
 			addiu	$s5, $s5, 1
@@ -88,29 +91,38 @@ next_done:	ret
 
 ; count the neighbors of the cell in $a0, ret in $v0
 count_nb:	clr		$v0					; $v0 holds neighbor count
-nb1:		lb		$t1, -16($a0)		; $t0 holds neighbor addr, $t1 holds state
-			bne		$t1, $s3, nb2
+			andi	$t8, $a0, 0xf
+			bnez	$t8, nb_notl
 			nop
-			addiu	$v0, $v0, 1
-nb2:		andi	$t0, $a0, 0xf
-			beqz	$t0, nb3
-			lb		$t1, -1($a0)
-			bne		$t1, $s3, nb3
+			lb		$t1, -17($a0)		; left and up
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+			lb		$t1, -1($a0)		; left
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+			lb		$t1, 15($a0)		; left and down
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+nb_notl:	addiu	$t8, $a0, 1
+			andi	$t8, $t8, 0xf
+			bnez	$t8, nb_notr
 			nop
-			addiu	$v0, $v0, 1
-nb3:		addiu	$t0, $a0, 1
-			andi	$t0, $t0, 0xf			
-			beqz	$t0, nb4
-			lb		$t1, 1($a0)
-			bne		$t1, $s3, nb4
-			nop
-			addiu	$v0, $v0, 1
-nb4:		lb		$t1, 16($a0)		; $t0 holds neighbor addr, $t1 holds state
-			bne		$t1, $s3, nb_done
-			nop
-			addiu	$v0, $v0, 1
-nb_done:	ret
-			nop
+			lb		$t1, -15($a0)		; right and up
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+			lb		$t1, 1($a0)			; right
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+			lb		$t1, 17($a0)		; right and down
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+nb_notr:	lb		$t1, -16($a0)		; up
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+			lb		$t1, 16($a0)		; down
+			andi	$t2, $t1, 1
+			addu	$v0, $v0, $t2
+			ret
 			nop
 
 

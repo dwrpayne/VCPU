@@ -50,6 +50,7 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
+			SaveMemoryToDisk();
 			__debugbreak();
 		}
  		if (pCPU->Halt())
