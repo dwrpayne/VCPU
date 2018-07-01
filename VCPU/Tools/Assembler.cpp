@@ -316,33 +316,43 @@ unsigned int Assembler::GetMachineLanguage(const std::string& line)
 			}
 			else
 			{
-				int got_vals = sscanf_s(words[2].c_str(), "%d($%d)", &val2, &val3);
-				if (got_vals == 2)
+				if ( sscanf_s(words[2].c_str(), "-%d($%d)", &val2, &val3) == 2)
 				{
-					// $rt, imm($rs)
+					// $rt, -imm($rs)
 					rt = val1;
-					imm = val2;
+					imm = -val2;
 					rs = val3;
-				}
-				else if (got_vals == 1)
-				{
-					// Special case here. LUI wants the reg in RT, BLEZ needs it in RS.
-					if (opcode == "lui")
-					{
-						// $rt, imm
-						rt = val1;
-						imm = val2;
-					}
-					else
-					{
-						// $rs, imm
-						rs = val1;
-						imm = val2;
-					}
 				}
 				else
 				{
-					std::cout << "ERROR: Couldn't parse line " << line << std::endl;
+					int got_vals = sscanf_s(words[2].c_str(), "%d($%d)", &val2, &val3);
+					if (got_vals == 2)
+					{
+						// $rt, imm($rs)
+						rt = val1;
+						imm = val2;
+						rs = val3;
+					}
+					else if (got_vals == 1)
+					{
+						// Special case here. LUI wants the reg in RT, BLEZ needs it in RS.
+						if (opcode == "lui")
+						{
+							// $rt, imm
+							rt = val1;
+							imm = val2;
+						}
+						else
+						{
+							// $rs, imm
+							rs = val1;
+							imm = val2;
+						}
+					}
+					else
+					{
+						std::cout << "ERROR: Couldn't parse line " << line << std::endl;
+					}
 				}
 			}
 		}
