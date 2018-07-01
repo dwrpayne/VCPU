@@ -1,0 +1,126 @@
+; main board is 8x16, each byte is a cell.
+; board runs 0x10000000 to 0x10000080, row order.
+; board starts at $s0, runs up to $s1.
+; on is 0x23 ('#') for easy printing.
+; off is 0x20 (' ') for easy printing.
+main:		move 	$s0, $gp		; board pos start.
+			li		$s4, 0x080		; board size
+			li		$s6, 0x100		; working board offset
+			addu	$s1, $s0, $s4	; board pos end
+			li		$s2, 0x20		; off byte
+			li		$s3, 0x23		; on byte
+			clr		$s7				; generation count in $s7
+			ori		$a0, $r0, boardstart
+			call 	copy_board
+
+; board is filled, start a cycle
+cycle:		call	print_b
+			move	$s5, $s0		; $s5 is the current cell.
+cell_loop:	move	$a0, $s5
+			call	count_nb
+			move	$a0, $s5
+			move 	$a1, $v0
+			call	next_state
+			addu	$t0, $s5, $s6	; $t0 is the parallel addr
+			addiu	$s5, $s5, 1
+			sb		$v0, 0($t0)
+			bne		$s5, $s1, cell_loop
+			nop
+; now copy back from working board
+			addu	$a0, $s0, $s6
+			call 	copy_board
+			b		cycle
+			addiu	$s7, $s7, 1
+			nop
+			nop
+			
+; copy_board takes the start addr of the new board in $a0, and fills the board with it.
+copy_board:	move	$t0, $s0			; $t0 iterates through the current board state mem
+copy_loop:	lw		$t1, 0($a0)			; load a word into $t1
+			sw		$t1, 0($t0)			; fill it into the board.
+			addiu	$a0, $a0, 4
+			bne		$t0, $s1, copy_loop
+			addiu	$t0, $t0, 4
+			ret
+			nop
+
+; print_b knows the board spans $s0 to $s1.
+print_b:	push 	$ra
+			call 	newline
+			ori		$a0, $r0, generation
+			call 	printf
+			move	$a0, $s7
+			call	print_int
+			call 	newline
+			move	$t4, $s0		; $t4 iterates the row			
+print_row:	lb		$a0, 0($t4)
+			call	putch
+			addiu	$t4, $t4, 1
+			andi	$t5, $t4, 0xf	; $t5 checks if it's a new row
+			beq		$t4, $s1, print_done
+			nop
+			bnez	$t5, print_row
+			nop
+			call	newline
+			b 		print_row
+			nop
+print_done:	pop		$ra
+			ret		
+			nop	
+			
+			
+; next_state takes the addr of the cell in $a0 and the neighbor count in $a1
+; returns the next cell state in $v0
+next_state:	li		$t3, 3			; now alive
+			li		$t2, 2			; same as before
+			lb		$t0, 0($a0)
+			beq		$a1, $t3, next_done   ; not alive
+			move 	$v0, $s3		; set alive, will be stomped if not branched
+			bne 	$a1, $t2, next_done		; not dead
+			move 	$v0, $s2		; set dead, will be stomped if not branched
+			move	$v0, $t0		; we know it's same now.
+next_done:	ret
+			nop
+
+
+
+; count the neighbors of the cell in $a0, ret in $v0
+count_nb:	clr		$v0					; $v0 holds neighbor count
+nb1:		lb		$t1, -16($a0)		; $t0 holds neighbor addr, $t1 holds state
+			bne		$t1, $s3, nb2
+			nop
+			addiu	$v0, $v0, 1
+nb2:		andi	$t0, $a0, 0xf
+			beqz	$t0, nb3
+			lb		$t1, -1($a0)
+			bne		$t1, $s3, nb3
+			nop
+			addiu	$v0, $v0, 1
+nb3:		addiu	$t0, $a0, 1
+			andi	$t0, $t0, 0xf			
+			beqz	$t0, nb4
+			lb		$t1, 1($a0)
+			bne		$t1, $s3, nb4
+			nop
+			addiu	$v0, $v0, 1
+nb4:		lb		$t1, 16($a0)		; $t0 holds neighbor addr, $t1 holds state
+			bne		$t1, $s3, nb_done
+			nop
+			addiu	$v0, $v0, 1
+nb_done:	ret
+			nop
+			nop
+
+
+.text
+boardbufs:	.ascii  "                "
+boardstart: .ascii 	"                "
+boardrow1: 	.ascii 	"                "
+boardrow2: 	.ascii 	"    ###         "
+boardrow3: 	.ascii 	"    ###  ##     "
+boardrow4: 	.ascii 	"    ###  ##     "
+boardrow5: 	.ascii 	"    ###  ##     "
+boardrow6: 	.ascii 	"                "
+boardrow7: 	.ascii 	"                "
+boardbufe:  .ascii 	"                "
+generation: .ascii	"GENERATION "
