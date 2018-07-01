@@ -116,11 +116,15 @@ inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
 inline void SystemBus::LockForBusRequest()
 {
 	mBusMutex.lock();
+#if DEBUG
 	PrintBus(true);
+#endif
 }
 
 inline void SystemBus::UnlockForBusRequest()
 {
+#if DEBUG
 	PrintBus(false);
+#endif
 	mBusMutex.unlock();
 }

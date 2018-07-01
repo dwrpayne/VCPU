@@ -12,6 +12,7 @@ main:		move 	$s0, $gp		; board pos start.
 			clr		$s7				; generation count in $s7
 			ori		$a0, $r0, boardstart
 			call 	copy_board
+			brk
 
 ; board is filled, start a cycle
 cycle:		call	print_b

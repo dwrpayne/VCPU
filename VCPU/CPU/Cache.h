@@ -292,11 +292,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	lineWriteDecoder.Update();
 	wordWriteDecoder.Update();
 
-	if (cachelinewrite.Out().On())
-	{
-		std::cout << "Writing cache line at addr " << DEBUG_addr.UnsignedRead() << std::endl;
-	}
-
 	// Must update the line tag mux *before* the registers, as their tags get stomped on write
 	lineTagMux.Update();
 
@@ -323,15 +318,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 	outCacheDataMux.Update();
 	outDataMux.Update();
 	memAddrMux.Update();
-
-	if (evictedDirty.Out().On())
-	{
-		std::stringstream ss;
-		ss << "Evicted from 0x" << std::hex << std::setw(8) << std::setfill('0') << memAddrMux.Out().UnsignedRead() << std::dec << std::setfill(' ') << ", data ";
-		outDataToBusMux.Out().print(ss);
-		ss << std::endl;
-		std::cout << ss.str();
-	}
 
 	busBuffer.Update();
 	needStall.Update();
