@@ -38,6 +38,7 @@ public:
 private:
 	void DisconnectFromBus();
 	SystemBus * pSystemBus;
+	AndGate	reqBuffer;
 	NorGateN<4> usercodeBusAddr;
 	Inverter notAckOnBus;
 	AndGateN<3> incomingRequest;
@@ -57,6 +58,9 @@ private:
 
 	std::mutex mMutex;
 	bool mIsMainMemory;
+
+	// A bit of a hack to enable writes to code-only memory.
+	bool mIsLoadingProgram;
 
 	friend class Debugger;
 };
@@ -82,16 +86,18 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 	pSystemBus->ConnectData(outData.Out());
 	pSystemBus->ConnectCtrl(outServicedRequest.Q(), SystemBus::CtrlBit::Ack);
 
+	reqBuffer.Connect(pSystemBus->OutCtrl().Req(), Wire::ON);
+
 	usercodeBusAddr.Connect(pSystemBus->OutAddr().Range<4>(-4));
 	userdataBusAddr.Connect(usercodeBusAddr.Out(), pSystemBus->OutAddr().Range<1>(-1));
 	notAckOnBus.Connect(pSystemBus->OutCtrl().Ack());
 	if (mIsMainMemory)
 	{
-		incomingRequest.Connect({ &userdataBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
+		incomingRequest.Connect({ &userdataBusAddr.Out(), &reqBuffer.Out(), &notAckOnBus.Out() });
 	}
 	else
 	{
-		incomingRequest.Connect({ &usercodeBusAddr.Out(), &pSystemBus->OutCtrl().Req(), &notAckOnBus.Out() });
+		incomingRequest.Connect({ &usercodeBusAddr.Out(), &reqBuffer.Out(), &notAckOnBus.Out() });
 	}
 	servicedRead.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Read());
 	servicedWrite.Connect(incomingRequest.Out(), pSystemBus->OutCtrl().Write());
@@ -119,6 +125,8 @@ template <unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::Update()
 {
 	cycle++;
+	reqBuffer.Update();
+
 	usercodeBusAddr.Update();
 	userdataBusAddr.Update();
 	notAckOnBus.Update();
@@ -135,6 +143,13 @@ inline void Memory<N, BYTES>::Update()
 #endif
 	servicedRead.Update();
 	servicedWrite.Update();
+
+	if (servicedWrite.Out().On())
+	{
+		if(!(mIsLoadingProgram || mIsMainMemory))
+			pSystemBus->PrintBus();
+		assert((mIsLoadingProgram || mIsMainMemory) && "Attempting to write to code memory");
+	}
 #if DEBUG
 	if (servicedWrite.Out().On())
 	{

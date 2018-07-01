@@ -40,8 +40,8 @@ public:
 	static const int CACHE_LINE_BITS = 256;
 	static const int NUM_REGISTERS = 32;
 
-	static const int INS_CACHE_BYTES = 128;
-	static const int MAIN_CACHE_BYTES = 128;
+	static const int INS_CACHE_BYTES = 512;
+	static const int MAIN_CACHE_BYTES = 512;
 
 	static const int INS_MEM_BYTES = 2048;
 	static const int MAIN_MEM_BYTES = 16384;

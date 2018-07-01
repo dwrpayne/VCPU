@@ -1,5 +1,5 @@
 
-*This project follows the git-flow branching model. Master is always releasable. Dev is likely working but possibly unstable, while feature branches (if they exist) are in-progress work.*
+* Master is always in a releasable state. Dev is likely working but possibly unstable, while feature branches (if they exist) are in-progress work.*
 
 Virtual CPU
 ---------

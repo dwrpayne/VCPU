@@ -11,6 +11,9 @@ public:
 	void Load(const class Program* program);
 
 private:
+	void LoadInstructions(const class Program* program);
+	void LoadText(const class Program* program);
+	
 	SystemBus& systembus;
 	CPU::InsMemory& memory;
 	MagicBundle<CPU::WORD_SIZE> addrBundle;

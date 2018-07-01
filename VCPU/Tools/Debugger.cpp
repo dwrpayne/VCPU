@@ -18,9 +18,9 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bSingleStep = verbosity >= NORMAL;
 	bPrintInstruction = verbosity >= NORMAL;
 	bPrintRegisters = verbosity >= NORMAL;
-	bPrintMemory = verbosity >= MEMORY;
+	bPrintMemory = verbosity >= VERBOSE;
 	bPrintDataForward = verbosity >= VERBOSE;
-	bPrintTiming = verbosity >= NORMAL;
+	bPrintTiming = verbosity >= TIMING;
 	bPrintStack = verbosity >= NORMAL;
 	bPrintBus = verbosity >= NORMAL; 
 
@@ -28,7 +28,9 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	pProgram = pAssembler->Assemble(source_filename);
 	
 	ProgramLoader loader(*pCPU);
+	pCPU->InstructionMemory().mIsLoadingProgram = true;
 	loader.Load(pProgram);
+	pCPU->InstructionMemory().mIsLoadingProgram = false;
 	pCPU->Connect();
 }
 
@@ -48,6 +50,7 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
+			SaveMemoryToDisk();
 			__debugbreak();
 		}
  		if (pCPU->Halt())
@@ -100,17 +103,23 @@ void Debugger::Step()
 		{
 			mLastInstructions.pop_back();
 		}
+
+		DoProfilingCheck();
 	}
+
 	PrintCycle();
 }
 
 void Debugger::PrintCycle()
 {
+	//bPrintInstruction = pCPU->Break();
+	//bPrintRegisters = pCPU->Break();
+
 	if (!pCPU->PipelineFreeze())
 	{
 		if (bPrintInstruction)
 		{
-			std::cout << "--------------------- CYCLE " << pCPU->cycles << " -----";
+			std::cout << "---------- INSTRUCTION " << pCPU->instructions << " ------ ( CYCLE " << pCPU->cycles << " ) -------";
 			std::cout << (pCPU->PipelineFreeze() ? " PIPELINE FREEZE" : "---------------") << "---------" << std::endl;
 		}
 		if (bPrintDataForward)
@@ -227,7 +236,7 @@ void Debugger::SaveMemoryToDisk()
 		if (ifs.is_open()) continue;
 
 		std::ofstream of(filename);
-		for (int i = 500; i < CPU::MainMemory::BYTES; i++)
+		for (int i = USER_DATA_START; i < KERNEL_DATA_END; i++)
 		{
 			of << GetCacheByte(i);
 		}
@@ -237,6 +246,7 @@ void Debugger::SaveMemoryToDisk()
 
 void Debugger::PrintInstruction()
 {
+	assert(pCPU->IR().UnsignedRead() == pProgram->GetInstruction(mLastInstructions[0])->mBinary);
 	std::cout << "Current IR: " << std::bitset<32>(pCPU->IR().UnsignedRead()) << std::endl;
 	std::cout << "Address  Stage   Assembled Instruction      Source Instruction  " << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
@@ -267,12 +277,16 @@ void Debugger::PrintRegisters()
 			std::stringstream ss;
 			ss << "$" << pAssembler->GetRegName(num) << "(" << num << ") ";
 			std::cout << std::left << std::setw(8) << ss.str();
-			if (num >= 28 || val > 0x10000000) 
-				std::cout << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << GetRegisterVal(num);
-			else
+
+			if (num < 28 && val < 0x10000000)
+			{
 				std::cout << std::setw(12) << GetRegisterVal(num);
-			if (num >= 28 || val > 0x10000000)
+			}
+			else
+			{
+				std::cout << "0x" << std::hex << std::setfill('0') << std::setw(8) << std::right << GetRegisterVal(num) << "  ";
 				std::cout << std::setw(12) << std::setfill(' ') << std::dec;
+			}
 		}
 		std::cout << std::endl;
 	}
@@ -386,7 +400,7 @@ void Debugger::PrintStack()
 
 void Debugger::PrintTiming()
 {	
-	if (pCPU->cycles % 1000 == 0)
+	if (pCPU->instructions % 1000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
 		std::cout << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;
@@ -436,3 +450,27 @@ void Debugger::PrintBus()
 {
 	pCPU->GetSystemBus().PrintBus();
 }
+
+void Debugger::DoProfilingCheck()
+{
+	auto codeline = pProgram->GetLine(mLastInstructions[0]);
+	bool start = !mIsCurrentlyProfiling && codeline->mComment.find("!PROFILE START") != std::string::npos;
+	bool stop = mIsCurrentlyProfiling && codeline->mComment.find("!PROFILE STOP") != std::string::npos;
+
+	if (start) mIsCurrentlyProfiling = true;
+	if (stop) mIsCurrentlyProfiling = false;
+
+	if (mIsCurrentlyProfiling)
+	{
+		mProfilingLineCounts[codeline] += 1;
+	}
+	if (stop)
+	{
+		for (auto &[line, count] : mProfilingLineCounts)
+		{
+			std::cout << std::setw(60) << std::left << line->to_string();
+			std::cout << "\t\t" << count << std::endl;
+		}
+	}
+}
+

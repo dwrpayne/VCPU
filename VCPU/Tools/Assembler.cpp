@@ -30,10 +30,12 @@ std::vector<std::string> split(const char *str)
 }
 
 Assembler::Assembler()
+	: mCurSection(Section::CODE)
 {
 	pProgram = new Program();
 	ParseSourceLine("nop ;null address", pProgram);		// address 0x00000000 is empty.
 	ParseSourceLine("li $sp, " + std::to_string(USER_STACK_START), pProgram);
+	ParseSourceLine("li $gp, " + std::to_string(USER_DATA_START), pProgram);
 	ParseSourceLine("call main", pProgram);
 	IncludeLib("library.vasm");
 }
@@ -46,6 +48,7 @@ void Assembler::IncludeLib(const std::string & filename)
 const Program* Assembler::Assemble(const std::string& filename)
 {
 	ParseFile(filename, pProgram);
+	mCurSection = Section::CODE;
 	for (auto inc : mIncludeFiles)
 	{
 		ParseFile(inc, pProgram);
@@ -72,6 +75,12 @@ void Assembler::ParseFile(const std::string & filename, Program * program)
 
 void Assembler::ParseSourceLine(const std::string &line, Program * program)
 {
+	if (line.find(".text") != std::string::npos)
+	{
+		mCurSection = Section::TEXT;
+		return;
+	}
+
 	// Get code line without comment
 	std::string code_line = line.substr(0, line.find(';'));
 
@@ -88,15 +97,47 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 		code_line = code_line.substr(colon_pos + 1);
 	}
 
-	unsigned int source_line = program->AddSourceLine(label, code_line, comment);
-
 	std::vector<std::string> words = split(code_line.c_str());
-	if (words[0].size() > 0)
+
+	if (mCurSection == Section::CODE)
 	{
-		for (auto& line : GetInstructionsForLine(code_line))
+		unsigned int source_line = program->AddSourceLine(label, code_line, comment);
+		if (words[0].size() > 0)
 		{
-			program->AddInstruction(source_line, line);
+			for (auto& line : GetInstructionsForLine(code_line))
+			{
+				program->AddInstruction(source_line, line);
+			}
 		}
+	}
+	else if (mCurSection == Section::TEXT)
+	{
+		if (words[0].size() > 2 && words[0][0] == '.')
+		{
+			std::vector<unsigned char> bytes;
+			if (code_line.find("ascii") != std::string::npos)
+			{
+				bool in_string = false;
+				for (unsigned char c : code_line)
+				{
+					if (c == '"') 
+					{
+						if (in_string) break;
+						in_string = true;
+						continue;
+					}
+					if (in_string)
+					{
+						bytes.push_back(c);
+					}
+				}
+				program->AddTextField(label, bytes.size(), bytes);
+			}
+		}
+	}
+	else
+	{
+		assert(false);
 	}
 }
 
@@ -152,6 +193,7 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 	line = std::regex_replace(line, std::regex("^\\s*bge\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $1, $2\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*ble\\s+(\\$.+), (\\$.+), (\\S+)"),	"slt	$$at, $2, $1\nbeq	$$at, $$zero, $3");
 	line = std::regex_replace(line, std::regex("^\\s*beqz\\s+(\\$.+), (\\S+)"),			"beq	$1, $$zero, $2");
+	line = std::regex_replace(line, std::regex("^\\s*bnez\\s+(\\$.+), (\\S+)"),			"bne	$1, $$zero, $2");
 	
 	// Pseudo-Instructions
 	// Logic and Data
@@ -274,33 +316,43 @@ unsigned int Assembler::GetMachineLanguage(const std::string& line)
 			}
 			else
 			{
-				int got_vals = sscanf_s(words[2].c_str(), "%d($%d)", &val2, &val3);
-				if (got_vals == 2)
+				if ( sscanf_s(words[2].c_str(), "-%d($%d)", &val2, &val3) == 2)
 				{
-					// $rt, imm($rs)
+					// $rt, -imm($rs)
 					rt = val1;
-					imm = val2;
+					imm = -val2;
 					rs = val3;
-				}
-				else if (got_vals == 1)
-				{
-					// Special case here. LUI wants the reg in RT, BLEZ needs it in RS.
-					if (opcode == "lui")
-					{
-						// $rt, imm
-						rt = val1;
-						imm = val2;
-					}
-					else
-					{
-						// $rs, imm
-						rs = val1;
-						imm = val2;
-					}
 				}
 				else
 				{
-					std::cout << "ERROR: Couldn't parse line " << line << std::endl;
+					int got_vals = sscanf_s(words[2].c_str(), "%d($%d)", &val2, &val3);
+					if (got_vals == 2)
+					{
+						// $rt, imm($rs)
+						rt = val1;
+						imm = val2;
+						rs = val3;
+					}
+					else if (got_vals == 1)
+					{
+						// Special case here. LUI wants the reg in RT, BLEZ needs it in RS.
+						if (opcode == "lui")
+						{
+							// $rt, imm
+							rt = val1;
+							imm = val2;
+						}
+						else
+						{
+							// $rs, imm
+							rs = val1;
+							imm = val2;
+						}
+					}
+					else
+					{
+						std::cout << "ERROR: Couldn't parse line " << line << std::endl;
+					}
 				}
 			}
 		}

@@ -38,24 +38,31 @@ strcpy:	lb		$t0, 0($a0)
 
 ; getch blocks until a char is ready
 getch:			li		$t0, 0xffff0000U
-getch_check:	lb		$t1, 0($t0)
-				beqz	$t1, getch_check
+getch_poll:		lb		$v0, 0($t0)
+				andi	$v0, $v0, 0x01
+				beqz	$v0, getch_poll
 				nop
 				lb		$v0, 4($t0)
 				ret 
 
 ; putch takes the char to output in $a0	
 putch:			li		$t0, 0xffff0008U
-putch_check:	lb		$t1, 0($t0)
-				beqz	$t1, putch_check
+putch_poll:		lb		$t1, 0($t0)
+				beqz	$t1, putch_poll
 				nop
 				sb		$a0, 4($t0)				
 				ret 
-								
+
+; putch_fast takes the char to output in $a0, without polling first.
+; the VCPU architecture is such that the console is always ready so this will always work.
+putch_fast:		li		$t0, 0xffff000CU
+				sb		$a0, 0($t0)				
+				ret 	
+				
 ; newline just outputs a newline
 newline:		push	$ra
 				li		$a0, 0xa			;0xa is newline
-				call 	putch
+				call 	putch_fast
 				pop		$ra
 				ret
 
@@ -63,7 +70,7 @@ newline:		push	$ra
 printf:			move 	$t2, $a0
 				push	$ra
 printf_loop:	lb		$a0, 0($t2)		
-				call 	putch
+				call 	putch_fast
 				bgtz	$a0, printf_loop
 				addi	$t2, $t2, 1
 				pop 	$ra
@@ -101,6 +108,13 @@ print_int:		push	$ra
 				call itoa
 				li		$a0, 0x10003fa0
 				call printf
+				pop		$ra
+				ret
+
+;print_digit takes a digit in $a0 and prints it in ascii.
+print_digit:	push	$ra
+				addiu	$a0, $a0, 0x30
+				call putch_fast
 				pop		$ra
 				ret
 

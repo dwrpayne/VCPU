@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <deque>
+#include <map>
 #include "CPU/CPU.h"
 
 class Assembler;
@@ -13,8 +14,8 @@ public:
 	{
 		SILENT,
 		MINIMAL,
-		MEMORY,
 		TIMING,
+		MEMORY,
 		NORMAL,
 		VERBOSE,
 	};
@@ -42,6 +43,8 @@ private:
 	void PrintStack();
 	void PrintTiming();
 	void PrintBus();
+
+	void DoProfilingCheck();
 	
 	CPU* pCPU;
 	bool bSingleStep;
@@ -58,6 +61,9 @@ private:
 	std::deque<int> mLastInstructions;
 	std::array<unsigned char, 16*1024> mLastCycleMemory;
 	unsigned int mLastStackPointer;
+
+	bool mIsCurrentlyProfiling;
+	std::map<const class CodeLine*, int> mProfilingLineCounts;
 
 	long long last_output_reg;
 

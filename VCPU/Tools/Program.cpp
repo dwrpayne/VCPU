@@ -1,4 +1,5 @@
 #include "Program.h"
+#include "CPU/Addresses.h"
 #include <sstream>
 #include <iomanip>
 #include <assert.h>
@@ -6,6 +7,7 @@
 #include <regex>
 
 Program::Program()
+	: mTextStartAddr(USER_TEXT_START)
 {
 }
 
@@ -19,8 +21,7 @@ unsigned int Program::AddSourceLine(const std::string& label, std::string source
 
 	if (label.size() > 0)
 	{
-		assert(mLabelAddrNum.count(label) == 0 && "Found two instances of the label.");
-		mLabelAddrNum[label] = codeline.mFirstInstructionNum;
+		AddLabel(label, codeline.mFirstInstructionNum * 4);
 	}
 
 	return line_num;
@@ -30,6 +31,13 @@ void Program::AddInstruction(unsigned int source_line, const std::string& text)
 {
 	mSourceLines[source_line].mFirstInstructionNum = mInstructions.size();
 	mInstructions.push_back(Instruction(TrimWhitespace(text), 0, source_line));
+}
+
+void Program::AddTextField(const std::string & label, int size, const std::vector<unsigned char>& bytes)
+{
+	assert(label.size() > 0);
+	AddLabel(label, mTextBytes.size() + mTextStartAddr);
+	mTextBytes.insert(mTextBytes.end(), bytes.begin(), bytes.end());
 }
 
 const Instruction * Program::GetInstruction(unsigned int addr) const
@@ -60,9 +68,7 @@ const std::string Program::GetSourceLine(unsigned int addr) const
 	{
 		return "";
 	}
-	std::stringstream ss;
-	ss << std::left << std::setw(3) << source->mLineNum << std::setw(25) << source->mSource << source->mComment;
-	return ss.str();
+	return source->to_string();
 }
 
 const std::string Program::GetAssembledLine(unsigned int addr)  const
@@ -72,6 +78,12 @@ const std::string Program::GetAssembledLine(unsigned int addr)  const
 		return ins->mText;
 	}
 	return "";
+}
+
+void Program::AddLabel(const std::string & label, unsigned int addr)
+{
+	assert(mLabelAddrNum.count(label) == 0 && "Found two instances of the label.");
+	mLabelAddrNum[label] = addr;
 }
 
 // Turns all the labels in the instructions into actual number offsets
@@ -91,7 +103,7 @@ void Program::ConvertLabels()
 	if (mLabelAddrNum.count("main") == 0)
 	{
 		// todo: need a better way to automatically determine this.
-		ReplaceLabel("main", 4);
+		ReplaceLabel("main", 6);
 	}
 }
 
@@ -103,21 +115,21 @@ void Program::ReplaceLabel(const std::string& label, unsigned int addr)
 		if (label_pos != std::string::npos)
 		{
 			auto first_alpha = mInstructions[i].mText.find_first_not_of(" \t\r\n");
-			int mem_addr = addr * 4;
+			int mem_addr = addr;
 			if (mInstructions[i].mText[first_alpha] == 'b')
 			{
 				mem_addr -= 4 * (i + 1);
 			}
 			else
 			{
-				assert(mInstructions[i].mText[first_alpha] == 'j' && "Labels must be on J or B instructions");
+				//assert((mInstructions[i].mText[first_alpha] == 'j' || mInstructions[i].mText[first_alpha] == 'l') && "Labels must be on J or B or L instructions");
 			}
 			mInstructions[i].mText.replace(label_pos, label.size(), std::to_string(mem_addr));
 		}
 	}
 }
 
-std::string Program::TrimWhitespace(const std::string& s)
+std::string TrimWhitespace(const std::string & s)
 {
 	// Strip begin and end whitespace, and collapse multiple
 	std::string line = std::regex_replace(s, std::regex("^\\s*"), "");
