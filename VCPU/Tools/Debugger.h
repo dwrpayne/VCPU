@@ -14,8 +14,8 @@ public:
 	{
 		SILENT,
 		MINIMAL,
-		MEMORY,
 		TIMING,
+		MEMORY,
 		NORMAL,
 		VERBOSE,
 	};

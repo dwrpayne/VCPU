@@ -20,7 +20,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintRegisters = verbosity >= NORMAL;
 	bPrintMemory = verbosity >= VERBOSE;
 	bPrintDataForward = verbosity >= VERBOSE;
-	bPrintTiming = verbosity >= NORMAL;
+	bPrintTiming = verbosity >= TIMING;
 	bPrintStack = verbosity >= NORMAL;
 	bPrintBus = verbosity >= NORMAL; 
 
