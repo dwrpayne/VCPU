@@ -113,13 +113,13 @@ print_done:	pop		$ra
 
 
 .text
-boardbufs:	.ascii  "                "
-boardstart: .ascii 	"                "
-boardrow1: 	.ascii 	"                "
-boardrow2: 	.ascii 	"    ###         "
-boardrow3: 	.ascii 	"    ###  ##     "
-boardrow4: 	.ascii 	"    ###  ##     "
-boardrow5: 	.ascii 	"    ###  ##     "
+boardbufs: 	.ascii 	"                "
+boardstart:	.ascii  "   #            "
+boardrow1:  .ascii 	" # #            "
+boardrow2: 	.ascii 	"  ##            "
+boardrow3: 	.ascii 	"                "
+boardrow4: 	.ascii 	"                "
+boardrow5: 	.ascii 	"                "
 boardrow6: 	.ascii 	"                "
 boardrow7: 	.ascii 	"                "
 boardbufe:  .ascii 	"                "
