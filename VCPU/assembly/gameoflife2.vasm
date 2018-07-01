@@ -15,28 +15,71 @@ main:		move 	$s0, $gp		; board pos start.
 			call 	copy_board
 
 ; board is filled, start a cycle			
-cycle:		call	print_b			; !PROFILE START
-			move	$s5, $s0		; $s5 is the current cell.			
-cell_loop:	move	$a0, $s5		
-			call	count_nb; 		;$v0 is the neighbor count
-			lb		$t0, 0($s5)
-			beq		$v0, $t6, next_done   	; =3? alive for sure
-			move 	$v0, $s3				; set alive, will be stomped if not branched
-			bne 	$v0, $t7, next_done		; !=2? dead for sure
-			move 	$v0, $s2				; set dead, will be stomped if not branched
-			move	$v0, $t0				; we know it's same now.
-next_done:	addu	$t0, $s5, $s6			; $t0 is the parallel addr
+cycle:		call	print_b			
+			move	$s5, $s0		; $s5 is the current cell.		
+			nop
+cell_loop:	lb		$t0, 0($s5)
 			addiu	$s5, $s5, 1
-			sb		$v0, 0($t0)
-			bne		$s5, $s1, cell_loop
-			nop								
-; now copy back from working board
-			addu	$a0, $s0, $s6					
-			call 	copy_board
-			b		cycle			; !PROFILE STOP
+			bne		$t0, $s3, cell_loop
+			beq		$s5, $s1, done_nb_c
+			addiu	$a0, $s5, 0xff				; $a0 holds the parallel cell. add less because we already incremented $s5
+			call	add_nb						; now we know this cell is alive
+			b		cell_loop
+			lb		$t0, 0($s5)
+; get all n counts
+done_nb_c:	move	$s5, $s0				; $s5 is the current cell addr.				
+next_loop:	lb		$v0, 256($s5)			; $v0 is the neighbor count
+			sb		$r0, 256($s5)			; clear working board
+			beq		$v0, $t6, next_set   	; =3? alive for sure
+			move 	$t0, $s3				; set alive, 	
+			bne 	$v0, $t7, next_set		; !=2? dead for sure
+			move 	$t0, $s2				; set dead, 
+			bne		$s5, $s1, next_loop
+			addiu	$s5, $s5, 1
+			b		next_done
+			nop
+next_set:	sb		$t0, 0($s5)
+			bne		$s5, $s1, next_loop
+			addiu	$s5, $s5, 1			
+next_done:	b		cycle			
 			addiu	$s7, $s7, 1
 			nop
 			nop
+
+; takes the cell in the working board as $a0, and adds 1 around it. Assumes buffer space.
+add_nb:		andi	$t8, $a0, 0xf
+			beqz	$t8, nb_skipl
+			lb		$t1, -17($a0)		; left and up
+			lb		$t2, -1($a0)		; left
+			lb		$t3, 15($a0)		; left and down
+			addiu	$t1, $t1, 1
+			addiu	$t2, $t2, 1
+			addiu	$t3, $t3, 1
+			sb		$t1, -17($a0)		; left and up
+			sb		$t2, -1($a0)		; left
+			sb		$t3, 15($a0)		; left and down
+nb_skipl:	addiu	$t8, $a0, 1
+			andi	$t8, $t8, 0xf
+			beqz	$t8, nb_skipr
+			lb		$t1, -15($a0)		; right and up
+			lb		$t2, 1($a0)			; right
+			lb		$t3, 17($a0)		; right and down
+			addiu	$t1, $t1, 1
+			addiu	$t2, $t2, 1
+			addiu	$t3, $t3, 1
+			sb		$t1, -15($a0)		; right and up
+			sb		$t2, 1($a0)		; right
+			sb		$t3, 17($a0)		; right and down
+nb_skipr:	lb		$t1, -16($a0)		; up
+			lb		$t2, 16($a0)			; down
+			addiu	$t1, $t1, 1
+			addiu	$t2, $t2, 1
+			sb		$t1, -16($a0)		; up
+			sb		$t2, 16($a0)		; down
+			ret
+			nop
+			
+			
 			
 ; copy_board takes the start addr of the new board in $a0, and fills the board with it.
 copy_board:	move	$t0, $s0			; $t0 iterates through the current board state mem
@@ -71,41 +114,6 @@ print_done:	pop		$ra
 			ret									
 			nop				
 	
-; count the neighbors of the cell in $a0, ret in $v0
-count_nb:	clr		$v0					; $v0 holds neighbor count
-			andi	$t8, $a0, 0xf
-			beqz	$t8, nb_skipl
-			nop
-			lb		$t1, -17($a0)		; left and up
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-			lb		$t1, -1($a0)		; left
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-			lb		$t1, 15($a0)		; left and down
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-nb_skipl:	addiu	$t8, $a0, 1
-			andi	$t8, $t8, 0xf
-			beqz	$t8, nb_skipr
-			nop
-			lb		$t1, -15($a0)		; right and up
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-			lb		$t1, 1($a0)			; right
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-			lb		$t1, 17($a0)		; right and down
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-nb_skipr:	lb		$t1, -16($a0)		; up
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-			lb		$t1, 16($a0)		; down
-			andi	$t2, $t1, 1
-			addu	$v0, $v0, $t2
-			ret
-			nop
 
 
 .text

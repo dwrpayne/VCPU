@@ -50,7 +50,7 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
-			//SaveMemoryToDisk();
+			SaveMemoryToDisk();
 			__debugbreak();
 		}
  		if (pCPU->Halt())
@@ -112,8 +112,8 @@ void Debugger::Step()
 
 void Debugger::PrintCycle()
 {
-	bPrintInstruction = pCPU->Break();
-	bPrintRegisters = pCPU->Break();
+	//bPrintInstruction = pCPU->Break();
+	//bPrintRegisters = pCPU->Break();
 
 	if (!pCPU->PipelineFreeze())
 	{
@@ -400,7 +400,7 @@ void Debugger::PrintStack()
 
 void Debugger::PrintTiming()
 {	
-	if (pCPU->cycles % 1000 == 0)
+	if (pCPU->instructions % 1000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
 		std::cout << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;

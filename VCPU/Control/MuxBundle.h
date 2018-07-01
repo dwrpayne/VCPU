@@ -23,7 +23,7 @@ public:
 	const Bundle<N>& Out() const { return out; }
 
 private:
-#ifdef DEBUG
+#if DEBUG || 1
 	std::array<Bundle<N>, Ninput> in_bundles;
 	Bundle<BITS> select;
 #endif
@@ -43,7 +43,7 @@ inline MuxBundle<N, Ninput>::MuxBundle()
 template <unsigned int N, unsigned int Ninput>
 inline void MuxBundle<N, Ninput>::Connect(const std::array<Bundle<N>, Ninput> in, const Bundle<BITS>& sel)
 {
-#ifdef DEBUG
+#if DEBUG || 1
 	in_bundles = in;
 	select = sel;
 #endif

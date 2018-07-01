@@ -146,7 +146,8 @@ inline void Memory<N, BYTES>::Update()
 
 	if (servicedWrite.Out().On())
 	{
-		//pSystemBus->PrintBus();
+		if(!(mIsLoadingProgram || mIsMainMemory))
+			pSystemBus->PrintBus();
 		assert((mIsLoadingProgram || mIsMainMemory) && "Attempting to write to code memory");
 	}
 #if DEBUG

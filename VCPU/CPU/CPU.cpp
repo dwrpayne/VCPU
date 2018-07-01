@@ -374,7 +374,7 @@ void CPU::Update()
 	{
 		mIsMissingInsCache = false;
 
-		if (MainCache().NeedStall().On())
+		if (GetMainCache().NeedStall().On())
 		{
 			if (!mIsMissingDataCache)
 			{
