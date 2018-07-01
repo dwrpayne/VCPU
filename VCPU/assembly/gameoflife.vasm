@@ -13,17 +13,13 @@ main:		move 	$s0, $gp		; board pos start.
 			ori		$a0, $r0, boardstart
 			call 	copy_board
 
-; board is filled, start a cycle
-			
-cycle:		brk
-			call	print_b
+; board is filled, start a cycle			
+cycle:		call	print_b
 			move	$s5, $s0		; $s5 is the current cell.
 cell_loop:	move	$a0, $s5
 			call	count_nb
 			move	$a0, $s5
-			li		$t0, 0x10000200
 			move 	$a1, $v0
-			sb		$v0, 0($t0)
 			call	next_state
 			addu	$t0, $s5, $s6	; $t0 is the parallel addr
 			addiu	$s5, $s5, 1
@@ -50,29 +46,26 @@ copy_loop:	lw		$t1, 0($a0)			; load a word into $t1
 			nop
 
 ; print_b knows the board spans $s0 to $s1.
-print_b:	push 	$ra
+print_b:	push 	$ra							; !PROFILE START
 			call 	newline
 			ori		$a0, $r0, generation
 			call 	printf
 			move	$a0, $s7
 			call	print_int
 			call 	newline
-			move	$t4, $s0		; $t4 iterates the row			
-print_row:	lb		$a0, 0($t4)
-			call	putch
-			addiu	$t4, $t4, 1
-			andi	$t5, $t4, 0xf	; $t5 checks if it's a new row
+			move	$t4, $s0		; $t4 iterates the row	
+print_row:	addiu	$t5, $t4, 0xf	; $t5 is end of row marker				
 			beq		$t4, $s1, print_done
-			nop
-			bnez	$t5, print_row
-			nop
+print_cell:	lb		$a0, 0($t4)
+			call	putch_fast
+			bne		$t4, $t5, print_cell
+			addiu	$t4, $t4, 1
 			call	newline
-			b 		print_row
+			b		print_row
 			nop
 print_done:	pop		$ra
-			ret		
-			nop	
-			
+			ret									; !PROFILE STOP
+			nop				
 			
 ; next_state takes the addr of the cell in $a0 and the neighbor count in $a1
 ; returns the next cell state in $v0
@@ -92,7 +85,7 @@ next_done:	ret
 ; count the neighbors of the cell in $a0, ret in $v0
 count_nb:	clr		$v0					; $v0 holds neighbor count
 			andi	$t8, $a0, 0xf
-			bnez	$t8, nb_notl
+			beqz	$t8, nb_skipl
 			nop
 			lb		$t1, -17($a0)		; left and up
 			andi	$t2, $t1, 1
@@ -103,9 +96,9 @@ count_nb:	clr		$v0					; $v0 holds neighbor count
 			lb		$t1, 15($a0)		; left and down
 			andi	$t2, $t1, 1
 			addu	$v0, $v0, $t2
-nb_notl:	addiu	$t8, $a0, 1
+nb_skipl:	addiu	$t8, $a0, 1
 			andi	$t8, $t8, 0xf
-			bnez	$t8, nb_notr
+			beqz	$t8, nb_skipr
 			nop
 			lb		$t1, -15($a0)		; right and up
 			andi	$t2, $t1, 1
@@ -116,7 +109,7 @@ nb_notl:	addiu	$t8, $a0, 1
 			lb		$t1, 17($a0)		; right and down
 			andi	$t2, $t1, 1
 			addu	$v0, $v0, $t2
-nb_notr:	lb		$t1, -16($a0)		; up
+nb_skipr:	lb		$t1, -16($a0)		; up
 			andi	$t2, $t1, 1
 			addu	$v0, $v0, $t2
 			lb		$t1, 16($a0)		; down

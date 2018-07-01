@@ -68,9 +68,7 @@ const std::string Program::GetSourceLine(unsigned int addr) const
 	{
 		return "";
 	}
-	std::stringstream ss;
-	ss << std::left << std::setw(3) << source->mLineNum << std::setw(25) << source->mSource << source->mComment;
-	return ss.str();
+	return source->to_string();
 }
 
 const std::string Program::GetAssembledLine(unsigned int addr)  const
@@ -131,7 +129,7 @@ void Program::ReplaceLabel(const std::string& label, unsigned int addr)
 	}
 }
 
-std::string Program::TrimWhitespace(const std::string& s)
+std::string TrimWhitespace(const std::string & s)
 {
 	// Strip begin and end whitespace, and collapse multiple
 	std::string line = std::regex_replace(s, std::regex("^\\s*"), "");

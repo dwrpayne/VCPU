@@ -2,7 +2,12 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <map>
+
+
+std::string TrimWhitespace(const std::string& s);
 
 class Instruction
 {
@@ -31,6 +36,13 @@ public:
 	std::string mComment;
 	unsigned int mLineNum;
 	unsigned int mFirstInstructionNum;
+
+	std::string to_string() const 
+	{
+		std::stringstream ss;
+		ss << std::left << std::setw(15) << mLabel << std::setw(6) << mLineNum << std::setw(25) << TrimWhitespace(mSource);
+		return ss.str();
+	}
 };
 
 class Program
@@ -59,7 +71,6 @@ public:
 private:
 	void AddLabel(const std::string& label, unsigned int addr);
 
-	std::string TrimWhitespace(const std::string& s);
 	std::vector<CodeLine> mSourceLines;
 	std::vector<Instruction> mInstructions;
 

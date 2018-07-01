@@ -50,7 +50,7 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
-			SaveMemoryToDisk();
+			//SaveMemoryToDisk();
 			__debugbreak();
 		}
  		if (pCPU->Halt())
@@ -103,12 +103,18 @@ void Debugger::Step()
 		{
 			mLastInstructions.pop_back();
 		}
+
+		DoProfilingCheck();
 	}
+
 	PrintCycle();
 }
 
 void Debugger::PrintCycle()
 {
+	bPrintInstruction = pCPU->Break();
+	bPrintRegisters = pCPU->Break();
+
 	if (!pCPU->PipelineFreeze())
 	{
 		if (bPrintInstruction)
@@ -444,3 +450,27 @@ void Debugger::PrintBus()
 {
 	pCPU->GetSystemBus().PrintBus();
 }
+
+void Debugger::DoProfilingCheck()
+{
+	auto codeline = pProgram->GetLine(mLastInstructions[0]);
+	bool start = !mIsCurrentlyProfiling && codeline->mComment.find("!PROFILE START") != std::string::npos;
+	bool stop = mIsCurrentlyProfiling && codeline->mComment.find("!PROFILE STOP") != std::string::npos;
+
+	if (start) mIsCurrentlyProfiling = true;
+	if (stop) mIsCurrentlyProfiling = false;
+
+	if (mIsCurrentlyProfiling)
+	{
+		mProfilingLineCounts[codeline] += 1;
+	}
+	if (stop)
+	{
+		for (auto &[line, count] : mProfilingLineCounts)
+		{
+			std::cout << std::setw(60) << std::left << line->to_string();
+			std::cout << "\t\t" << count << std::endl;
+		}
+	}
+}
+
