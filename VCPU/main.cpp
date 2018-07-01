@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	if (argc == 1)
 	{
 		//Test();
-		RunCPU("gameoflife2.vasm");
+		RunCPU("gameoflife.vasm");
 	}
 	else
 	{
