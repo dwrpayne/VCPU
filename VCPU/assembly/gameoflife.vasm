@@ -37,6 +37,7 @@ cell_loop:	move	$a0, $s5
 ; copy_board takes the start addr of the new board in $a0, and fills the board with it.
 copy_board:	move	$t0, $s0			; $t0 iterates through the current board state mem
 copy_loop:	lw		$t1, 0($a0)			; load a word into $t1
+			nop
 			sw		$t1, 0($t0)			; fill it into the board.
 			addiu	$a0, $a0, 4
 			bne		$t0, $s1, copy_loop
