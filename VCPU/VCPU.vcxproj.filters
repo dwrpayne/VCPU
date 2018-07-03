@@ -5,7 +5,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Async\ThreadedComponent.cpp" />
-    <ClCompile Include="Controllers\DeviceController.cpp" />
     <ClCompile Include="Control\TriStateBuffer.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
@@ -33,10 +32,12 @@
     <ClCompile Include="Tools\Debugger.cpp" />
     <ClCompile Include="Tools\Program.cpp" />
     <ClCompile Include="Tools\ProgramLoader.cpp" />
+    <ClCompile Include="Devices\DeviceController.cpp" />
+    <ClCompile Include="Devices\TerminalController.cpp" />
+    <ClCompile Include="Devices\KeyboardController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Async\ThreadedComponent.h" />
-    <ClInclude Include="Controllers\DeviceController.h" />
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Bus.h" />
     <ClInclude Include="Control\Component.h" />
@@ -107,5 +108,8 @@
     <ClInclude Include="Tools\Utils.h" />
     <ClInclude Include="Functional\ChangeDetector.h" />
     <ClInclude Include="CPU\Addresses.h" />
+    <ClInclude Include="Devices\DeviceController.h" />
+    <ClInclude Include="Devices\TerminalController.h" />
+    <ClInclude Include="Devices\KeyboardController.h" />
   </ItemGroup>
 </Project>

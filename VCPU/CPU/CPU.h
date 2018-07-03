@@ -10,8 +10,8 @@
 #include "Cache.h"
 #include "HazardUnit.h"
 #include "Interlock.h"
-#include "SystemBus.h"
-#include "Controllers/DeviceController.h"
+#include "KeyboardController.h"
+#include "TerminalController.h"
 
 // Code mem runs 0x00000000 - 0x10000000
 // User data starts at 0x10000000

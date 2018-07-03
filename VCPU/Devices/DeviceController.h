@@ -2,10 +2,11 @@
 #include "Bundle.h"
 #include "Tools/MagicBundle.h"
 #include "ThreadedComponent.h"
-#include "CPU/SystemBus.h"
 #include "Register.h"
 #include "JKFlipFlop.h"
 #include "EdgeDetector.h"
+
+class SystemBus;
 
 class DeviceController : public ThreadedAsyncComponent
 {
@@ -27,7 +28,7 @@ protected:
 	RegisterEnable<32> control;
 	RegisterEnable<32> data;
 
-	SystemBus * pSystemBus;
+	SystemBus* pSystemBus;
 	NorGateN<8> bits8To15On;
 	AndGateN<16> bitsHiOn;
 	AndGate isMemMappedIo;
@@ -43,33 +44,3 @@ protected:
 	Wire pending;
 	JKFlipFlop pendingState;
 };
-
-class KeyboardController : public DeviceController
-{
-public:
-	KeyboardController()
-		: DeviceController(L"Keyboard Controller Thread")
-	{}
-	virtual ~KeyboardController();
-	virtual void Connect(SystemBus& bus);
-	virtual void InternalUpdate();
-	
-private:
-	MagicBundle<8> c_in;
-};
-
-
-class TerminalController : public DeviceController
-{
-public:
-	TerminalController()
-		: DeviceController(L"Terminal Controller Thread")
-	{}
-	virtual ~TerminalController() 
-	{
-		StopUpdating();
-	}
-	virtual void Connect(SystemBus& bus);
-	virtual void InternalUpdate();
-};
-

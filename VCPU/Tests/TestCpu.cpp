@@ -7,9 +7,10 @@
 #include "Instructions.h"
 #include "Tools/Debugger.h"
 #include "Tools/Assembler.h"
-#include "Controllers/DeviceController.h"
-#include "CPU/BusWriteBuffer.h"
-#include "CPU/BusRequestBuffer.h"
+#include "KeyboardController.h"
+#include "TerminalController.h"
+#include "BusWriteBuffer.h"
+#include "BusRequestBuffer.h"
 
 class SystemBusTest : public SystemBus
 {

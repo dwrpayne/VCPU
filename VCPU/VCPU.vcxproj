@@ -98,7 +98,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async;Devices</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -127,7 +127,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Async\ThreadedComponent.cpp" />
-    <ClCompile Include="Controllers\DeviceController.cpp" />
     <ClCompile Include="Control\TriStateBuffer.cpp" />
     <ClCompile Include="Control\Wire.cpp" />
     <ClCompile Include="CPU\BranchControl.cpp" />
@@ -135,6 +134,9 @@
     <ClCompile Include="CPU\HazardUnit.cpp" />
     <ClCompile Include="CPU\Interlock.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
+    <ClCompile Include="Devices\DeviceController.cpp" />
+    <ClCompile Include="Devices\KeyboardController.cpp" />
+    <ClCompile Include="Devices\TerminalController.cpp" />
     <ClCompile Include="Functional\FullAdder.cpp" />
     <ClCompile Include="Gates\AndGate.cpp" />
     <ClCompile Include="Gates\Inverter.cpp" />
@@ -158,7 +160,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Async\ThreadedComponent.h" />
-    <ClInclude Include="Controllers\DeviceController.h" />
     <ClInclude Include="Control\Bundle.h" />
     <ClInclude Include="Control\Bus.h" />
     <ClInclude Include="Control\Component.h" />
@@ -184,6 +185,9 @@
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="CPU\SystemBus.h" />
+    <ClInclude Include="Devices\DeviceController.h" />
+    <ClInclude Include="Devices\KeyboardController.h" />
+    <ClInclude Include="Devices\TerminalController.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\ByteExtractor.h" />

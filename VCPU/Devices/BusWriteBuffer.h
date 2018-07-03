@@ -9,7 +9,6 @@
 #include "EdgeDetector.h"
 
 // This buffers writes to the bus. They are fire-and-forget and you don't get a result back.
-// Used by the cache to send writes off to main memory.
 // Notifies when full in which case you need to wait for it to empty.
 
 template <unsigned int N, unsigned int Naddr, unsigned int Nbuf>
