@@ -19,21 +19,19 @@ public:
 		}
 	}
 
-	template <unsigned int M>
-	void Connect(const Bundle<M>& bundle, int start = 0)
+	void Connect(const BundleAny& bundle, int start = 0)
 	{
-		for (int i = 0; i < M; i++)
+		for (unsigned int i = 0; i < bundle.Size(); i++)
 		{
-			Connect(start + i, bundle[i]);
+			Connect(start + i, bundle.Get(i));
 		}
 	}
 
-	template <unsigned int M>
-	void Remove(const Bundle<M>& bundle, int start = 0)
+	void Remove(const BundleAny& bundle, int start = 0)
 	{
-		for (int i = 0; i < M; i++)
+		for (unsigned int i = 0; i < bundle.Size(); i++)
 		{
-			Disconnect(start + i, bundle[i]);
+			Disconnect(start + i, bundle.Get(i));
 		}
 	}
 

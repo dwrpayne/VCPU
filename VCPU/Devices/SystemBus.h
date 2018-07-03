@@ -37,9 +37,9 @@ public:
 		const Wire& IRQ() const { return Get(CtrlBit::IRQ); }
 	};
 	
-	template <unsigned int N>	void ConnectData(const Bundle<N>& b, int start = 0);
+	void ConnectData(const BundleAny& b, int start = 0);
 	template <unsigned int N>	void ConnectAddr(const Bundle<N>& b, int start = 0);
-	template<unsigned int N>	void DisconnectData(const Bundle<N>& b, int start = 0);
+	void DisconnectData(const BundleAny& b, int start = 0);
 	template<unsigned int N>	void DisconnectAddr(const Bundle<N>& b, int start = 0);
 	void ConnectCtrl(const Wire& wire, CtrlBit start);
 	void DisconnectCtrl(const Wire & wire, CtrlBit start);
@@ -75,8 +75,7 @@ private:
 
 
 
-template<unsigned int N>
-inline void SystemBus::ConnectData(const Bundle<N>& b, int start)
+inline void SystemBus::ConnectData(const BundleAny& b, int start)
 {
 	data.Connect(b, start);
 }
@@ -92,8 +91,7 @@ inline void SystemBus::ConnectCtrl(const Wire& wire, CtrlBit start)
 	ctrl.Connect(Bundle<1>(wire), start);
 }
 
-template<unsigned int N>
-inline void SystemBus::DisconnectData(const Bundle<N>& b, int start)
+inline void SystemBus::DisconnectData(const BundleAny& b, int start)
 {
 	data.Remove(b, start);
 }

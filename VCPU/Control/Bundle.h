@@ -9,16 +9,23 @@ It doesn't really exist and can't be modified.
 If you reconnect its wires, you have to reconnect the components that are using it.
 ****************/
 
-template <unsigned int N>
-class Bundle
+class BundleAny
 {
 public:
-	static const unsigned int N = N;
+	virtual unsigned int Size() const = 0;
+	virtual const Wire& Get(unsigned int n) const = 0;
+};
+
+template <unsigned int N>
+class Bundle : public BundleAny
+{
+public:
 	static const Bundle<N> OFF;
 	static const Bundle<N> ON;
 	static const Bundle<N> ERR;
 
 	Bundle() {}
+
 	Bundle(std::initializer_list<const Wire*> list)
 	{
 		Connect(list);
@@ -54,6 +61,8 @@ public:
 		int val = n < pow2(N) / 2 ? n : n - pow2(N);
 		InitNumber(val);
 	}
+
+	virtual unsigned int Size() const { return N;	}
 	
 	void InitNumber(long long n)
 	{
@@ -155,7 +164,7 @@ public:
 		return Bundle<TO>(*this, -shiftby, fill);
 	}
 
-	const Wire& Get(unsigned int n) const 
+	virtual const Wire& Get(unsigned int n) const 
 	{
 		return *wires[n];
 	}
