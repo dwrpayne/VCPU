@@ -20,6 +20,7 @@ template <unsigned int N>
 class Bundle : public BundleAny
 {
 public:
+	static const unsigned int N = N;
 	static const Bundle<N> OFF;
 	static const Bundle<N> ON;
 	static const Bundle<N> ERR;

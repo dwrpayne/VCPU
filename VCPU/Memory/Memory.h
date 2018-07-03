@@ -29,6 +29,7 @@ public:
 	~Memory();
 	void Connect(SystemBus & bus);
 	void Update();
+	const Wire& ServicedWrite() { return servicedWrite.Out(); }
 
 private:
 	void DisconnectFromBus();
@@ -53,9 +54,6 @@ private:
 
 	std::mutex mMutex;
 	bool mIsMainMemory;
-
-	// A bit of a hack to enable writes to code-only memory.
-	bool mIsLoadingProgram;
 
 	friend class Debugger;
 };
@@ -139,12 +137,6 @@ inline void Memory<N, BYTES>::Update()
 	servicedRead.Update();
 	servicedWrite.Update();
 
-	if (servicedWrite.Out().On())
-	{
-		if(!(mIsLoadingProgram || mIsMainMemory))
-			pSystemBus->PrintBus();
-		assert((mIsLoadingProgram || mIsMainMemory) && "Attempting to write to code memory");
-	}
 #if DEBUG
 	if (servicedWrite.Out().On())
 	{
@@ -170,13 +162,6 @@ inline void Memory<N, BYTES>::Update()
 		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
 		ss << " just finished memory " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
 		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << ". Ack on!" << std::endl;
-		std::cout << ss.str();
-	}
-	else if (outServicedRequest.Q().On())
-	{
-		std::stringstream ss;
-		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
-		ss << " finished servicing a " << (servicedRead.Out().On() ? "read" : "write") <<  ". Ack off: " << std::endl;
 		std::cout << ss.str();
 	}
 #endif

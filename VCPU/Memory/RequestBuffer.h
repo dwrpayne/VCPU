@@ -81,11 +81,11 @@ public:
 			: WriteBufBundle()
 		{
 			Connect(0, addr);
-			Connect(AddrBundle::N, data);
+			Connect(ADDR_LEN, data);
 		}
 
 		const AddrBundle Addr() const { return Range<ADDR_LEN>(); }
-		const DataBundle Data() const { return Range<DataBundle::N>(ADDR_LEN); }
+		const DataBundle Data() const { return Range<N-ADDR_LEN>(ADDR_LEN); }
 	};
 
 	void Connect(const AddrBundle & readaddr, const AddrBundle & writeaddr, const DataBundle & data, const Wire& writereq, const Wire& readreq);

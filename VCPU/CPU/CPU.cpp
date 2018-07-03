@@ -352,6 +352,12 @@ void CPU::Update()
 	mMainMemory->DoOneUpdate();
 	mKeyboard.DoOneUpdate();
 	mTerminal.DoOneUpdate();
+
+	if (mInsMemory->ServicedWrite().On())
+	{
+		systemBus.PrintBus();
+		assert(false && "Attempting to write to code memory");
+	}
 	
 	cycles++;
 	if (!PipelineFreeze())

@@ -28,9 +28,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	pProgram = pAssembler->Assemble(source_filename);
 	
 	ProgramLoader loader(*pCPU);
-	pCPU->InstructionMemory().mIsLoadingProgram = true;
 	loader.Load(pProgram);
-	pCPU->InstructionMemory().mIsLoadingProgram = false;
 	pCPU->Connect();
 }
 
@@ -372,7 +370,6 @@ void Debugger::PrintDataForward()
 	}
 }
 
-#pragma optimize( "", off )  
 void Debugger::PrintStack()
 {
 	unsigned int cur_stack = pCPU->Registers().registers[29].Out().UnsignedRead();
@@ -396,11 +393,10 @@ void Debugger::PrintStack()
 		}
 	}
 }
-#pragma optimize( "", on )  
 
 void Debugger::PrintTiming()
 {	
-	if (pCPU->instructions % 1000 == 0)
+	if (pCPU->instructions % 10000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
 		std::cout << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;
