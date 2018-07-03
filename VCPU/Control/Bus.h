@@ -2,7 +2,6 @@
 #include <array>
 #include <algorithm> 
 
-#include "Component.h"
 #include "Wire.h"
 #include "Bundle.h"
 #include "Junction.h"

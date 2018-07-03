@@ -3,10 +3,8 @@
 
 #include "Component.h"
 #include "Bundle.h"
-#include "XorGate.h"
 #include "Register.h"
 #include "Counter.h"
-#include "MuxBundle.h"
 #include "MultiGate.h"
 #include "CircularBuffer.h"
 

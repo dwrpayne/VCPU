@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Component.h"
-#include "Wire.h"
 #include "Bundle.h"
 #include "Inverter.h"
 #include "FullAdder.h"
-#include "Multiplexer.h"
 #include "MuxBundle.h"
 #include "OverflowDetector.h"
+
+class Wire;
 
 /*******************************
 	  Adder select table

@@ -1,6 +1,5 @@
 #pragma once
 #include "Bundle.h"
-#include "Tools/MagicBundle.h"
 #include "ThreadedComponent.h"
 #include "Register.h"
 #include "JKFlipFlop.h"

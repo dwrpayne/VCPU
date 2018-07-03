@@ -1,7 +1,6 @@
 #pragma once
 #include <assert.h>
 #include <vector>
-#include "Component.h"
 #include "Wire.h"
 #include "Bundle.h"
 

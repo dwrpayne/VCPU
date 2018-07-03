@@ -1,5 +1,5 @@
 #include "CPU/CPU.h"
-#include "CPU/Cache.h"
+#include "CPU/OpcodeDecoder.h"
 
 #define _PRINT_COST(obj) std::cout << Wire::WireCount() - cnt << "\t" << typeid(obj).name() << std::endl;
 #define PRINT_COST(type) {int cnt = Wire::WireCount(); type t; _PRINT_COST(t);}

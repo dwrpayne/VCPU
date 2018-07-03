@@ -9,14 +9,12 @@
 #include "Bundle.h"
 #include "Register.h"
 #include "Decoder.h"
-#include "MultiGate.h"
+#include "Shifter.h"
 #include "Masker.h"
 #include "MuxBundle.h"
 #include "CacheLine.h"
-#include "Memory.h"
 #include "ByteMask.h"
 #include "SystemBus.h"
-#include "TriStateBuffer.h"
 #include "BusRequestBuffer.h"
 
 // This takes a byteindex/bytewrite/halfwrite to extract a byte/halfword from the incoming word and shift it appropriately.
@@ -85,7 +83,6 @@ public:
 	typedef Bundle<CACHE_OFFSET_BITS> CacheOffsetBundle;
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
-	typedef RequestBuffer<CACHE_LINE_BITS, ADDR_BITS, 4, 4> ReqBuffer;
 
 	~Cache();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus);

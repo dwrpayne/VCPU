@@ -23,7 +23,6 @@
 #include "Bus.h"
 #include "GrayCode.h"
 #include "FullAdder.h"
-#include "Adder.h"
 #include "Multiplexer.h"
 #include "Encoder.h"
 #include "Matcher.h"

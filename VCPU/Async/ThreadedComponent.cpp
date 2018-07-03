@@ -1,7 +1,8 @@
-#include "ThreadedComponent.h"
 #include <windows.h>
 #include <assert.h>
 
+#include "ThreadedComponent.h"
+#include "Wire.h"
 
 ThreadedAsyncComponent::ThreadedAsyncComponent(const wchar_t* name)
 	: numBeforeWires(Wire::WireCount())

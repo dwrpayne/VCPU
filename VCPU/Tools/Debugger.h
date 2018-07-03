@@ -1,11 +1,12 @@
 #pragma once
 #include <chrono>
 #include <deque>
+#include <array>
 #include <map>
-#include "CPU/CPU.h"
 
 class Assembler;
 class Program;
+class CPU;
 
 class Debugger
 {

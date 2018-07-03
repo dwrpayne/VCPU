@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Component.h"
-#include "Bundle.h"
-#include "JKFlipFlop.h"
-#include "AndGate.h"
-#include "MuxBundle.h"
 #include "Inverter.h"
+
+template <unsigned int N>
+class Bundle;
 
 template <unsigned int N>
 class GrayCounter : public Component

@@ -2,7 +2,8 @@
 
 #include "Component.h"
 #include "NorGate.h"
-#include "NandGate.h"
+
+class Wire;
 
 class SRLatch :	public Component
 {

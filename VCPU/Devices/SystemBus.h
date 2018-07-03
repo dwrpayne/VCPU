@@ -1,13 +1,9 @@
 #pragma once
 #include <mutex>
-#include "Component.h"
-#include "Bus.h"
-#include "AndGate.h"
-#include "NandGate.h"
-#include "NorGate.h"
-#include "Decoder.h"
 #include <bitset>
 #include <iomanip>
+#include "Bus.h"
+#include "Decoder.h"
 
 class SystemBus
 {

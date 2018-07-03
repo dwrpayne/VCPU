@@ -1,6 +1,5 @@
 #include "ProgramLoader.h"
 #include "Program.h"
-#include "CPU/CPU.h" 
 #include "CPU/Addresses.h" 
 
 ProgramLoader::ProgramLoader(CPU & cpu)

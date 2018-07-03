@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Component.h"
-#include "AndGate.h"
 #include "MultiGate.h"
 #include "Inverter.h"
 #include "Bundle.h"

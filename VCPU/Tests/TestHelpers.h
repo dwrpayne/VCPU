@@ -2,7 +2,8 @@
 
 #include <iostream>
 #include <cmath>
-#include "Wire.h"
+
+class Wire;
 
 enum Verbosity
 {

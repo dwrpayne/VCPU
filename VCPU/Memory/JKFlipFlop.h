@@ -1,8 +1,7 @@
 #pragma once
 #include "Component.h"
-#include "NandGate.h"
+#include "AndGate.h"
 #include "SRLatch.h"
-#include "NorGate.h"
 
 
 class JKFlipFlop : public Component

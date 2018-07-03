@@ -9,7 +9,7 @@
 #include "EdgeDetector.h"
 
 // This buffers writes to the bus. They are fire-and-forget and you don't get a result back.
-// Notifies when full in which case you need to wait for it to empty.
+// Notifies whether the write was successful.
 
 template <unsigned int N, unsigned int Naddr, unsigned int Nbuf>
 class BusWriteBuffer : Component

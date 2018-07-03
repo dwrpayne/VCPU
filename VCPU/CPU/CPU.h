@@ -1,13 +1,10 @@
 #pragma once
 
 #include "Component.h"
-#include "ThreadedComponent.h"
 #include "RegisterFile.h"
 
-#include "OpcodeDecoder.h"
-#include "InsRegister.h"
-#include "PipelineBuffers.h"
 #include "Cache.h"
+#include "Memory.h"
 #include "HazardUnit.h"
 #include "Interlock.h"
 #include "KeyboardController.h"

@@ -4,15 +4,13 @@
 
 #include "CPU.h"
 #include "Register.h"
-#include "Memory.h"
 #include "ALU.h"
 #include "Multiplier.h"
 #include "MuxBundle.h"
 #include "BranchControl.h"
 #include "ByteExtractor.h"
 #include "SystemBus.h"
-#include "Cache.h"
-#include "Memory.h"
+#include "PipelineBuffers.h"
 
 class CPU::Stage1 : public ThreadedAsyncComponent
 {

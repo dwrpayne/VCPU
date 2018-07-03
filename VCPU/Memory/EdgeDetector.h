@@ -1,10 +1,10 @@
 #pragma once
 #include <array>
 #include "Component.h"
-#include "Wire.h"
-#include "Bundle.h"
 #include "DFlipFlop.h"
 #include "AndGate.h"
+
+class Wire;
 
 // EdgeDetector pulses exactly once on input wire transition from 0->1 (Rise) and 1->0 (Fall)
 class EdgeDetector : public Component

@@ -1,14 +1,13 @@
 #pragma once
 #include <array>
 #include <iostream>
-#include "Wire.h"
 // Base class for all VCPU components
 
 class Component
 {
 public:
 	Component() {}
-	~Component() {}
+	virtual ~Component() {}
 
 	virtual void Update() = 0;
 };

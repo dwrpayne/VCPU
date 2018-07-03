@@ -4,7 +4,6 @@
 #include "Bundle.h"
 #include "Register.h"
 #include "Decoder.h"
-#include "MultiGate.h"
 #include "MuxBundle.h"
 
 // Note, this register file has R0 hardwired to all 0 bits, always.

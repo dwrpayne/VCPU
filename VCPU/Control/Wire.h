@@ -5,6 +5,7 @@ class Wire
 {
 public:
 	Wire(bool initial_state = false);
+	virtual ~Wire() {}
 
 	inline void Set(bool new_state) { state = new_state; }
 	

@@ -61,7 +61,6 @@
     <ClInclude Include="CPU\Interlock.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
-    <ClInclude Include="CPU\SystemBus.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />
     <ClInclude Include="Functional\ByteExtractor.h" />
@@ -111,5 +110,6 @@
     <ClInclude Include="Devices\DeviceController.h" />
     <ClInclude Include="Devices\TerminalController.h" />
     <ClInclude Include="Devices\KeyboardController.h" />
+    <ClInclude Include="Devices\SystemBus.h" />
   </ItemGroup>
 </Project>

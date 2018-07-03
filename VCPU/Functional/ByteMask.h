@@ -4,6 +4,7 @@
 #include "Bundle.h"
 #include "MuxBundle.h"
 #include "MultiGate.h"
+#include "Shifter.h"
 
 // ByteMask creates a 32-bit mask of the specified byte, half-word, or word
 

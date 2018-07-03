@@ -100,6 +100,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async;Devices</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -184,9 +185,9 @@
     <ClInclude Include="CPU\Interlock.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
-    <ClInclude Include="CPU\SystemBus.h" />
     <ClInclude Include="Devices\DeviceController.h" />
     <ClInclude Include="Devices\KeyboardController.h" />
+    <ClInclude Include="Devices\SystemBus.h" />
     <ClInclude Include="Devices\TerminalController.h" />
     <ClInclude Include="Functional\Adder.h" />
     <ClInclude Include="Functional\ALU.h" />

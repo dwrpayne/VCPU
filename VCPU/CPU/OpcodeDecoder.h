@@ -2,10 +2,8 @@
 
 #include "Component.h"
 #include "OrGate.h"
-#include "NandGate.h"
 #include "NorGate.h"
 #include "Bundle.h"
-#include "Decoder.h"
 #include "MuxBundle.h"
 
 

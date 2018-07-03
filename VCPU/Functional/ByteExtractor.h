@@ -2,7 +2,6 @@
 #include <array>
 #include "Component.h"
 #include "Bundle.h"
-#include "Multiplexer.h"
 #include "SubWordSelector.h"
 
 // ByteExtractor pulls the specified byte, half-word, or word from the provided 32-bit word

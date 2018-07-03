@@ -1,8 +1,10 @@
 #include <vector>
-#include "TestCPU.h"
 #include "TestHelpers.h"
+#include "TestCPU.h"
 #include "CPU/Cache.h"
 #include "CPU/CPU.h"
+#include "ALU.h"
+#include "CPU/OpcodeDecoder.h"
 #include "Tools/MagicBundle.h"
 #include "Instructions.h"
 #include "Tools/Debugger.h"

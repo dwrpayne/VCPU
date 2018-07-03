@@ -2,9 +2,7 @@
 #include <vector>
 #include <algorithm> 
 
-#include "Component.h"
 #include "Wire.h"
-#include "Bundle.h"
 
 class Junction : public Wire
 {

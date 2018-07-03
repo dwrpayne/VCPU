@@ -1,4 +1,5 @@
 #include "TestHelpers.h"
+#include "Wire.h"
 
 void print() {
 	std::cout << std::endl;

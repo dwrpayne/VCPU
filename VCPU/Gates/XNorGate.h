@@ -1,9 +1,10 @@
 #pragma once
 #include "Component.h"
-#include "Wire.h"
 #include "AndGate.h"
 #include "OrGate.h"
 #include "Inverter.h"
+
+class Wire;
 
 class XNorGate : public Component
 {

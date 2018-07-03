@@ -1,16 +1,11 @@
 #pragma once
 
-#include "Component.h"
 #include "Bundle.h"
 #include "Register.h"
 #include "Decoder.h"
 #include "MultiGate.h"
-#include "Counter.h"
 #include "AndGate.h"
-#include "Decoder.h"
 #include "MuxBundle.h"
-#include "Shifter.h"
-#include "SelectBundle.h"
 #include "RequestBuffer.h"
 #include "ThreadedComponent.h"
 #include "SystemBus.h"
