@@ -35,7 +35,7 @@ public:
 #endif
 
 	const Wire& WriteFailed() const { return writeFailed.Out(); }
-	const Wire& WaitingForRead() const { return waitingForRead.Q(); }
+	const Wire& WaitingForRead() const { return readRequested.Out(); }
 	const Wire& ReadSuccess() const { return receivedReadAck.Out(); }
 	const Wire& Busy() const { return busy.Out(); }
 
@@ -57,6 +57,7 @@ private:
 	AndGate shouldPopWrite;
 
 	JKFlipFlop waitingForRead;
+	OrGate readRequested;
 	JKFlipFlop waitingForWrite;
 
 	CircularBuffer<N + Naddr, Nbuf> writeBuffer;
@@ -126,8 +127,13 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 	shouldPopRead.Connect(shouldPopEdge.Rise(), writeBuffer.Empty());
 	shouldPopWrite.Connect(shouldPopEdge.Rise(), writeBuffer.NonEmpty());
 
+	// waitingFor -> "We are sending to the bus now and waiting on a response".
 	waitingForRead.Connect(shouldPopRead.Out(), ackBuffer.Out());
 	waitingForWrite.Connect(shouldPopWrite.Out(), ackBuffer.Out());
+
+	// We have been asked to do a read and don't have a response yet.
+	// There is a one cycle buffer delay to acquire the bus.
+	readRequested.Connect(waitingForRead.Q(), newRead.Out());
 
 	// Update the write buffer.
 	FullBundle bundle;
@@ -181,13 +187,14 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 {
 	newRead.Update();
 	newWrite.Update();
-
+	
 	shouldPopEdge.Update();
 	shouldPopRead.Update();
 	shouldPopWrite.Update();
 
 	waitingForRead.Update();
 	waitingForWrite.Update();
+	readRequested.Update();
 
 	writeBuffer.Update();
 	readBuffer.Update();

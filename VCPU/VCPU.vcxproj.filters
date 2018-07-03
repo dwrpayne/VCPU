@@ -35,6 +35,7 @@
     <ClCompile Include="Devices\DeviceController.cpp" />
     <ClCompile Include="Devices\TerminalController.cpp" />
     <ClCompile Include="Devices\KeyboardController.cpp" />
+    <ClCompile Include="Devices\BusSlave.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Async\ThreadedComponent.h" />
@@ -111,5 +112,6 @@
     <ClInclude Include="Devices\SystemBus.h" />
     <ClInclude Include="Devices\BusRequestBuffer.h" />
     <ClInclude Include="Devices\BusWriteBuffer.h" />
+    <ClInclude Include="Devices\BusSlave.h" />
   </ItemGroup>
 </Project>

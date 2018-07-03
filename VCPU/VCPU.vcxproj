@@ -76,8 +76,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Control;Functional;Gates;Memory;.;Async;Devices</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,6 +136,7 @@
     <ClCompile Include="CPU\HazardUnit.cpp" />
     <ClCompile Include="CPU\Interlock.cpp" />
     <ClCompile Include="CPU\OpcodeDecoder.cpp" />
+    <ClCompile Include="Devices\BusSlave.cpp" />
     <ClCompile Include="Devices\DeviceController.cpp" />
     <ClCompile Include="Devices\KeyboardController.cpp" />
     <ClCompile Include="Devices\TerminalController.cpp" />
@@ -184,6 +186,7 @@
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
     <ClInclude Include="Devices\BusRequestBuffer.h" />
+    <ClInclude Include="Devices\BusSlave.h" />
     <ClInclude Include="Devices\BusWriteBuffer.h" />
     <ClInclude Include="Devices\DeviceController.h" />
     <ClInclude Include="Devices\KeyboardController.h" />

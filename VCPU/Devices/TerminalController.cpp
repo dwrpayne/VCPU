@@ -7,13 +7,13 @@ void TerminalController::Connect(SystemBus& bus)
 {
 	// 0xffff0008 is control, 0xffff000c is data
 	DeviceController::Connect(bus);
-	incomingRequest.Connect({ &isMemMappedIo.Out(), &pSystemBus->OutAddr()[3], &pSystemBus->OutCtrl().Req() });
+	myAddress.Connect(isMemMappedIo.Out(), busConnector.GetAddr()[3]);
 
 	Bundle<32> controlBundle = Bundle<32>::OFF;
 	controlBundle.Connect(0, pendingState.Q());
-	control.Connect(controlBundle, Wire::ON, incomingControlRequest.Out());
+	control.Connect(controlBundle, Wire::ON, controlRequest.Out());
 
-	data.Connect(pSystemBus->OutData().Range<32>(), incomingDataRequest.Out(), Wire::OFF);
+	data.Connect(busConnector.GetData().Range<32>(), dataRequest.Out(), Wire::OFF);
 
 	pendingState.Connect(pendingState.NotQ(), incomingDataNow.Rise());
 	pendingState.Update();

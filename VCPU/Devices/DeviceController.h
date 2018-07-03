@@ -28,19 +28,20 @@ protected:
 	virtual void Update();
 	virtual void InternalUpdate() = 0;
 
-	AndGateN<3> incomingRequest;
+	BusSlaveConnector busConnector;
+
+	AndGate myAddress;
 	RegisterEnable<32> control;
 	RegisterEnable<32> data;
 
-	SystemBus* pSystemBus;
 	NorGateN<8> bits8To15On;
 	AndGateN<16> bitsHiOn;
 	AndGate isMemMappedIo;
 	Inverter addrBit2Inv;
 	Inverter addrBit3Inv;
-	AndGate incomingControlRequest;
-	AndGate incomingDataRequest;
-	AndGate incomingWriteRequest;
+	AndGate incomingRequest;
+	AndGate controlRequest;
+	AndGate dataRequest;
 	EdgeDetector incomingDataNow;
 
 	AndGate outServicedRequest;
