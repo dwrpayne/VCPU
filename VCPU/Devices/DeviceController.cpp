@@ -9,7 +9,7 @@ DeviceController::~DeviceController()
 	StopUpdating();
 	if (pSystemBus)
 	{
-		pSystemBus->DisconnectData(control.Out());
+		pSystemBus->DisconnectData(outData.Out());
 		pSystemBus->DisconnectCtrl(outServicedRequest.Out(), SystemBus::CtrlBit::Ack);
 	}
 }
@@ -17,7 +17,7 @@ DeviceController::~DeviceController()
 void DeviceController::Connect(SystemBus & bus)
 {
 	pSystemBus = &bus;
-	pSystemBus->ConnectData(control.Out());
+	pSystemBus->ConnectData(outData.Out());
 	pSystemBus->ConnectCtrl(outServicedRequest.Out(), SystemBus::CtrlBit::Ack);
 	
 	bits8To15On.Connect(pSystemBus->OutAddr().Range<8>(8));
@@ -32,6 +32,7 @@ void DeviceController::Connect(SystemBus & bus)
 	incomingDataNow.Connect(incomingDataRequest.Out());
 
 	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
+	outData.Connect(data.Out(), control.Out());
 }
 
 void DeviceController::Update()
@@ -51,4 +52,5 @@ void DeviceController::Update()
 	InternalUpdate();
 
 	outServicedRequest.Update();
+	outData.Update();
 }

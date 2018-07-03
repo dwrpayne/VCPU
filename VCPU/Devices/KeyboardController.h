@@ -10,7 +10,7 @@ public:
 	KeyboardController()
 		: DeviceController(L"Keyboard Controller Thread")
 	{}
-	virtual ~KeyboardController();
+	virtual ~KeyboardController() = default;
 	virtual void Connect(SystemBus& bus);
 	virtual void InternalUpdate();
 	

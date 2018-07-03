@@ -3,20 +3,10 @@
 #include <conio.h>
 
 
-KeyboardController::~KeyboardController()
-{
-	StopUpdating();
-	if (pSystemBus)
-	{
-		pSystemBus->DisconnectData(data.Out());
-	}
-}
-
 void KeyboardController::Connect(SystemBus& bus)
 {
 	// 0xffff0000 is control, 0xffff0004 is data
 	DeviceController::Connect(bus);
-	pSystemBus->ConnectData(data.Out());
 
 	incomingRequest.Connect({ &isMemMappedIo.Out(), &addrBit3Inv.Out(), &pSystemBus->OutCtrl().Req() });
 

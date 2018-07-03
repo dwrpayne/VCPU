@@ -4,6 +4,11 @@
 #include "Register.h"
 #include "JKFlipFlop.h"
 #include "EdgeDetector.h"
+#include "BusSlave.h"
+#include "MultiGate.h"
+#include "OrGate.h"
+#include "AndGate.h"
+#include "NorGate.h"
 
 class SystemBus;
 
@@ -39,6 +44,7 @@ protected:
 	EdgeDetector incomingDataNow;
 
 	AndGate outServicedRequest;
+	MultiGate<OrGate, 32> outData;
 
 	Wire pending;
 	JKFlipFlop pendingState;
