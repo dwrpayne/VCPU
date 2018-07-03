@@ -176,8 +176,6 @@
     <ClInclude Include="Control\Wire.h" />
     <ClInclude Include="CPU\Addresses.h" />
     <ClInclude Include="CPU\BranchControl.h" />
-    <ClInclude Include="CPU\BusRequestBuffer.h" />
-    <ClInclude Include="CPU\BusWriteBuffer.h" />
     <ClInclude Include="CPU\Cache.h" />
     <ClInclude Include="CPU\CPU.h" />
     <ClInclude Include="CPU\HazardUnit.h" />
@@ -185,6 +183,8 @@
     <ClInclude Include="CPU\Interlock.h" />
     <ClInclude Include="CPU\OpcodeDecoder.h" />
     <ClInclude Include="CPU\PipelineBuffers.h" />
+    <ClInclude Include="Devices\BusRequestBuffer.h" />
+    <ClInclude Include="Devices\BusWriteBuffer.h" />
     <ClInclude Include="Devices\DeviceController.h" />
     <ClInclude Include="Devices\KeyboardController.h" />
     <ClInclude Include="Devices\SystemBus.h" />
