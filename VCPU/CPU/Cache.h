@@ -84,7 +84,6 @@ public:
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
 
-	~Cache();
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus);
 	void Update();
 	void UpdateUntilNoStall(bool flush = false);
@@ -125,7 +124,6 @@ private:
 		TagBundle tag;
 	};
 
-	void DisconnectFromBus();
 	SystemBus * pSystemBus;
 
 	OrGate readOrWrite;
@@ -174,12 +172,6 @@ private:
 
 	friend class Debugger;
 };
-
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
-inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::~Cache()
-{
-	DisconnectFromBus();
-}
 
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
@@ -330,9 +322,4 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::UpdateUntilNoStall(bool flush)
 	{
 		Update();
 	} while (NeedStall().On() || (flush && busBuffer.Busy().On()));
-}
-
-template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
-void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::DisconnectFromBus()
-{
 }
