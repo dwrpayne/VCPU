@@ -133,25 +133,22 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 				}
 				program->AddTextField(label, bytes.size(), bytes);
 			}
-			//else if (words[0] == ".byte")
-			//{
-
-			//	bool in_string = false;
-			//	for (unsigned char c : code_line)
-			//	{
-			//		if (c == '"')
-			//		{
-			//			if (in_string) break;
-			//			in_string = true;
-			//			continue;
-			//		}
-			//		if (in_string)
-			//		{
-			//			bytes.push_back(c);
-			//		}
-			//	}
-			//	program->AddTextField(label, bytes.size(), bytes);
-			//}
+			else if (words[0] == ".byte")
+			{
+				for (std::string w : words)
+				{
+					std::replace(w.begin(), w.end(), ',', ' ');
+					try
+					{
+						int val = std::stoul(w);
+						assert(val < 256);
+						bytes.push_back((unsigned char)val);
+					}
+					catch (std::invalid_argument)
+					{}
+				}
+				program->AddTextField(label, bytes.size(), bytes);
+			}
 		}
 	}
 	else
