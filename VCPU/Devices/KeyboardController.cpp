@@ -18,7 +18,7 @@ void KeyboardController::Connect(SystemBus& bus)
 	controlBundle.Connect(0, pendingState.Q());
 	control.Connect(controlBundle, Wire::ON, controlRequest.Out());	
 
-	pendingState.Connect(pending, incomingDataNow.Rise());
+	pendingState.Connect(pending, dataRequest.Out());
 }
 
 void KeyboardController::InternalUpdate()

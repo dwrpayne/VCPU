@@ -42,7 +42,6 @@ protected:
 	AndGate incomingRequest;
 	AndGate controlRequest;
 	AndGate dataRequest;
-	EdgeDetector incomingDataNow;
 
 	AndGate outServicedRequest;
 	MultiGate<OrGate, 32> outData;

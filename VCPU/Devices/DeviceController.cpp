@@ -22,7 +22,6 @@ void DeviceController::Connect(SystemBus & bus)
 	incomingRequest.Connect(myAddress.Out(), busConnector.Request());
 	dataRequest.Connect(incomingRequest.Out(), busConnector.GetAddr()[2]);
 	controlRequest.Connect(incomingRequest.Out(), addrBit2Inv.Out());
-	incomingDataNow.Connect(dataRequest.Out());
 
 	outServicedRequest.Connect(incomingRequest.Out(), Wire::ON);
 	outData.Connect(data.Out(), control.Out());
@@ -42,8 +41,6 @@ void DeviceController::Update()
 	incomingRequest.Update();
 	dataRequest.Update();
 	controlRequest.Update();
-	incomingDataNow.Update();
-
 
 	InternalUpdate();
 

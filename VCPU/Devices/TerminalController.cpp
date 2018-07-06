@@ -15,7 +15,7 @@ void TerminalController::Connect(SystemBus& bus)
 
 	data.Connect(busConnector.GetData().Range<32>(), dataRequest.Out(), Wire::OFF);
 
-	pendingState.Connect(pendingState.NotQ(), incomingDataNow.Rise());
+	pendingState.Connect(pendingState.NotQ(), dataRequest.Out());
 	pendingState.Update();
 }
 
