@@ -18,6 +18,7 @@ public:
 	~BusSlaveConnector();
 	void Connect(SystemBus& bus, const DataBundle& data, const Wire& ack);
 	void Update();
+	void PostUpdate();
 
 	const AddrBundle& GetAddr() { return pSystemBus->OutAddr(); }
 	const DataBundle& GetData() { return pSystemBus->OutData(); }

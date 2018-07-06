@@ -22,7 +22,7 @@ void BusSlaveConnector::Connect(SystemBus & bus, const DataBundle& data, const W
 	readRequest.Connect(request.Out(), pSystemBus->OutCtrl().Read());
 	writeRequest.Connect(request.Out(), pSystemBus->OutCtrl().Write());
 
-	mAckBuffer.Connect(request.Out(), ack, mAckBuffer.Cout());
+	mAckBuffer.Connect(pSystemBus->OutCtrl().Req(), ack, mAckBuffer.Cout());
 
 	mDataBuffer.Connect(data, ack, mAckBuffer.Cout());
 }
@@ -33,6 +33,10 @@ void BusSlaveConnector::Update()
 	request.Update();
 	readRequest.Update();
 	writeRequest.Update();
+}
+
+void BusSlaveConnector::PostUpdate()
+{
 	mAckBuffer.Update();
 	mDataBuffer.Update();
 }

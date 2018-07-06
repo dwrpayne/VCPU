@@ -49,4 +49,6 @@ void DeviceController::Update()
 
 	outServicedRequest.Update();
 	outData.Update();
+
+	busConnector.PostUpdate();
 }
