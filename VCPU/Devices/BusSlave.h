@@ -4,16 +4,19 @@
 #include "Inverter.h"
 #include "AndGate.h"
 #include "SystemBus.h"
+#include "Register.h"
+#include "FullAdder.h"
 
 
 class BusSlaveConnector : public Component
 {
 public:
-	typedef Bundle<SystemBus::Ndata> DataBundle;
+	static const int N = SystemBus::Ndata;
+	typedef Bundle<N> DataBundle;
 	typedef Bundle<SystemBus::Naddr> AddrBundle;
 
 	~BusSlaveConnector();
-	void Connect(SystemBus& bus, const BundleAny& data, const Wire& ack);
+	void Connect(SystemBus& bus, const DataBundle& data, const Wire& ack);
 	void Update();
 
 	const AddrBundle& GetAddr() { return pSystemBus->OutAddr(); }
@@ -24,9 +27,10 @@ public:
 	const Wire& ReadRequest() { return readRequest.Out(); }
 
 private:
-	const Wire* mAck;
-	const BundleAny* mData;
 	SystemBus* pSystemBus;
+
+	RegisterEnable<SystemBus::Ndata> mDataBuffer;
+	FullAdder mAckBuffer;
 
 	Inverter busAckInv;
 	AndGate request;
