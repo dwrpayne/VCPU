@@ -100,6 +100,8 @@ print_b:	push 	$ra
 print_row:	addiu	$t5, $t4, 0xf	; $t5 is end of row marker				
 			beq		$t4, $s1, print_done
 print_cell:	lb		$a0, 0($t4)
+			ori		$a0, $a0, 144			; convert 32/35 to 176/178
+			andi	$a0, $a0, 0xfffe		; convert 32/35 to 176/178
 			call	putch_fast
 			bne		$t4, $t5, print_cell
 			addiu	$t4, $t4, 1
