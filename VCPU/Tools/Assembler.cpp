@@ -115,7 +115,7 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 		if (words[0].size() > 2 && words[0][0] == '.')
 		{
 			std::vector<unsigned char> bytes;
-			if (code_line.find("ascii") != std::string::npos)
+			if (words[0] == ".ascii")
 			{
 				bool in_string = false;
 				for (unsigned char c : code_line)
@@ -133,6 +133,25 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 				}
 				program->AddTextField(label, bytes.size(), bytes);
 			}
+			//else if (words[0] == ".byte")
+			//{
+
+			//	bool in_string = false;
+			//	for (unsigned char c : code_line)
+			//	{
+			//		if (c == '"')
+			//		{
+			//			if (in_string) break;
+			//			in_string = true;
+			//			continue;
+			//		}
+			//		if (in_string)
+			//		{
+			//			bytes.push_back(c);
+			//		}
+			//	}
+			//	program->AddTextField(label, bytes.size(), bytes);
+			//}
 		}
 	}
 	else
@@ -150,15 +169,15 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 {
 	std::string line = l;
 
-	// TODO: hex number replaces
 	for (auto& word : split(l.c_str()))
 	{
-		if (word.size() > 2 && word[0] == '0' && (word[1] == 'x' || word[1] == 'X'))
+		try
 		{
-			unsigned int hex = std::stoul(word, 0, 16);
-			line = std::regex_replace(line, std::regex(word), std::to_string(hex));
-			break;
+			auto val = std::stoll(word, 0, 0);
+			line = std::regex_replace(line, std::regex(word), std::to_string(val));
 		}
+		catch (std::invalid_argument)
+		{}
 	}
 	// Function calls
 	line = std::regex_replace(line, std::regex("^\\s*call\\s+(\\S+)\\b"), "jal	$1\nnop");
