@@ -21,10 +21,10 @@ void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss, const W
 	bubble.Connect({ &idexMatcher.Match(), &exmemMatcher.Match(), &idextoexmemMatcher.Match() });
 	freeze.Connect({&inscachemiss, &cachemiss, &haltExOp});
 	freezeInv.Connect(freeze.Out());
-	bubbleID.Connect(idexMatcher.Match(), freezeInv.Out());
-	exmemMatchEither.Connect(exmemMatcher.Match(), idextoexmemMatcher.Match());
-	bubbleEX.Connect(exmemMatchEither.Out(), freezeInv.Out());
-	proceedID.Connect(freeze.Out(), exmemMatchEither.Out());
+	idexMatchEither.Connect(idexMatcher.Match(), idextoexmemMatcher.Match());
+	bubbleID.Connect(idexMatchEither.Out(), freezeInv.Out());
+	bubbleEX.Connect(exmemMatcher.Match(), freezeInv.Out());
+	proceedID.Connect(freeze.Out(), exmemMatcher.Match());
 	proceedIF.Connect(freeze.Out(), bubble.Out());
 }
 
@@ -46,8 +46,8 @@ void Interlock::Update()
 	bubble.Update();
 	freeze.Update();
 	freezeInv.Update();
+	idexMatchEither.Update();
 	bubbleID.Update();
-	exmemMatchEither.Update();
 	bubbleEX.Update();
 	proceedIF.Update();
 	proceedID.Update();

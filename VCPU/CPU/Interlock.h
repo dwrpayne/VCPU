@@ -44,7 +44,7 @@ private:
 	OrGateN<3> freeze;
 	Inverter freezeInv;
 	AndGate bubbleID;
-	OrGate exmemMatchEither;
+	OrGate idexMatchEither;
 	AndGate bubbleEX;
 	NorGate proceedIF;
 	NorGate proceedID;
