@@ -115,7 +115,7 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 		if (words[0].size() > 2 && words[0][0] == '.')
 		{
 			std::vector<unsigned char> bytes;
-			if (words[0] == ".ascii")
+			if (words[0].substr(0, 6) == ".ascii")
 			{
 				bool in_string = false;
 				for (unsigned char c : code_line)
@@ -131,6 +131,10 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 						bytes.push_back(c);
 					}
 				}
+				if (words[0] == ".asciiz")
+				{
+					bytes.push_back(0);
+				}
 				program->AddTextField(label, bytes.size(), bytes);
 			}
 			else if (words[0] == ".byte")
@@ -140,12 +144,30 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 					std::replace(w.begin(), w.end(), ',', ' ');
 					try
 					{
-						int val = std::stoul(w);
+						int val = std::stoul(w, 0, 0);
 						assert(val < 256);
 						bytes.push_back((unsigned char)val);
 					}
 					catch (std::invalid_argument)
 					{}
+				}
+				program->AddTextField(label, bytes.size(), bytes);
+			}
+			else if (words[0] == ".half")
+			{
+				for (std::string w : words)
+				{
+					std::replace(w.begin(), w.end(), ',', ' ');
+					try
+					{
+						int val = std::stoul(w, 0, 0);
+						assert(val < 65536);
+						bytes.push_back((unsigned char)(val%256));
+						bytes.push_back((unsigned char)(val/256));
+					}
+					catch (std::invalid_argument)
+					{
+					}
 				}
 				program->AddTextField(label, bytes.size(), bytes);
 			}
