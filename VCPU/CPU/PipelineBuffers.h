@@ -82,19 +82,18 @@ public:
 	void Connect(const Wire& enable, const Wire& flush, const Bundle<5>& rwrite, const Bundle<32>& regR2, const Bundle<32>& aluout, const ALU<32>::ALUFlags& flags,
 		const OpcodeDecoder::OpcodeDecoderBundle& opcodeDec)
 	{
-		flushInv.Connect(flush);
-		enableAnd.Connect(flushInv.Out(), enable);
+		// Only flush if we aren't stalling!
+		flushAnd.Connect(enable, flush);
 
-		Rwrite.Connect(rwrite, enable, flush);
-		reg2.Connect(regR2, enableAnd.Out());
-		aluOut.Connect(aluout, enableAnd.Out());
-		aluFlags.Connect(flags, enableAnd.Out());
-		opcodeControl.Connect(opcodeDec, enableAnd.Out());
+		Rwrite.Connect(rwrite, enable, flushAnd.Out());
+		reg2.Connect(regR2, enable, flushAnd.Out());
+		aluOut.Connect(aluout, enable, flushAnd.Out());
+		aluFlags.Connect(flags, enable, flushAnd.Out());
+		opcodeControl.Connect(opcodeDec, enable, flushAnd.Out());
 	}
 	void Update()
 	{
-		flushInv.Update();
-		enableAnd.Update();
+		flushAnd.Update();
 		Rwrite.Update();
 		reg2.Update();
 		aluOut.Update();
@@ -107,16 +106,15 @@ public:
 	OpcodeDecoder::OpcodeDecoderBundle OpcodeControl() const { return OpcodeDecoder::OpcodeDecoderBundle(opcodeControl.Out()); }
 
 	RegisterReset<5> Rwrite;
-	Register<32> reg2;
-	Register<32> aluOut;
-	Register<4> aluFlags;
-	Register<OpcodeDecoder::OUT_WIDTH> opcodeControl;
+	RegisterReset<32> reg2;
+	RegisterReset<32> aluOut;
+	RegisterReset<4> aluFlags;
+	RegisterReset<OpcodeDecoder::OUT_WIDTH> opcodeControl;
 
 private:
 	// Flushing EXMEM leads the cache to behave badly if it was in the middle of a pending operation.
 	// It relies on this pipeline buffer to maintain its state for it. Maybe that should be rethought.
-	Inverter flushInv;
-	AndGate enableAnd;
+	AndGate flushAnd;
 };
 
 class BufferMEMWB : public Component
