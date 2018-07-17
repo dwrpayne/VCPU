@@ -15,7 +15,7 @@ public:
 
 	void Connect(const Wire& inscachemiss, const Wire& cachemiss, const Wire& haltExOp,								// todo: replace this with a dedicated jumpreg/branch circuit in cpu.
 		const RegBundle& readR1IFID, const RegBundle& readR2IFID, const RegBundle& writingRegIDEX, const Bundle<6>& opcodeIF, const Bundle<6>& funcIF,
-		const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM);
+		const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM, const Wire& storeopIDEX);
 	void Update();
 
 	const Wire& BubbleID() { return bubbleID.Out(); }
@@ -38,6 +38,8 @@ private:
 	AndGate branchopand;
 	OrGate branchOrJumpReg;
 	AndGate branchandload;
+	Inverter notStoreOp;
+	AndGate loadAndNotStore;
 	OrGateN<3> bubble;
 	OrGateN<3> freeze;
 	Inverter freezeInv;

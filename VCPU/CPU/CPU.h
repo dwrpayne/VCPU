@@ -93,6 +93,7 @@ private:
 	
 	HazardUnit hazardIDEX;
 	HazardUnit hazardIFID;
+	HazardUnit hazardEXMEM;
 	Interlock interlock;
 
 	bool mIsMissingInsCache;

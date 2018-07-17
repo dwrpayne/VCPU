@@ -113,7 +113,7 @@ void Debugger::PrintCycle()
 	//bPrintInstruction = pCPU->Break();
 	//bPrintRegisters = pCPU->Break();
 
-	if (!pCPU->PipelineFreeze())
+	//if (!pCPU->PipelineFreeze())
 	{
 		if (bPrintInstruction)
 		{
@@ -244,7 +244,7 @@ void Debugger::SaveMemoryToDisk()
 
 void Debugger::PrintInstruction()
 {
-	assert(pCPU->IR().UnsignedRead() == pProgram->GetInstruction(mLastInstructions[0])->mBinary);
+	//assert(pCPU->IR().UnsignedRead() == pProgram->GetInstruction(mLastInstructions[0])->mBinary);
 	std::cout << "Current IR: " << std::bitset<32>(pCPU->IR().UnsignedRead()) << std::endl;
 	std::cout << "Address  Stage   Assembled Instruction      Source Instruction  " << std::endl;
 	static const char* STAGE[5] = { "IF", "ID", "EX", "MEM", "WB" };
@@ -328,45 +328,58 @@ void Debugger::PrintDataForward()
 	{
 		if (pCPU->hazardIFID.ForwardExMemRs.Out().On())
 		{
-			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRs().Read() << " from Ex/Mem to ID stage RS" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRs().Read() << 
+				"(0x" << std::hex << pCPU->hazardIFID.ForwardDataRs().Read() << std::dec << ") from Ex/Mem to ID stage RS" << std::endl;
 		}
 		else
 		{
-			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRs().Read() << " from Mem/WB to ID stage RS" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRs().Read() << 
+				"(0x" << std::hex << pCPU->hazardIFID.ForwardDataRs().Read() << std::dec << ") from Mem/WB to ID stage RS" << std::endl;
 		}
 	}
 	if (pCPU->hazardIFID.DoForwardRt().On())
 	{
 		if (pCPU->hazardIFID.ForwardExMemRt.Out().On())
 		{
-			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRt().Read() << " from Ex/Mem to ID stage RT" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRt().Read() << 
+				"(0x" << std::hex << pCPU->hazardIFID.ForwardDataRt().Read() << std::dec << ") from Ex/Mem to ID stage RT" << std::endl;
 		}
 		else
 		{
-			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRt().Read() << " from Mem/WB to ID stage RT" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIFID.ForwardDataRt().Read() << 
+				"(0x" << std::hex << pCPU->hazardIFID.ForwardDataRt().Read() << std::dec << ") from Mem/WB to ID stage RT" << std::endl;
 		}
 	}
 	if (pCPU->hazardIDEX.DoForwardRs().On())
 	{
 		if (pCPU->hazardIDEX.ForwardExMemRs.Out().On())
 		{
-			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRs().Read() << " from Ex/Mem to EX stage RS (alu input A)" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRs().Read() << 
+				"(0x" << std::hex << pCPU->hazardIDEX.ForwardDataRs().Read() << std::dec << ") from Ex/Mem to EX stage RS (alu input A)" << std::endl;
 		}
 		else
 		{
-			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRs().Read() << " from Mem/WB to EX stage RS (alu input A)" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRs().Read() << 
+				"(0x" << std::hex << pCPU->hazardIDEX.ForwardDataRs().Read() << std::dec << ") from Mem/WB to EX stage RS (alu input A)" << std::endl;
 		}
 	}
 	if (pCPU->hazardIDEX.DoForwardRt().On())
 	{
 		if (pCPU->hazardIDEX.ForwardExMemRt.Out().On())
 		{
-			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRt().Read() << " from Ex/Mem to EX stage RT (alu input B)" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRt().Read() << 
+				"(0x" << std::hex << pCPU->hazardIDEX.ForwardDataRt().Read() << std::dec << ") from Ex/Mem to EX stage RT (alu input B)" << std::endl;
 		}
 		else
 		{
-			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRt().Read() << " from Mem/WB to EX stage RT (alu input B)" << std::endl;
+			std::cout << "Forwarding " << pCPU->hazardIDEX.ForwardDataRt().Read() << 
+				"(0x" << std::hex << pCPU->hazardIDEX.ForwardDataRt().Read() << std::dec << ") from Mem/WB to EX stage RT (alu input B)" << std::endl;
 		}
+	}
+	if (pCPU->hazardEXMEM.DoForwardRt().On())
+	{
+		std::cout << "Forwarding " << pCPU->hazardEXMEM.ForwardDataRt().Read() << 
+			"(0x" << std::hex << pCPU->hazardEXMEM.ForwardDataRt().Read() << std::dec << ") from Mem/Wb to MEM stage RT (mem write value)" << std::endl;
 	}
 }
 

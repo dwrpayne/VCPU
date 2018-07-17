@@ -84,11 +84,12 @@ class CPU::Stage4 : public ThreadedAsyncComponent
 {
 public:
 	using ThreadedAsyncComponent::ThreadedAsyncComponent;
-	void Connect(const BufferEXMEM& stage3, const Wire& proceed, SystemBus& systembus);
+	void Connect(const BufferEXMEM& stage3, const HazardUnit& hazard, const Wire& proceed, SystemBus& systembus);
 	void Update();
 	void PostUpdate();
 	const BufferMEMWB& Out() const { return bufMEMWB; }
 private:
+	MuxBundle<32, 2> memWriteDataMux;
 	CPU::MainCache cache;
 	ByteExtractor byteSelect;
 	MuxBundle<32, 2> regWriteDataMux;
@@ -187,14 +188,15 @@ void CPU::Stage3::Connect(const BufferIDEX& stage2, const HazardUnit& hazard, co
 		alu.Flags(), stage2.OpcodeControl());
 }
 
-void CPU::Stage4::Connect(const BufferEXMEM& stage3, const Wire& proceed, SystemBus& systembus)
+void CPU::Stage4::Connect(const BufferEXMEM& stage3, const HazardUnit& hazard, const Wire& proceed, SystemBus& systembus)
 {
 	// Main Memory
 	const auto& memAddr = stage3.aluOut.Out();
-	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), stage3.reg2.Out(), stage3.OpcodeControl().LoadOp(),
+
+	memWriteDataMux.Connect({ stage3.reg2.Out(), hazard.ForwardDataRt() }, hazard.DoForwardRt());
+	cache.Connect(memAddr.Range<MainCache::ADDR_BITS>(0), memWriteDataMux.Out(), stage3.OpcodeControl().LoadOp(),
 		stage3.OpcodeControl().StoreOp(), stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord(), systembus);
-
-
+	
 	// Byte/Half/Word Selection
 	byteSelect.Connect(cache.Out(), memAddr.Range<2>(0), stage3.OpcodeControl().LoadSigned(),
 		stage3.OpcodeControl().MemOpByte(), stage3.OpcodeControl().MemOpHalfWord());
@@ -263,6 +265,7 @@ void CPU::Stage3::PostUpdate()
 // ******** STAGE 4 BEGIN - MEMORY STORE ************
 void CPU::Stage4::Update()
 {
+	memWriteDataMux.Update();
 	cache.Update();
 	byteSelect.Update();
 	regWriteDataMux.Update();
@@ -289,10 +292,14 @@ CPU::CPU()
 	hazardIDEX.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
 		stage2->Out().RS.Out(), stage2->Out().RT.Out());
+	hazardEXMEM.Connect(HazardUnit::RegBundle::OFF, HazardUnit::DataBundle::OFF, Wire::OFF,
+		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
+		HazardUnit::RegBundle::OFF, stage3->Out().Rwrite.Out());
 
 	interlock.Connect(InstructionCache().NeedStall(), GetMainCache().NeedStall(), stage3->Out().OpcodeControl().Halt(),
 		stage1->Out().IR.RsAddr(), stage1->Out().IR.RtAddr(), stage2->Out().RD.Out(), stage1->Out().IR.Opcode(), stage1->Out().IR.Function(),
-		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), stage3->Out().OpcodeControl().LoadOp());
+		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), 
+		stage3->Out().OpcodeControl().LoadOp(), stage2->Out().OpcodeControl().StoreOp());
 
 	mInsMemory->Connect(systemBus);
 	mMainMemory->Connect(systemBus);
@@ -323,7 +330,7 @@ void CPU::Connect()
 	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.ProceedIF(), systemBus);
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
-	stage4->Connect(stage3->Out(), interlock.ProceedMEM(), systemBus); 
+	stage4->Connect(stage3->Out(), hazardEXMEM, interlock.ProceedMEM(), systemBus);
 }
 
 void CPU::Update()
@@ -347,6 +354,7 @@ void CPU::Update()
 
 	hazardIFID.Update();
 	hazardIDEX.Update();
+	hazardEXMEM.Update();
 		
 	mInsMemory->DoOneUpdate();
 	mMainMemory->DoOneUpdate();
