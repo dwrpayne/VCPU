@@ -331,7 +331,6 @@ void CPU::Connect()
 	stage1->Connect(stage2->Out().pcJumpAddr.Out(), stage2->Out().branchTaken.Out(), interlock.ProceedIF(), systemBus);
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
-	stage4->Connect(stage3->Out(), interlock.ProceedMEM(), systemBus);
 	stage4->Connect(stage3->Out(), hazardEXMEM, interlock.ProceedMEM(), systemBus);
 	mKeyboard.UpdateForever();
 	mTerminal.UpdateForever();
