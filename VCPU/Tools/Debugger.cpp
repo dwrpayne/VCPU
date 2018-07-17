@@ -69,6 +69,16 @@ void Debugger::Step()
 	mThisCycleTime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
+	if (pCPU->Fault())
+	{
+		bSingleStep = true;
+		bPrintInstruction = true;
+		bPrintRegisters = true;
+		bPrintDataForward = true;
+		bPrintStack = true;
+		bPrintBus = true;
+	}
+
 	if (bPrintTiming)
 	{
 		for (int i = 0; i < NUM_BUCKETS; i++)

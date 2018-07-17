@@ -285,6 +285,7 @@ CPU::CPU()
 	, mInsMemory(new InsMemory(false))
 	, mMainMemory(new MainMemory(true))
 	, cycles(1)
+	, fault(false)
 {
 	hazardIFID.Connect(stage3->Out().Rwrite.Out(), stage3->Out().aluOut.Out(), stage3->Out().OpcodeControl().RegWrite(),
 		stage4->Out().Rwrite.Out(), stage4->Out().RWriteData.Out(), stage4->Out().OpcodeControl().RegWrite(),
@@ -364,7 +365,8 @@ void CPU::Update()
 	if (mInsMemory->ServicedWrite().On())
 	{
 		systemBus.PrintBus();
-		assert(false && "Attempting to write to code memory");
+		std::cout << "Attempting to write to code memory!" << std::endl;
+		fault = true;
 	}
 	
 	cycles++;
@@ -452,6 +454,11 @@ bool CPU::Halt()
 bool CPU::Break()
 {
 	return stage2->Out().OpcodeControl().Break().On();
+}
+
+bool CPU::Fault()
+{
+	return fault;
 }
 
 std::array<std::chrono::microseconds, 4> CPU::GetStageTiming()
