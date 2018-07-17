@@ -62,7 +62,7 @@ jump1: 	addiu	$8, $8, 1
 		hlt
 jump2: 	addiu	$8, $8, 1
 		addiu	$8, $8, 1
-		addiu	$10, $0, 312
+		ori		$10, $r0, jump3
 		addiu	$8, $8, 1
 		addiu	$8, $8, 1
 		addiu	$8, $8, 1
@@ -71,8 +71,8 @@ jump2: 	addiu	$8, $8, 1
 		add		$0, $0, $0
 		add		$0, $0, $0
 		hlt
-		addiu	$9, $9, 1
-		addiu	$11, $0, 380
+jump3:	addiu	$9, $9, 1
+		ori		$11, $0, jump4
 		addiu	$9, $9, 1
 		addiu	$9, $9, 1
 		addiu	$9, $9, 1
@@ -88,7 +88,7 @@ jump2: 	addiu	$8, $8, 1
 		hlt
 		addiu	$9, $9, 1
 		addiu	$9, $9, 1
-		addiu	$9, $9, 1
+jump4:	addiu	$9, $9, 1
 		addiu	$9, $9, 1
 		addiu	$9, $9, 1
 		hlt
