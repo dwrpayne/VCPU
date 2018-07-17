@@ -1,39 +1,62 @@
-main:	li		$25, 0x10000000
-		addi 	$23, $0, 1234
-		addi 	$2, $23, 123
-		addi 	$3, $23, 123
-		addi 	$3, $3, 123
-		addi 	$3, $3, 123
-		add 	$4, $23, $2
-		add 	$5, $23, $3
-		add 	$6, $5, $4
-		add 	$7, $5, $6
-		sub 	$7, $5, $6
-		add 	$8, $7, $7
-		sw		$23, 4($25)
+main:	li		$24, 0x10000000
+		li		$25, 0x10000000
+		li		$2, 1234
+		sw		$2, 4($25)			; store before load
+		lw		$3, 4($25)			; no bubble
+		nop
+		nop
+		addiu	$24, $24, 100
+		lw		$13, 4($25)			; store after load, same value
+		sw		$13, 4($24)			; bubble
 		nop
 		nop
 		nop
-		lw		$10, 4($25)
-		add		$11, $10, $23
-		add		$12, $10, $23
-		add		$13, $10, $23
-		add		$14, $10, $23
-		beq		$13, $14, 12
+		brk
+		lw		$3, 4($25)			; store after load, same address
+		sw		$2, 4($25)			; no bubble
+		nop
+		nop
+		li		$4, 0x10000010		; store after ori address
+		sw		$2, 0($4)			; no stall
+		nop
+		nop
+		li		$5, 1234			; store after ori value
+		sw		$5, 4($4)			; no stall
+		nop
+		nop
+		li		$6, 0x10000010		; load after ori addr
+		lw		$7, 0($6)			; no stall
+		nop
+		nop
+		li		$8, 4444			; load after ori val
+		lw		$8, 0($6)			; no stall
+		nop
+		nop
+		lw		$9, 0($6)			; add after load val
+		addiu	$9, $9, 1			; stall
+		nop
+		nop
+		lw		$9, 0($6)			; add after load addr
+		addiu	$10, $6, 4			; no stall
+		nop
+		nop
+		lw		$9, 0($6)			; branch after load val
+		beq		$9, $2, 4			; double bubble
 		nop
 		nop
 		nop
-		sub		$20, $0, $23
-		blez	$20, -4
-		addi	$20, $20, 100
-		ori		$21, $0, 123
-		or		$22, $21, $0
-		beq		$21, $22, 20
-		nop
-		nop
-		hlt
+		lw		$9, 0($6)			; branch after load addr
+		beq		$6, $24, 0			; no bubble
 		nop
 		nop
 		nop
+		addiu	$10, $10, 2			; branch after add val
+		beq		$10, $6, 0			; bubble
 		nop
+		nop
+		addiu	$11, $9, 2			; branch after add source
+		beq		$9, $6, 0			; no bubble
+		nop
+		nop
+		nop				
 		hlt
