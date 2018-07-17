@@ -168,6 +168,9 @@ private:
 
 #if DEBUG || 1
 	CacheAddrBundle DEBUG_addr;
+	DataBundle DEBUG_data;
+	const Wire* DEBUG_read;
+	const Wire* DEBUG_write;
 #endif
 
 	friend class Debugger;
@@ -180,6 +183,9 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	CacheAddrBundle address(addr);
 #if DEBUG || 1
 	DEBUG_addr = address;
+	DEBUG_data = data;
+	DEBUG_read = &read;
+	DEBUG_write = &write;
 #endif
 
 	pSystemBus = &bus;	
@@ -258,6 +264,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 {
+	readOrWrite.Update();
 #if DEBUG
 	if (needStall.Out().On())
 	{
@@ -266,8 +273,11 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Update()
 		ss << " is still stalling from the previous request (write buffered could mean it's a while)" << std::endl;
 		std::cout << ss.str();
 	}
+	if (readOrWrite.Out().On())
+	{
+		std::cout << "Cache " << (DEBUG_read->On() ? "reading " : "writing ") << DEBUG_data.UnsignedRead() << " at " << DEBUG_addr.UnsignedRead() << std::endl;
+	}
 #endif
-	readOrWrite.Update();
 
 	unCacheableAddr.Update();
 	cacheableAddr.Update();

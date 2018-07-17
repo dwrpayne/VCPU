@@ -3,7 +3,7 @@
 
 void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss, const Wire& haltExOp,
 	const RegBundle& readR1IFID, const RegBundle& readR2IFID, const RegBundle& writingRegIDEX, const Bundle<6>& opcodeIF, const Bundle<6>& funcIF,
-	const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM)
+	const RegBundle& readR1IDEX, const RegBundle& readR2IDEX, const RegBundle& writingRegEXMEM, const Wire& loadopEXMEM, const Wire& storeopIDEX)
 {
 	func3Inv.Connect(funcIF[3]);
 	zeroOpcode.Connect(opcodeIF);
@@ -13,16 +13,18 @@ void Interlock::Connect(const Wire& inscachemiss, const Wire& cachemiss, const W
 	branchopand.Connect(opcodeIF[2], branchopnor.Out());
 	branchOrJumpReg.Connect(branchopand.Out(), jumpOp.Out());
 	branchandload.Connect(branchOrJumpReg.Out(), loadopEXMEM);
+	notStoreOp.Connect(storeopIDEX);
+	loadAndNotStore.Connect(loadopEXMEM, notStoreOp.Out());
 	idexMatcher.Connect(readR1IFID, readR2IFID, writingRegIDEX, branchOrJumpReg.Out());
-	exmemMatcher.Connect(readR1IDEX, readR2IDEX, writingRegEXMEM, loadopEXMEM);
+	exmemMatcher.Connect(readR1IDEX, readR2IDEX, writingRegEXMEM, loadAndNotStore.Out());
 	idextoexmemMatcher.Connect(readR1IFID, readR2IFID, writingRegEXMEM, branchandload.Out());
 	bubble.Connect({ &idexMatcher.Match(), &exmemMatcher.Match(), &idextoexmemMatcher.Match() });
 	freeze.Connect({&inscachemiss, &cachemiss, &haltExOp});
 	freezeInv.Connect(freeze.Out());
-	bubbleID.Connect(idexMatcher.Match(), freezeInv.Out());
-	exmemMatchEither.Connect(exmemMatcher.Match(), idextoexmemMatcher.Match());
-	bubbleEX.Connect(exmemMatchEither.Out(), freezeInv.Out());
-	proceedID.Connect(freeze.Out(), exmemMatchEither.Out());
+	idexMatchEither.Connect(idexMatcher.Match(), idextoexmemMatcher.Match());
+	bubbleID.Connect(idexMatchEither.Out(), freezeInv.Out());
+	bubbleEX.Connect(exmemMatcher.Match(), freezeInv.Out());
+	proceedID.Connect(freeze.Out(), exmemMatcher.Match());
 	proceedIF.Connect(freeze.Out(), bubble.Out());
 }
 
@@ -37,13 +39,15 @@ void Interlock::Update()
 	branchOrJumpReg.Update();
 	branchandload.Update();
 	idexMatcher.Update();
+	notStoreOp.Update();
+	loadAndNotStore.Update();
 	exmemMatcher.Update();
 	idextoexmemMatcher.Update();
 	bubble.Update();
 	freeze.Update();
 	freezeInv.Update();
+	idexMatchEither.Update();
 	bubbleID.Update();
-	exmemMatchEither.Update();
 	bubbleEX.Update();
 	proceedIF.Update();
 	proceedID.Update();

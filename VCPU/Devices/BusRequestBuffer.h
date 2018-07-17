@@ -84,6 +84,9 @@ private:
 	TriState readRequestBuf;
 	TriState writeRequestBuf;
 	TriState busRequestBuf;
+
+	AddrBundle DEBUG_addr;
+	DataBundle DEBUG_data;
 };
 
 
@@ -111,6 +114,9 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 #if DEBUG
 	assert(!(read.On() && write.On()));
 #endif
+	DEBUG_addr = writeaddr;
+	DEBUG_data = data;
+
 	// Matchers to make sure we don't push the same request twice
 	newRead.Connect(readaddr, read);
 	newWrite.Connect(data, writeaddr, write);
@@ -187,6 +193,13 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 {
 	newRead.Update();
 	newWrite.Update();
+
+#if DEBUG
+	if (newWrite.Out().On())
+	{
+		std::cout << "Requested a new write of " << DEBUG_data << " at " << DEBUG_addr << std::endl;
+	}
+#endif
 	
 	shouldPopEdge.Update();
 	shouldPopRead.Update();

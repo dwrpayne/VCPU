@@ -17,7 +17,6 @@ main:		move 	$s0, $gp		; board pos start.
 ; board is filled, start a cycle			
 cycle:		call	print_b			
 			move	$s5, $s0		; $s5 is the current cell.		
-			nop
 cell_loop:	lb		$t0, 0($s5)
 			addiu	$s5, $s5, 1
 			bne		$t0, $s3, cell_loop
@@ -38,9 +37,7 @@ next_loop:	lb		$v0, 256($s5)			; $v0 is the neighbor count
 			b		next_loop				; definitely dead now.
 			sb		$s2, -1($s5)
 next_done:	b		cycle						
-			addiu	$s7, $s7, 1					
-			nop
-			nop
+			addiu	$s7, $s7, 1		
 
 ; takes the cell in the working board as $a0, and adds 1 around it. Assumes buffer space.
 add_nb:		andi	$t8, $a0, 0xf
@@ -72,21 +69,17 @@ nb_skipr:	lb		$t1, -16($a0)		; up
 			addiu	$t2, $t2, 1
 			sb		$t1, -16($a0)		; up
 			sb		$t2, 16($a0)		; down
-			ret
-			nop
-			
+			ret			
 			
 			
 ; copy_board takes the start addr of the new board in $a0, and fills the board with it.
 copy_board:	move	$t0, $s0			; $t0 iterates through the current board state mem
-copy_loop:	lw		$t1, 0($a0)			; load a word into $t1
-			nop
+copy_loop:	lw		$t1, 0($a0)			; load a word into $t
 			sw		$t1, 0($t0)			; fill it into the board.
 			addiu	$a0, $a0, 4
 			bne		$t0, $s1, copy_loop
 			addiu	$t0, $t0, 4
 			ret
-			nop
 
 ; print_b knows the board spans $s0 to $s1.
 print_b:	push 	$ra							
@@ -100,6 +93,8 @@ print_b:	push 	$ra
 print_row:	addiu	$t5, $t4, 0xf	; $t5 is end of row marker				
 			beq		$t4, $s1, print_done
 print_cell:	lb		$a0, 0($t4)
+			ori		$a0, $a0, 144			; convert 32/35 to 176/178
+			andi	$a0, $a0, 0xfffe		; convert 32/35 to 176/178
 			call	putch_fast
 			bne		$t4, $t5, print_cell
 			addiu	$t4, $t4, 1
@@ -107,8 +102,7 @@ print_cell:	lb		$a0, 0($t4)
 			b		print_row
 			nop
 print_done:	pop		$ra
-			ret									
-			nop				
+			ret				
 	
 
 
@@ -123,4 +117,4 @@ boardrow5: 	.ascii 	"          ####  "
 boardrow6: 	.ascii 	"                "
 boardrow7: 	.ascii 	"                "
 boardbufe:  .ascii 	"                "
-generation: .ascii	"GENERATION "
+generation: .asciiz	"GENERATION "

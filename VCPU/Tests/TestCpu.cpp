@@ -681,10 +681,10 @@ bool TestCPUBranch(Verbosity verbosity, Debugger::Verbosity dverb)
 	debugger.Start();
 	success &= TestState(i++, 12, debugger.GetRegisterVal(8), verbosity);
 	success &= TestState(i++, 8, debugger.GetRegisterVal(9), verbosity);
-	success &= TestState(i++, 312, debugger.GetRegisterVal(10), verbosity);
-	success &= TestState(i++, 380, debugger.GetRegisterVal(11), verbosity);
-	success &= TestState(i++, 344, debugger.GetRegisterVal(31), verbosity);
-	success &= TestState(i++, 400, debugger.GetNextPCAddr(), verbosity);
+	success &= TestState(i++, 320, debugger.GetRegisterVal(10), verbosity);
+	success &= TestState(i++, 388, debugger.GetRegisterVal(11), verbosity);
+	success &= TestState(i++, 352, debugger.GetRegisterVal(31), verbosity);
+	success &= TestState(i++, 408, debugger.GetNextPCAddr(), verbosity);
 
 	return success;
 }

@@ -115,7 +115,7 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 		if (words[0].size() > 2 && words[0][0] == '.')
 		{
 			std::vector<unsigned char> bytes;
-			if (code_line.find("ascii") != std::string::npos)
+			if (words[0].substr(0, 6) == ".ascii")
 			{
 				bool in_string = false;
 				for (unsigned char c : code_line)
@@ -129,6 +129,44 @@ void Assembler::ParseSourceLine(const std::string &line, Program * program)
 					if (in_string)
 					{
 						bytes.push_back(c);
+					}
+				}
+				if (words[0] == ".asciiz")
+				{
+					bytes.push_back(0);
+				}
+				program->AddTextField(label, bytes.size(), bytes);
+			}
+			else if (words[0] == ".byte")
+			{
+				for (std::string w : words)
+				{
+					std::replace(w.begin(), w.end(), ',', ' ');
+					try
+					{
+						int val = std::stoul(w, 0, 0);
+						assert(val < 256);
+						bytes.push_back((unsigned char)val);
+					}
+					catch (std::invalid_argument)
+					{}
+				}
+				program->AddTextField(label, bytes.size(), bytes);
+			}
+			else if (words[0] == ".half")
+			{
+				for (std::string w : words)
+				{
+					std::replace(w.begin(), w.end(), ',', ' ');
+					try
+					{
+						int val = std::stoul(w, 0, 0);
+						assert(val < 65536);
+						bytes.push_back((unsigned char)(val%256));
+						bytes.push_back((unsigned char)(val/256));
+					}
+					catch (std::invalid_argument)
+					{
 					}
 				}
 				program->AddTextField(label, bytes.size(), bytes);
@@ -150,15 +188,15 @@ std::vector<std::string> Assembler::GetInstructionsForLine(const std::string& l)
 {
 	std::string line = l;
 
-	// TODO: hex number replaces
 	for (auto& word : split(l.c_str()))
 	{
-		if (word.size() > 2 && word[0] == '0' && (word[1] == 'x' || word[1] == 'X'))
+		try
 		{
-			unsigned int hex = std::stoul(word, 0, 16);
-			line = std::regex_replace(line, std::regex(word), std::to_string(hex));
-			break;
+			auto val = std::stoll(word, 0, 0);
+			line = std::regex_replace(line, std::regex(word), std::to_string(val));
 		}
+		catch (std::invalid_argument)
+		{}
 	}
 	// Function calls
 	line = std::regex_replace(line, std::regex("^\\s*call\\s+(\\S+)\\b"), "jal	$1\nnop");

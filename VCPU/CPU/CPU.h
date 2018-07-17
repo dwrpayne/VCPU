@@ -69,6 +69,10 @@ private:
 	bool PipelineFreeze() { return interlock.Freeze().On(); }
 	bool Halt();
 	bool Break();
+	
+	// Hack for now until I have exceptions
+	bool Fault();
+
 	std::array<std::chrono::microseconds, 4> GetStageTiming();
 
 private:
@@ -93,12 +97,14 @@ private:
 	
 	HazardUnit hazardIDEX;
 	HazardUnit hazardIFID;
+	HazardUnit hazardEXMEM;
 	Interlock interlock;
 
 	bool mIsMissingInsCache;
 	bool mIsMissingDataCache;
 	
 	bool exit;
+	bool fault;
 
 	friend class ProgramLoader;
 	friend class Debugger;
