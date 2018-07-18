@@ -13,8 +13,8 @@
 // This thing takes a Bundle and a Wire, and it outputs a wire. Output is as follows:
 // input 0 -> output 0
 // input 1 -> 
-// If input wire or bundle has changed from the previous update, output 1
-// Otherwise, output 0
+//		If input wire or bundle has changed from the previous update, output 1
+//		Otherwise, output 0
 
 template <unsigned int N>
 class ChangeDetector : public Component

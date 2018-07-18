@@ -6,7 +6,6 @@
 #include "MultiGate.h"
 #include "AndGate.h"
 #include "MuxBundle.h"
-#include "RequestBuffer.h"
 #include "ThreadedComponent.h"
 #include "SystemBus.h"
 #include "BusSlave.h"

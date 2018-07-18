@@ -11,7 +11,6 @@
 #include "Tools/Assembler.h"
 #include "KeyboardController.h"
 #include "TerminalController.h"
-#include "BusWriteBuffer.h"
 #include "BusRequestBuffer.h"
 
 class SystemBusTest : public SystemBus
@@ -272,39 +271,6 @@ bool TestOpcodeDecoder(Verbosity verbosity)
 		success &= TestState(i++, (op == OP_SH), out.MemOpHalfWord().On(), verbosity);
 
 	}
-	return success;
-}
-
-bool TestBusWriteBuffer(Verbosity verbosity)
-{
-	int i = 0;
-	bool success = true;
-	SystemBus bus;
-
-	BusWriteBuffer<32, 32, 8> test;
-	MagicBundle<32> data;
-	MagicBundle<32> addr;
-	Wire write(false);
-	test.Connect(bus, data, addr, write);
-	{
-		TerminalController terminal;
-		terminal.Connect(bus);
-		terminal.UpdateForever();
-
-		addr.Write(0xffff000c);
-		write.Set(true);
-		for (int i = 64; i < 127; i++)
-		{
-			data.Write(i);
-			test.Update();
-			while (test.Full().On())
-			{
-				test.Update();
-			}
-		}
-	}
-	std::cout << std::endl;
-
 	return success;
 }
 

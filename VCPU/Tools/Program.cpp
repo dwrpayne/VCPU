@@ -100,11 +100,6 @@ void Program::ConvertLabels()
 	{
 		ReplaceLabel(label, addr);
 	}
-	if (mLabelAddrNum.count("main") == 0)
-	{
-		// todo: need a better way to automatically determine this.
-		ReplaceLabel("main", 6);
-	}
 }
 
 void Program::ReplaceLabel(const std::string& label, unsigned int addr)

@@ -48,7 +48,6 @@
     <ClInclude Include="Control\Junction.h" />
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
-    <ClInclude Include="Control\SelectBundle.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
     <ClInclude Include="Control\TriStateBuffer.h" />
     <ClInclude Include="Control\Wire.h" />
@@ -92,7 +91,6 @@
     <ClInclude Include="Memory\RegisterFile.h" />
     <ClInclude Include="Memory\SRLatch.h" />
     <ClInclude Include="Memory\CircularBuffer.h" />
-    <ClInclude Include="Memory\RequestBuffer.h" />
     <ClInclude Include="Tests\ComponentCost.h" />
     <ClInclude Include="Tests\Instructions.h" />
     <ClInclude Include="Tests\TestCPU.h" />
@@ -111,7 +109,6 @@
     <ClInclude Include="Devices\KeyboardController.h" />
     <ClInclude Include="Devices\SystemBus.h" />
     <ClInclude Include="Devices\BusRequestBuffer.h" />
-    <ClInclude Include="Devices\BusWriteBuffer.h" />
     <ClInclude Include="Devices\BusSlave.h" />
   </ItemGroup>
 </Project>

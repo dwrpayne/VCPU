@@ -30,14 +30,12 @@
 #include "Masker.h"
 #include "Comparator.h"
 #include "MuxBundle.h"
-#include "SelectBundle.h"
 #include "Decoder.h"
 #include "ALU.h"
 #include "RegisterFile.h"
 #include "CacheLine.h"
 #include "Multiplier.h"
 #include "CircularBuffer.h"
-#include "RequestBuffer.h"
 
 #ifdef DEBUG
 bool TestAndGate(const Wire& a, const Wire& b)
