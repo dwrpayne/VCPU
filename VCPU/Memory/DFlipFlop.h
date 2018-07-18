@@ -8,7 +8,7 @@ class DFlipFlop : public Component
 {
 public:
 	void Connect(const Wire& d, const Wire& e);
-	inline void Update()
+	void Update()
 	{
 		invD.Update();
 		andD.Update();
