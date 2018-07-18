@@ -15,7 +15,7 @@ void BusSlaveConnector::Connect(SystemBus & bus, const DataBundle& data, const W
 {
 	pSystemBus = &bus;
 	pSystemBus->ConnectData(mDataBuffer.Out());
-	pSystemBus->ConnectCtrl(mAckBuffer.Cout(), SystemBus::CtrlBit::Ack);
+	pSystemBus->ConnectCtrl(mAckBuffer2.Out(), SystemBus::CtrlBit::Ack);
 
 	busAckInv.Connect(pSystemBus->OutCtrl().Ack());
 	request.Connect(pSystemBus->OutCtrl().Req(), busAckInv.Out());
@@ -23,8 +23,8 @@ void BusSlaveConnector::Connect(SystemBus & bus, const DataBundle& data, const W
 	writeRequest.Connect(request.Out(), pSystemBus->OutCtrl().Write());
 
 	mAckBuffer.Connect(pSystemBus->OutCtrl().Req(), ack, mAckBuffer.Cout());
-
 	mDataBuffer.Connect(data, ack, mAckBuffer.Cout());
+	mAckBuffer2.Connect(Wire::ON, mAckBuffer.Cout());
 }
 
 void BusSlaveConnector::Update()
@@ -39,4 +39,5 @@ void BusSlaveConnector::PostUpdate()
 {
 	mAckBuffer.Update();
 	mDataBuffer.Update();
+	mAckBuffer2.Update();
 }

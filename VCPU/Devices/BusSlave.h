@@ -32,6 +32,7 @@ private:
 
 	RegisterEnable<SystemBus::Ndata> mDataBuffer;
 	FullAdder mAckBuffer;
+	AndGate mAckBuffer2;
 
 	Inverter busAckInv;
 	AndGate request;
