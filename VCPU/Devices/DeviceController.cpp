@@ -11,7 +11,7 @@ DeviceController::~DeviceController()
 
 void DeviceController::Connect(SystemBus & bus)
 {
-	busConnector.Connect(bus, outData.Out().ZeroExtend<busConnector.N>(), outServicedRequest.Out());
+	busConnector.Connect(bus, outData.Out(), outServicedRequest.Out());
 	
 	bits8To15On.Connect(busConnector.GetAddr().Range<8>(8));
 	bitsHiOn.Connect(busConnector.GetAddr().Range<16>(16));

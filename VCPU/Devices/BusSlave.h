@@ -7,30 +7,28 @@
 #include "Register.h"
 #include "FullAdder.h"
 
-
-class BusSlaveConnector : public Component
+class BusSlaveBase : public Component
 {
 public:
-	static const int N = SystemBus::Ndata;
-	typedef Bundle<N> DataBundle;
 	typedef Bundle<SystemBus::Naddr> AddrBundle;
 
-	~BusSlaveConnector();
-	void Connect(SystemBus& bus, const DataBundle& data, const Wire& ack);
+	virtual ~BusSlaveBase();
+	void Connect(SystemBus& bus, const BundleAny& data, const Wire& ack);
 	void Update();
 	void PostUpdate();
 
 	const AddrBundle& GetAddr() { return pSystemBus->OutAddr(); }
-	const DataBundle& GetData() { return pSystemBus->OutData(); }
 
 	const Wire& Request() { return request.Out(); }
 	const Wire& WriteRequest() { return writeRequest.Out(); }
 	const Wire& ReadRequest() { return readRequest.Out(); }
 
-private:
-	SystemBus* pSystemBus;
+protected:
+	virtual void UpdateDataBuffer() = 0;
 
-	RegisterEnable<SystemBus::Ndata> mDataBuffer;
+	SystemBus * pSystemBus;
+	const BundleAny* mData;
+
 	FullAdder mAckBuffer;
 	AndGate mAckBuffer2;
 
@@ -40,3 +38,31 @@ private:
 	AndGate writeRequest;
 };
 
+template <unsigned int N>
+class BusSlaveConnector : public BusSlaveBase
+{
+public:
+	typedef Bundle<N> DataBundle;
+	using BusSlaveBase::BusSlaveBase;
+	virtual ~BusSlaveConnector() {}
+
+	void Connect(SystemBus& bus, const DataBundle& data, const Wire& ack);
+	const DataBundle GetData() { return pSystemBus->OutData().Range<N>(); }
+	void UpdateDataBuffer();
+
+private:
+	RegisterEnable<N> mDataBuffer;
+};
+
+template<unsigned int N>
+inline void BusSlaveConnector<N>::Connect(SystemBus & bus, const DataBundle & data, const Wire & ack)
+{
+	BusSlaveBase::Connect(bus, mDataBuffer.Out(), ack);
+	mDataBuffer.Connect(data, ack, mAckBuffer.Cout());
+}
+
+template<unsigned int N>
+inline void BusSlaveConnector<N>::UpdateDataBuffer()
+{
+	mDataBuffer.Update();
+}

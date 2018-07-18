@@ -1,20 +1,20 @@
 #include "BusSlave.h"
-#include "SystemBus.h"
 
 
-BusSlaveConnector::~BusSlaveConnector()
+BusSlaveBase::~BusSlaveBase()
 {
 	if (pSystemBus)
 	{
-		pSystemBus->DisconnectData(mDataBuffer.Out());
+		pSystemBus->DisconnectData(*mData);
 		pSystemBus->DisconnectCtrl(mAckBuffer.Cout(), SystemBus::CtrlBit::Ack);
 	}
 }
 
-void BusSlaveConnector::Connect(SystemBus & bus, const DataBundle& data, const Wire & ack)
+void BusSlaveBase::Connect(SystemBus& bus, const BundleAny& data, const Wire & ack)
 {
 	pSystemBus = &bus;
-	pSystemBus->ConnectData(mDataBuffer.Out());
+	mData = &data;
+	pSystemBus->ConnectData(data);
 	pSystemBus->ConnectCtrl(mAckBuffer2.Out(), SystemBus::CtrlBit::Ack);
 
 	busAckInv.Connect(pSystemBus->OutCtrl().Ack());
@@ -23,11 +23,10 @@ void BusSlaveConnector::Connect(SystemBus & bus, const DataBundle& data, const W
 	writeRequest.Connect(request.Out(), pSystemBus->OutCtrl().Write());
 
 	mAckBuffer.Connect(pSystemBus->OutCtrl().Req(), ack, mAckBuffer.Cout());
-	mDataBuffer.Connect(data, ack, mAckBuffer.Cout());
 	mAckBuffer2.Connect(Wire::ON, mAckBuffer.Cout());
 }
 
-void BusSlaveConnector::Update()
+void BusSlaveBase::Update()
 {
 	busAckInv.Update();
 	request.Update();
@@ -35,9 +34,9 @@ void BusSlaveConnector::Update()
 	writeRequest.Update();
 }
 
-void BusSlaveConnector::PostUpdate()
+void BusSlaveBase::PostUpdate()
 {
 	mAckBuffer.Update();
-	mDataBuffer.Update();
+	UpdateDataBuffer();
 	mAckBuffer2.Update();
 }

@@ -33,7 +33,7 @@ public:
 	const Wire& ServicedWrite() { return servicedWrite.Out(); }
 
 private:
-	BusSlaveConnector busConnector;
+	BusSlaveConnector<N> busConnector;
 	AndGate	reqBuffer;
 	NorGateN<4> usercodeBusAddr;
 	Inverter notAckOnBus;
@@ -74,7 +74,7 @@ inline Memory<N, BYTES>::~Memory()
 template <unsigned int N, unsigned int BYTES>
 inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 {
-	busConnector.Connect(bus, outData.Out().ZeroExtend<busConnector.N>(), outServicedRequest.Q());
+	busConnector.Connect(bus, outData.Out(), outServicedRequest.Q());
 
 	usercodeBusAddr.Connect(busConnector.GetAddr().Range<4>(-4));
 	userdataBusAddr.Connect(usercodeBusAddr.Out(), busConnector.GetAddr().Range<1>(-1));
@@ -97,7 +97,7 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		unsigned int line_bit_index = (NUM_LINES * N) % busConnector.N;
+		unsigned int line_bit_index = (NUM_LINES * N) % N;
 		cachelines[i].Connect(busConnector.GetData().Range<N>(line_bit_index), addrDecoder.Out()[i]);
 		lineOuts->at(i).Connect(0, cachelines[i].Out());
 	}

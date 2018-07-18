@@ -15,6 +15,7 @@ class SystemBus;
 class DeviceController : public ThreadedAsyncComponent
 {
 public:
+	static const unsigned int N = 32;
 	typedef Bundle<32> DataBundle;
 	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 
@@ -28,11 +29,11 @@ protected:
 	virtual void Update();
 	virtual void InternalUpdate() = 0;
 
-	BusSlaveConnector busConnector;
+	BusSlaveConnector<N> busConnector;
 
 	AndGate myAddress;
-	RegisterEnable<32> control;
-	RegisterEnable<32> data;
+	RegisterEnable<N> control;
+	RegisterEnable<N> data;
 
 	NorGateN<8> bits8To15On;
 	AndGateN<16> bitsHiOn;
@@ -44,7 +45,7 @@ protected:
 	AndGate dataRequest;
 
 	AndGate outServicedRequest;
-	MultiGate<OrGate, 32> outData;
+	MultiGate<OrGate, N> outData;
 
 	Wire pending;
 	JKFlipFlop pendingState;
