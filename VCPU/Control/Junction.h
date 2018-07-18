@@ -11,17 +11,11 @@ public:
 
 	void Connect(const Wire& wire)
 	{
-		if (&wire != &Wire::OFF)
-		{
-			inputs.push_back(&wire);
-		}
+		inputs.push_back(&wire);
 	}
 	void Disconnect(const Wire& wire)
 	{
-		if (&wire != &Wire::OFF)
-		{
-			inputs.erase(std::remove(inputs.begin(), inputs.end(), &wire), inputs.end());
-		}
+		inputs.erase(std::remove(inputs.begin(), inputs.end(), &wire), inputs.end());
 	}
 
 	virtual bool On() const
