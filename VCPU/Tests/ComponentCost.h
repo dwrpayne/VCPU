@@ -15,12 +15,14 @@ void PrintComponentCosts()
 	typedef MuxBundle<256, 16> MuxBundle328;
 	typedef MuxBundle<32, 128> MuxBundle32128;
 	typedef MuxBundle<32, 2048> MuxBundle322048;
-	typedef MuxBundle<256, 256> MuxBundle256256;
+	typedef MuxBundle<256, 32> MuxBundle25632;
 	typedef std::array<Register<32>,128> RegArray32128;
 	typedef std::array<Register<32>, 2048> RegArray322048;
 	typedef std::array<Register<256>, 256> RegArray256256;
 	typedef RegisterFile<32, 32> RegisterFile3232;
-	typedef CacheLine<256, 8> CacheLine2568;
+	typedef CacheLine<256, 23> CacheLine25623;
+	typedef BusRequestBuffer<256, 32, 4> CacheBusBuffer;
+
 
 	PRINT_COST_NEW(AndGate);
 	PRINT_COST_NEW(Inverter);
@@ -51,19 +53,22 @@ void PrintComponentCosts()
 	PRINT_COST_NEW(Shifter<32>);
 	PRINT_COST_NEW(Multiplexer<2>);
 	PRINT_COST_NEW(Multiplexer<8>);
+	PRINT_COST_NEW(Multiplexer<256>);
 	PRINT_COST_NEW(Decoder<32>);
-	PRINT_COST_NEW(Decoder<1024>);
+	PRINT_COST_NEW(Decoder<256>);
 	PRINT_COST_NEW(MuxBundle322);
 	PRINT_COST_NEW(MuxBundle324);
 	PRINT_COST_NEW(MuxBundle64);
-	PRINT_COST_NEW(MuxBundle32128);
 	PRINT_COST_NEW(RegArray32128);
 	PRINT_COST_NEW(ALU<32>);
 	PRINT_COST_NEW(RegisterFile3232);
-	PRINT_COST_NEW(CacheLine2568);
 	PRINT_COST_NEW(OpcodeDecoder);
 	PRINT_COST_NEW(CPU::InsCache);
 	PRINT_COST_NEW(CPU::MainCache);
+	PRINT_COST_NEW(CacheLineMasker<256>);
+	PRINT_COST_NEW(CacheLine25623);
+	PRINT_COST_NEW(MuxBundle25632);
+	PRINT_COST_NEW(CacheBusBuffer);
 	PRINT_COST_NEW_MEM(CPU::InsMemory);
 	PRINT_COST_NEW_MEM(CPU::MainMemory);
 	PRINT_COST_NEW(CPU::RegFile);
