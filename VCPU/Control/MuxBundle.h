@@ -2,67 +2,99 @@
 
 #include "Component.h"
 #include "Bundle.h"
-#include "Multiplexer.h"
+#include "Decoder.h"
+#include "MultiGate.h"
+#include "OrGate.h"
+#include <type_traits>
 
 template <unsigned int N, unsigned int Ninput>
 class MuxBundle : public Component
 {
 public:
-	static const unsigned int BITS = bits(Ninput);
-	MuxBundle();
-	void Connect(const std::array<Bundle<N>, Ninput> in, const Bundle<BITS>& sel);
+	typedef Bundle<N> DataBundle;
+	typedef typename std::conditional<Ninput == 2, MultiGate<OrGate, N>, 
+							MultiGateN<OrGateN<Ninput>, N, Ninput> >::type MultiOrGate;
 
-	template <typename = typename std::enable_if<BITS==1, const>::type>
-	void Connect(const std::array<Bundle<N>, Ninput> in, const Wire& sel)
+	static const unsigned int BITS = bits(Ninput);
+	void Connect(const std::array<DataBundle, Ninput> in, const Bundle<BITS>& sel);
+
+	template <typename = typename std::enable_if<BITS == 1, const>::type>
+	void Connect(const std::array<DataBundle, Ninput> in, const Wire& sel)
 	{
 		Connect(in, Bundle<BITS>(sel));
 	}
 
 	void Update();
 
-	const Bundle<N>& Out() const { return out; }
+	const DataBundle& Out() const { return orOut.Out(); }
 
 private:
 #if DEBUG || 1
-	std::array<Bundle<N>, Ninput> in_bundles;
+	std::array<DataBundle, Ninput> in_bundles;
 	Bundle<BITS> select;
 #endif
-	std::array<Multiplexer<Ninput>, N> muxes;
-	Bundle<N> out;
+	Decoder<Ninput> selectDec;
+	std::array<MultiGate<AndGate, N>, Ninput> ands;
+	MultiOrGate orOut;
 };
 
 template <unsigned int N, unsigned int Ninput>
-inline MuxBundle<N, Ninput>::MuxBundle()
-{
-	for (int i = 0; i < N; i++)
-	{
-		out.Connect(i, muxes[i].Out());
-	}
-}
-
-template <unsigned int N, unsigned int Ninput>
-inline void MuxBundle<N, Ninput>::Connect(const std::array<Bundle<N>, Ninput> in, const Bundle<BITS>& sel)
+inline void MuxBundle<N, Ninput>::Connect(const std::array<DataBundle, Ninput> in, const Bundle<BITS>& sel)
 {
 #if DEBUG || 1
 	in_bundles = in;
 	select = sel;
 #endif
-	for (int i = 0; i < N; i++)
+
+	selectDec.Connect(sel, Wire::ON);
+	std::array<Bundle<Ninput>, N> bundles;
+
+	for (int i = 0; i < Ninput; i++)
 	{
-		Bundle<Ninput> muxin;
-		for (int input = 0; input < Ninput; input++)
+		ands[i].Connect(in[i], DataBundle(selectDec.Out()[i]));
+
+		for (int bit = 0; bit < N; bit++)
 		{
-			muxin.Connect(input, in[input][i]);
+			bundles[bit].Connect(i, ands[i].Out()[bit]);
 		}
-		muxes[i].Connect(muxin, sel);
 	}
+	orOut.Connect(bundles);
 }
 
 template <unsigned int N, unsigned int Ninput>
 inline void MuxBundle<N, Ninput>::Update()
 {
-	for (auto& mux : muxes)
+	selectDec.Update();
+	for (auto& and : ands)
 	{
-		mux.Update();
+		and.Update();
 	}
+	orOut.Update();
+}
+
+
+template <unsigned int N>
+class MuxBundle<N, 1> : public Component
+{
+public:
+	typedef Bundle<N> DataBundle;
+
+	void Connect(const std::array<DataBundle, 1> in, const Bundle<0>& sel);	
+	void Update();
+	const DataBundle& Out() const { return buffer.Out(); }
+
+private:
+	MultiGate<AndGate, N> buffer;
+};
+
+template <unsigned int N>
+inline void MuxBundle<N, 1>::Connect(const std::array<DataBundle, 1> in, const Bundle<0>& sel)
+{
+	buffer.Connect(in[0], DataBundle::ON);
+}
+
+template <unsigned int N>
+inline void MuxBundle<N, 1>::Update()
+{
+	buffer.Update();
 }
