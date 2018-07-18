@@ -158,7 +158,7 @@ private:
 	MuxBundle<WORD_SIZE, 2> outDataMux;
 	MuxBundle<ADDR_BITS, 2> memAddrMux;
 
-	BusRequestBuffer<CACHE_LINE_BITS, ADDR_BITS, 8> busBuffer;
+	BusRequestBuffer<CACHE_LINE_BITS, ADDR_BITS, 2> busBuffer;
 
 	OrGate needStall;
 	Inverter needStallInv;

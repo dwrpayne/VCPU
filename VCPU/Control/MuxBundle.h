@@ -61,8 +61,8 @@ inline void MuxBundle<N, Ninput>::Connect(const std::array<Bundle<N>, Ninput> in
 template <unsigned int N, unsigned int Ninput>
 inline void MuxBundle<N, Ninput>::Update()
 {
-	for (int i = 0; i < N; i++)
+	for (auto& mux : muxes)
 	{
-		muxes[i].Update();
+		mux.Update();
 	}
 }
