@@ -49,6 +49,7 @@ void Debugger::Start(int cycles)
  		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
 			SaveMemoryToDisk();
+			PrintTiming(true);
 			__debugbreak();
 		}
  		if (pCPU->Halt())
@@ -417,9 +418,9 @@ void Debugger::PrintStack()
 	}
 }
 
-void Debugger::PrintTiming()
+void Debugger::PrintTiming(bool force)
 {	
-	if (pCPU->instructions % 10000 == 0)
+	if (force || pCPU->instructions % 10000 == 0)
 	{
 		long long ms = mCpuElapsedTime.count() / 1000;
 		std::cout << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;
@@ -441,7 +442,7 @@ void Debugger::PrintTiming()
 			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
 		}
 
-		if (bPrintTiming)
+		if (force || bPrintTiming)
 		{
 			std::cout << "Time(us)  Count" << std::endl;
 			for (int i = 0; i < NUM_BUCKETS; i++)

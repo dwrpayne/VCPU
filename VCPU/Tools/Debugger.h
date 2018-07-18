@@ -42,7 +42,7 @@ private:
 	void PrintMemory(bool force=false);
 	void PrintDataForward();
 	void PrintStack();
-	void PrintTiming();
+	void PrintTiming(bool force=false);
 	void PrintBus();
 
 	void DoProfilingCheck();
