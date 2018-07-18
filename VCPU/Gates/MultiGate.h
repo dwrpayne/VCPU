@@ -9,6 +9,7 @@ class MultiGate : public Component
 public:
 	MultiGate();
 	void Connect(const Bundle<N>& a, const Bundle<N>& b);
+	void Connect(std::array<Bundle<2>, N> in);
 	void Update();
 
 	const Bundle<N>& Out() const { return out; }
@@ -33,6 +34,15 @@ inline void MultiGate<Gate, N>::Connect(const Bundle<N>& a, const Bundle<N>& b)
 	for (int i = 0; i < N; ++i)
 	{
 		gates[i].Connect(a[i], b[i]);
+	}
+}
+
+template<typename Gate, unsigned int N>
+inline void MultiGate<Gate, N>::Connect(std::array<Bundle<2>, N> in)
+{
+	for (int i = 0; i < N; ++i)
+	{
+		gates[i].Connect(in[i][0], in[i][1]);
 	}
 }
 
