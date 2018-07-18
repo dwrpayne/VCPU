@@ -334,6 +334,8 @@ void CPU::Connect()
 	stage4->Connect(stage3->Out(), hazardEXMEM, interlock.ProceedMEM(), systemBus);
 	mKeyboard.UpdateForever();
 	mTerminal.UpdateForever();
+	mInsMemory->UpdateForever();
+	mMainMemory->UpdateForever();
 }
 
 void CPU::Update()
@@ -358,9 +360,6 @@ void CPU::Update()
 	hazardIFID.Update();
 	hazardIDEX.Update();
 	hazardEXMEM.Update();
-		
-	mInsMemory->DoOneUpdate();
-	mMainMemory->DoOneUpdate();
 
 	if (mInsMemory->ServicedWrite().On())
 	{
