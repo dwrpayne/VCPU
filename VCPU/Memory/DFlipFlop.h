@@ -8,15 +8,7 @@ class DFlipFlop : public Component
 {
 public:
 	void Connect(const Wire& d, const Wire& e);
-	void Update()
-	{
-		invD.Update();
-		andD.Update();
-		andDinv.Update();
-		norD.Update();
-		norDinv.Update();
-		norD.Update();
-	}
+	void Update();
 
 	const Wire& Q() const { return norDinv.Out(); }
 	const Wire& NotQ() const { return norD.Out(); }
