@@ -360,14 +360,17 @@ void CPU::Update()
 	hazardIFID.Update();
 	hazardIDEX.Update();
 	hazardEXMEM.Update();
+}
 
+void CPU::PostUpdate()
+{
 	if (mInsMemory->ServicedWrite().On())
 	{
 		systemBus.PrintBus();
 		std::cout << "Attempting to write to code memory!" << std::endl;
 		fault = true;
 	}
-	
+
 	cycles++;
 	if (!PipelineFreeze())
 	{
@@ -383,7 +386,7 @@ void CPU::Update()
 		}
 		ins_cachemiss_cycles++;
 	}
-	else 
+	else
 	{
 		mIsMissingInsCache = false;
 

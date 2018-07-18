@@ -52,6 +52,7 @@ public:
 
 	void Connect();
 	void Update();
+	void PostUpdate();
 
 private:
 

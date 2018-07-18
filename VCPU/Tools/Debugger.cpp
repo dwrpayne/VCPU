@@ -48,9 +48,9 @@ void Debugger::Start(int cycles)
 		}
  		if (pCPU->Break() && !pCPU->PipelineFreeze())
 		{
-			SaveMemoryToDisk();
+			//SaveMemoryToDisk();
 			PrintTiming(true);
-			__debugbreak();
+			//__debugbreak();
 		}
  		if (pCPU->Halt())
 		{
@@ -66,6 +66,7 @@ void Debugger::Step()
 	auto t1 = std::chrono::high_resolution_clock::now();
 	pCPU->Update();
 	auto t2 = std::chrono::high_resolution_clock::now();
+	pCPU->PostUpdate();
 	
 	mThisCycleTime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
