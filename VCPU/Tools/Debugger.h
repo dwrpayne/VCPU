@@ -65,9 +65,7 @@ private:
 
 	bool mIsCurrentlyProfiling;
 	std::map<const class CodeLine*, int> mProfilingLineCounts;
-
-	long long last_output_reg;
-
+	 
 	std::chrono::microseconds mThisCycleTime;
 	std::chrono::microseconds mCpuElapsedTime;
 
