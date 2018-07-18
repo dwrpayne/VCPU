@@ -117,7 +117,7 @@ inline void Memory<N, BYTES>::Update()
 	usercodeBusAddr.Update();
 	userdataBusAddr.Update();
 	incomingRequest.Update();
-#if DEBUG || 1
+#if DEBUG
 	if (incomingRequest.Out().On())
 	{
 		std::stringstream ss;
@@ -130,7 +130,7 @@ inline void Memory<N, BYTES>::Update()
 	servicedRead.Update();
 	servicedWrite.Update();
 
-#if DEBUG || 1
+#if DEBUG
 	if (servicedWrite.Out().On())
 	{
 		std::stringstream ss;
@@ -148,7 +148,7 @@ inline void Memory<N, BYTES>::Update()
 	}
 	outMux.Update();
 	outData.Update();
-#if DEBUG || 1
+#if DEBUG
 	if (incomingRequest.Out().On())
 	{
 		std::stringstream ss;

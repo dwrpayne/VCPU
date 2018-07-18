@@ -166,7 +166,7 @@ private:
 	Inverter needStallInv;
 	int cycles;
 
-#if DEBUG || 1
+#if DEBUG
 	CacheAddrBundle DEBUG_addr;
 	DataBundle DEBUG_data;
 	const Wire* DEBUG_read;
@@ -181,7 +181,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
-#if DEBUG || 1
+#if DEBUG
 	DEBUG_addr = address;
 	DEBUG_data = data;
 	DEBUG_read = &read;

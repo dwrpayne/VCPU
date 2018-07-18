@@ -186,6 +186,17 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::PreUpdate()
 	ackBuffer.Update();
 	receivedReadAck.Update();
 	readDataReg.Update();
+
+#if DEBUG
+	if (receivedReadAck.Out().On())
+	{
+		std::stringstream ss;
+		ss << "Received a new read of ";
+		readDataReg.Out().print(ss);
+		ss << std::endl;
+		std::cout << ss.str();
+	}
+#endif
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
