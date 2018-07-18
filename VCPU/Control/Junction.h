@@ -7,7 +7,11 @@
 class Junction : public Wire
 {
 public:
-	using Wire::Wire;
+	Junction()
+		: Wire()
+	{
+		dynamic = true;
+	}
 
 	void Connect(const Wire& wire)
 	{
@@ -18,7 +22,7 @@ public:
 		inputs.erase(std::remove(inputs.begin(), inputs.end(), &wire), inputs.end());
 	}
 
-	virtual bool On() const
+	bool OnDynamic() const
 	{
 		return std::any_of(inputs.begin(), inputs.end(), [](const Wire* wire) {return wire->On(); });
 	}

@@ -32,7 +32,6 @@ private:
 	bool mUpdating;
 	bool mUpdatingUntilExit;
 	std::thread mThread;
-	int numBeforeWires;
 
 	std::chrono::microseconds mElapsedTime;
 };

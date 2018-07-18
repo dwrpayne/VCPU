@@ -5,8 +5,7 @@
 #include "Wire.h"
 
 ThreadedAsyncComponent::ThreadedAsyncComponent(const wchar_t* name)
-	: numBeforeWires(Wire::WireCount())
-	, mUpdating(false)
+	: mUpdating(false)
 	, mThread(&ThreadedAsyncComponent::ThreadedUpdate, this)
 {
 	SetThreadDescription((HANDLE)mThread.native_handle(), name);
