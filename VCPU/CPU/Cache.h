@@ -124,8 +124,6 @@ private:
 		TagBundle tag;
 	};
 
-	SystemBus * pSystemBus;
-
 	OrGate readOrWrite;
 	AndGateN<16> unCacheableAddr; // Replace this with a lookup table of some kind, or a tag!
 	Inverter cacheableAddr;
@@ -188,7 +186,6 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	DEBUG_write = &write;
 #endif
 
-	pSystemBus = &bus;	
 	readOrWrite.Connect(read, write);
 
 	// Determine if the address is cacheable
