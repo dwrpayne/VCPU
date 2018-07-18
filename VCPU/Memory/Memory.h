@@ -117,26 +117,26 @@ inline void Memory<N, BYTES>::Update()
 	usercodeBusAddr.Update();
 	userdataBusAddr.Update();
 	incomingRequest.Update();
-#if DEBUG
+#if DEBUG || 1
 	if (incomingRequest.Out().On())
 	{
 		std::stringstream ss;
 		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
-		ss << " starting to service a " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
-		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << std::endl;
+		ss << " starting to service a " << (busConnector.ReadRequest().On() ? "read" : (busConnector.WriteRequest().On() ? "write" : "hold"));
+		ss << " at " << std::hex << busConnector.GetAddr().UnsignedRead() << std::endl;
 		std::cout << ss.str();
 	}
 #endif
 	servicedRead.Update();
 	servicedWrite.Update();
 
-#if DEBUG
+#if DEBUG || 1
 	if (servicedWrite.Out().On())
 	{
 		std::stringstream ss;
 		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
-		ss << " writing at  " << std::hex << (int)(pSystemBus->OutAddr().UnsignedRead()/32)*32 << ", data: " << std::dec;
-		pSystemBus->OutData().print(ss);
+		ss << " writing at  " << std::hex << (int)(busConnector.GetAddr().UnsignedRead()/32)*32 << ", data: " << std::dec;
+		busConnector.GetData().print(ss);
 		ss << std::endl;
 		std::cout << ss.str();
 	}
@@ -148,13 +148,13 @@ inline void Memory<N, BYTES>::Update()
 	}
 	outMux.Update();
 	outData.Update();
-#if DEBUG
+#if DEBUG || 1
 	if (incomingRequest.Out().On())
 	{
 		std::stringstream ss;
 		ss << (mIsMainMemory ? "Main Mem" : "Ins Mem");
-		ss << " just finished memory " << (pSystemBus->OutCtrl().Read().On() ? "read" : (pSystemBus->OutCtrl().Write().On() ? "write" : "hold"));
-		ss << " at " << std::hex << pSystemBus->OutAddr().UnsignedRead() << ". Ack on!" << std::endl;
+		ss << " just finished memory " << (busConnector.ReadRequest().On() ? "read" : (busConnector.WriteRequest().On() ? "write" : "hold"));
+		ss << " at " << std::hex << busConnector.GetAddr().UnsignedRead() << ". Ack on!" << std::endl;
 		std::cout << ss.str();
 	}
 #endif
