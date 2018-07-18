@@ -332,8 +332,6 @@ void CPU::Connect()
 	stage2->Connect(stage1->Out(), stage4->Out(), hazardIFID, interlock.ProceedID(), interlock.BubbleID());
 	stage3->Connect(stage2->Out(), hazardIDEX, interlock.ProceedEX(), interlock.BubbleEX());
 	stage4->Connect(stage3->Out(), hazardEXMEM, interlock.ProceedMEM(), systemBus);
-	mKeyboard.UpdateForever();
-	mTerminal.UpdateForever();
 	mInsMemory->UpdateForever();
 	mMainMemory->UpdateForever();
 }
@@ -360,6 +358,9 @@ void CPU::Update()
 	hazardIFID.Update();
 	hazardIDEX.Update();
 	hazardEXMEM.Update();
+
+	mKeyboard.DoOneUpdate();
+	mTerminal.DoOneUpdate();
 }
 
 void CPU::PostUpdate()
