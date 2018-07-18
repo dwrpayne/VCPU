@@ -19,7 +19,9 @@ public:
 
 private:
 	static unsigned int id_counter;
+#ifdef DEBUG
 	unsigned int id : 24;
+#endif
 	bool state : 8;
 };
 

@@ -12,6 +12,8 @@ std::ostream& operator<<(std::ostream& os, const Wire& w)
 
 inline Wire::Wire(bool initial_state)
 	: state(initial_state)
+#ifdef DEBUG
 	, id(id_counter++)
+#endif
 { 
 }
