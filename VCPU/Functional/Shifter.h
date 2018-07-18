@@ -35,6 +35,21 @@ private:
 	std::array<MuxBundle<N, 2>, BITS> muxes;
 };
 
+
+template <unsigned int N, unsigned int Nword>
+class LeftShifterByWord : public Component
+{
+public:
+	static const int BITS = bits(N) - bits(Nword);
+	void Connect(const Bundle<N>& in, const Bundle<BITS>& shift);
+	void Update();
+
+	const Bundle<N>& Out() const { return muxes[BITS - 1].Out(); }
+
+private:
+	std::array<MuxBundle<N, 2>, BITS> muxes;
+};
+
 template <unsigned int N>
 class Shifter : public Component
 {
@@ -106,6 +121,27 @@ inline void LeftShifter<N>::Connect(const Bundle<N>& in, const Bundle<BITS>& shi
 
 template<unsigned int N>
 inline void LeftShifter<N>::Update()
+{
+	for (auto& mux : muxes)
+	{
+		mux.Update();
+	}
+}
+
+template<unsigned int N, unsigned int Nword>
+inline void LeftShifterByWord<N, Nword>::Connect(const Bundle<N>& in, const Bundle<BITS>& shift)
+{
+	for (int bit = 0; bit < BITS; bit++)
+	{
+		unsigned int shift_by = 1 << (bit + bits(Nword));
+		const Bundle<N>& bundle = bit == 0 ? in : muxes[bit - 1].Out();
+		Bundle<N> shifted = bundle.ShiftZeroExtendCanLose<N>(shift_by);
+		muxes[bit].Connect({ bundle, shifted }, shift[bit]);
+	}
+}
+
+template<unsigned int N, unsigned int Nword>
+inline void LeftShifterByWord<N, Nword>::Update()
 {
 	for (auto& mux : muxes)
 	{

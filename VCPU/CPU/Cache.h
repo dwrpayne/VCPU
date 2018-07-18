@@ -34,8 +34,8 @@ public:
 		const Wire& bytewrite, const Wire& halfwrite, const Wire& wordwrite, const Wire& linewrite)
 	{
 		maskedDataWord.Connect(byteindex, dataword, bytewrite, halfwrite, wordwrite);
-		lineDataShifter.Connect(maskedDataWord.Word().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
-		lineMaskShifter.Connect(maskedDataWord.WordMask().ZeroExtend<N>(), wordoffset.ShiftZeroExtend<bits(N)>(5));
+		lineDataShifter.Connect(maskedDataWord.Word().ZeroExtend<N>(), wordoffset);
+		lineMaskShifter.Connect(maskedDataWord.WordMask().ZeroExtend<N>(), wordoffset);
 		maskedCacheLine.Connect(lineDataShifter.Out(), dataline, lineMaskShifter.Out());
 		lineFullMask.Connect({ lineMaskShifter.Out(), CacheLine::ON }, linewrite);
 	}
@@ -52,8 +52,8 @@ public:
 
 private:
 	WordMasker maskedDataWord;
-	LeftShifter<N> lineDataShifter;
-	LeftShifter<N> lineMaskShifter;
+	LeftShifterByWord<N, 32> lineDataShifter;
+	LeftShifterByWord<N, 32> lineMaskShifter;
 	MuxBundle<N, 2> lineFullMask;
 	Masker<N> maskedCacheLine;
 };
