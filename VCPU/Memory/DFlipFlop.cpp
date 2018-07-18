@@ -3,18 +3,9 @@
 void DFlipFlop::Connect(const Wire& d, const Wire& e)
 {
 	invD.Connect(d);
-	nandD.Connect(d, e);
-	nandDinv.Connect(invD.Out(), e);
-	nandR.Connect(nandD.Out(), nandS.Out());
-	nandS.Connect(nandDinv.Out(), nandR.Out());
+	andD.Connect(d, e);
+	andDinv.Connect(invD.Out(), e);
+	norDinv.Connect(andDinv.Out(), norD.Out());
+	norD.Connect(andD.Out(), norDinv.Out());
 }
 
-void DFlipFlop::Update()
-{
-	invD.Update();
-	nandD.Update();
-	nandDinv.Update();
-	nandS.Update();
-	nandR.Update();
-	nandS.Update();
-}
