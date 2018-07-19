@@ -1416,7 +1416,7 @@ bool TestCircularBuffer1(Verbosity verbosity)
 	write.Set(true);
 	reg.Write(123456);
 	test.Update();
-	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, true, test.Full().On(), verbosity);
 
 	read.Set(true);
@@ -1424,31 +1424,31 @@ bool TestCircularBuffer1(Verbosity verbosity)
 	reg.Write(123456);
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, true, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
 
 
 	write.Set(true);
 	test.Update();
-	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, true, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
 
 	reg.Write(123456);
 	reg.Write(11);
 	test.Update();
-	success &= TestState(i++, true, test.NonEmpty().On(), verbosity);
-	success &= TestState(i++, true, test.Full().On(), verbosity);
+	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
+	success &= TestState(i++, false, test.Full().On(), verbosity);
 
 	read.Set(true);
 	write.Set(false);
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
+	success &= TestState(i++, 11, test.Out().Read(), verbosity);
 		
 	test.Update();
 	success &= TestState(i++, false, test.NonEmpty().On(), verbosity);
 	success &= TestState(i++, false, test.Full().On(), verbosity);
-	success &= TestState(i++, 123456, test.Out().Read(), verbosity);
+	success &= TestState(i++, 11, test.Out().Read(), verbosity);
 		
 	return success;
 }
