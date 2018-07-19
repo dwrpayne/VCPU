@@ -17,11 +17,12 @@ void PrintComponentCosts()
 	typedef MuxBundle<32, 128> MuxBundle32128;
 	typedef MuxBundle<32, 2048> MuxBundle322048;
 	typedef MuxBundle<256, 16> MuxBundle25616;
+	typedef MuxBundle<256, 512> MuxBundleMainMem;
 	typedef MuxBundle<256, 2> MuxBundle2562;
 	typedef LeftShifterByWord<256, 32> LeftShifterByWord25632;
 	typedef std::array<Register<32>,128> RegArray32128;
 	typedef std::array<Register<32>, 2048> RegArray322048;
-	typedef std::array<Register<256>, 256> RegArray256256;
+	typedef std::array<Register<256>, 512> RegArrayMainMem;
 	typedef RegisterFile<32, 32> RegisterFile3232;
 	typedef CacheLine<256, 23> CacheLine25623;
 	typedef std::array<CacheLine<256, 23>, 16> CacheLine25623Array;
@@ -82,6 +83,8 @@ void PrintComponentCosts()
 	PRINT_COST_NEW(MuxBundle25616);
 	PRINT_COST_NEW(CacheBusBuffer);
 	PRINT_COST_NEW_MEM(CPU::InsMemory);
+	PRINT_COST_NEW(RegArrayMainMem);
+	PRINT_COST_NEW(MuxBundleMainMem);
 	PRINT_COST_NEW_MEM(CPU::MainMemory);
 	PRINT_COST_NEW(CPU::RegFile);
 	PRINT_COST_NEW(CPU);	
