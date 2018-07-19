@@ -5,6 +5,7 @@
 #include "FullAdder.h"
 #include "Comparator.h"
 #include "MuxBundle.h"
+#include "Multiplexer.h"
 
 
 // BranchType:
