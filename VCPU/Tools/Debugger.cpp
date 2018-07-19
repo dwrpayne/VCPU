@@ -42,6 +42,7 @@ void Debugger::Start(int cycles)
 	while (cycles != 0)
 	{
 		Step();
+		pCPU->GetSystemBus().WriteBus();
 		if (bSingleStep && !pCPU->PipelineFreeze())
 		{
 			__debugbreak();

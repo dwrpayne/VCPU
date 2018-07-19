@@ -3,6 +3,7 @@
 #include <bitset>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
 #include "Bus.h"
 #include "Decoder.h"
 
@@ -49,15 +50,30 @@ public:
 	const Bundle<Naddr>& OutAddr() const { return addr; }
 	const ControlBundle& OutCtrl() const { return ctrl; }
 
-	void PrintBus(bool lock=true)
+	void WriteBus()
+	{
+		static std::ofstream f;
+		if (!f.is_open())
+		{
+			f.open("busout.txt", std::ofstream::out);
+		}
+		f << ToString();
+	}
+
+	void PrintBus(bool lock = true)
+	{
+		std::cout << ToString();
+	}
+
+	inline std::string ToString()
 	{
 		std::stringstream ss;
-		ss << (lock ? "L: " : "U: ") << " Addr | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (by word) ----------" << std::endl;
+		ss << " Address | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (by word) ----------" << std::endl;
 		ss << std::hex << std::left << std::setw(8) << OutAddr().UnsignedRead() << "    |    ";
 		ss << std::bitset<Nctrl>(OutCtrl().UnsignedRead()) << "     |    ";
 		OutData().print(ss);
 		ss << std::endl;
-		std::cout << ss.str();
+		return ss.str();
 	}
 
 	// This is a hack, need a bus arbitrator.
@@ -113,15 +129,9 @@ inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
 inline void SystemBus::LockForBusRequest()
 {
 	mBusMutex.lock();
-#if DEBUG
-	PrintBus(true);
-#endif
 }
 
 inline void SystemBus::UnlockForBusRequest()
 {
-#if DEBUG
-	PrintBus(false);
-#endif
 	mBusMutex.unlock();
 }

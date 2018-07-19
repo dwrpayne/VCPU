@@ -15,7 +15,8 @@ main:		move 	$s0, $gp		; board pos start.
 			call 	copy_board
 
 ; board is filled, start a cycle			
-cycle:		call	print_b			
+cycle:		call	print_b		 
+			brk
 			move	$s5, $s0		; $s5 is the current cell.		
 cell_loop:	lb		$t0, 0($s5)
 			addiu	$s5, $s5, 1
