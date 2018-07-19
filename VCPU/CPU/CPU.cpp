@@ -314,10 +314,10 @@ CPU::~CPU()
 	stage2->WaitUntilDone();
 	stage3->WaitUntilDone();
 	stage4->WaitUntilDone();
-	mInsMemory->WaitUntilDone();
-	mMainMemory->WaitUntilDone();
-	mKeyboard.StopUpdating();
-	mTerminal.StopUpdating();
+	mInsMemory->StopUpdating();
+	mMainMemory->StopUpdating();
+	mKeyboard.WaitUntilDone();
+	mTerminal.WaitUntilDone();
 	delete stage1;
 	delete stage2;
 	delete stage3;
