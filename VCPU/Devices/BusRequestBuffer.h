@@ -69,7 +69,6 @@ private:
 	TriState shouldOutputOnDataBus;
 
 	NorGateN<3> busIsFree;
-	OrGate busIsFreeOrMine;
 	AndGate wantTakeBus;
 	AndGate wantReleaseBus;
 	JKFlipFlop haveBusOwnership;
@@ -158,7 +157,6 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 		
 	// Actually acquire the bus.
 	busIsFree.Connect({&pSystemBus->OutCtrl().BusReq(), &ackBuffer.Out(), &pSystemBus->OutCtrl().Ack()});
-	busIsFreeOrMine.Connect(haveBusOwnership.Q(), busIsFree.Out());
 	wantTakeBus.Connect(busIsFree.Out(), havePendingRequests.Out());
 	wantReleaseBus.Connect(haveBusOwnership.Q(), ackBuffer.Out());
 	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out());
@@ -232,7 +230,6 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 		// Bus locking is a hack to get around my lack of bus arbitration.
 		pSystemBus->LockForBusRequest();
 			busIsFree.Update();
-			busIsFreeOrMine.Update();
 			wantTakeBus.Update();
 			wantReleaseBus.Update();
 			haveBusOwnership.Update();

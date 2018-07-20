@@ -4,6 +4,8 @@ Cache serve reads from write buffer -> can serve reads while write buffer is pen
 
 MMU in front of the memory on the bus. Consolidate I-Mem and D-mem.
 
+I-cache doesn't need to be able to write: can be faster
+
 associative cache
 
 OpcodeDecoder refactor

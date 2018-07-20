@@ -52,7 +52,6 @@ private:
 	MultiGate<AndGate, N> outData;
 	DFlipFlop outServicedRequest;
 
-	std::mutex mMutex;
 	bool mIsMainMemory;
 
 	friend class Debugger;

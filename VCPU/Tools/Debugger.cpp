@@ -444,13 +444,18 @@ void Debugger::PrintTiming(bool force)
 			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
 		}
 
-		if (force || bPrintTiming)
+		if (bPrintTiming)
 		{
 			std::cout << "Time(us)  Count" << std::endl;
 			for (int i = 0; i < NUM_BUCKETS; i++)
 			{
 				std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
 			}
+		}
+
+		if (force || bPrintTiming)
+		{
+			std::cout << "CPU update average " << mCpuElapsedTime.count() / pCPU->cycles << "us. Breakdown:" << std::endl;
 			int i = 0;
 			for (auto us : pCPU->GetStageTiming())
 			{
