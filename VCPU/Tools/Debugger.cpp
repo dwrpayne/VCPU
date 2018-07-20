@@ -69,7 +69,6 @@ void Debugger::Step()
 	auto t2 = std::chrono::high_resolution_clock::now();
 	pCPU->PostUpdate();
 	
-	mThisCycleTime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	mCpuElapsedTime += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
 	if (pCPU->Fault())
@@ -82,17 +81,6 @@ void Debugger::Step()
 		bPrintBus = true;
 	}
 
-	if (bPrintTiming)
-	{
-		for (int i = 0; i < NUM_BUCKETS; i++)
-		{
-			if (mThisCycleTime.count() < BUCKETS[i])
-			{
-				cycleTimeBuckets[i]++;
-				break;
-			}
-		}
-	}
 
 	int word = GetNextPCAddr() / 4;
 	if (!pCPU->PipelineFreeze())
@@ -442,15 +430,6 @@ void Debugger::PrintTiming(bool force)
 			std::cout << "\t\tTotal count: " << pCPU->data_cachemisses << std::endl;
 			std::cout << "\t\tCycles per miss: " << 1.0 * pCPU->data_cachemiss_cycles / pCPU->data_cachemisses << std::endl;
 			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
-		}
-
-		if (bPrintTiming)
-		{
-			std::cout << "Time(us)  Count" << std::endl;
-			for (int i = 0; i < NUM_BUCKETS; i++)
-			{
-				std::cout << BUCKETS[i] << "\t" << cycleTimeBuckets[i] << std::endl;
-			}
 		}
 
 		if (force || bPrintTiming)

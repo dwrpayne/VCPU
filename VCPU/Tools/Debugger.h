@@ -66,13 +66,7 @@ private:
 	bool mIsCurrentlyProfiling;
 	std::map<const class CodeLine*, int> mProfilingLineCounts;
 	 
-	std::chrono::microseconds mThisCycleTime;
 	std::chrono::microseconds mCpuElapsedTime;
-
-	static const int NUM_BUCKETS = 17;
-	int cycleTimeBuckets[NUM_BUCKETS];
-	inline static const int BUCKETS[NUM_BUCKETS] = {
-		100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 225, 250, 500, 1000, 5000, 1000000 };
 
 	Assembler* pAssembler;
 	const Program* pProgram;
