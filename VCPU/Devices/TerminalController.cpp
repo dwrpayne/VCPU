@@ -26,7 +26,7 @@ void TerminalController::InternalUpdate()
 
 	if (pendingState.NotQ().On())
 	{
-		std::cout << (unsigned char)data.ReadReg().Range<8>().UnsignedRead();
+		//std::cout << (unsigned char)data.ReadReg().Range<8>().UnsignedRead();
 	}
 	control.Update();
 }

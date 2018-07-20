@@ -412,43 +412,43 @@ void Debugger::PrintTiming(bool force)
 {	
 	if (force || pCPU->instructions % 10000 == 0)
 	{
+		std::stringstream ss;
 		long long ms = mCpuElapsedTime.count() / 1000;
-		std::cout << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;
-		std::cout << pCPU->cycles << " cycles and " << pCPU->instructions << " instructions  in " << ms / 1000.0 << "sec." << std::endl;
-		std::cout << "Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
-		std::cout << "Average of " << (1.0 * pCPU->cycles) / pCPU->instructions << " cycles / instructions." << std::endl;
+		ss << "------------------- Timing details for cycle " << pCPU->cycles << "------------------" << std::endl;
+		ss << pCPU->cycles << " cycles and " << pCPU->instructions << " instructions  in " << ms / 1000.0 << "sec." << std::endl;
+		ss << "Average clock freq of " << (1.0 * pCPU->cycles) / ms << "kHz" << std::endl;
+		ss << "Average of " << (1.0 * pCPU->cycles) / pCPU->instructions << " cycles / instructions." << std::endl;
 		if (pCPU->ins_cachemisses)
 		{
-			std::cout << "Instruction Cache Misses" << std::endl;
-			std::cout << "\t\tTotal count: " << pCPU->ins_cachemisses << std::endl;
-			std::cout << "\t\tCycles per miss: " << 1.0 * pCPU->ins_cachemiss_cycles / pCPU->ins_cachemisses << std::endl;
-			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->ins_cachemisses) / pCPU->instructions << std::endl;
+			ss << "Instruction Cache Misses" << std::endl;
+			ss << "\t\tTotal count: " << pCPU->ins_cachemisses << std::endl;
+			ss << "\t\tCycles per miss: " << 1.0 * pCPU->ins_cachemiss_cycles / pCPU->ins_cachemisses << std::endl;
+			ss << "\t\t% of instructions that missed: " << (100.0*pCPU->ins_cachemisses) / pCPU->instructions << std::endl;
 		}
 		if (pCPU->data_cachemisses)
 		{
-			std::cout << "Data Cache Misses" << std::endl;
-			std::cout << "\t\tTotal count: " << pCPU->data_cachemisses << std::endl;
-			std::cout << "\t\tCycles per miss: " << 1.0 * pCPU->data_cachemiss_cycles / pCPU->data_cachemisses << std::endl;
-			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
+			ss << "Data Cache Misses" << std::endl;
+			ss << "\t\tTotal count: " << pCPU->data_cachemisses << std::endl;
+			ss << "\t\tCycles per miss: " << 1.0 * pCPU->data_cachemiss_cycles / pCPU->data_cachemisses << std::endl;
+			ss << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
 		}
 
 		if (force || bPrintTiming)
 		{
-			std::cout << "CPU update average " << mCpuElapsedTime.count() / pCPU->cycles << "us. Breakdown:" << std::endl;
+			ss << "CPU update average " << mCpuElapsedTime.count() / pCPU->cycles << "us. Breakdown:" << std::endl;
 			int i = 0;
-			for (auto us : pCPU->GetStageTiming())
+			for (auto stage_us : pCPU->GetStageTiming())
 			{
-				std::cout << "CPU Stage " << i++ << " average " << us.count() << "us" << std::endl;
+				ss << "CPU Stage " << i++ << " average " << stage_us.count() << "us" << std::endl;
 			}
 			int imemcycle = pCPU->InstructionMemory().cycle;
 			int mmemcycle = pCPU->GetMainMemory().cycle;
 			long long imemus = pCPU->InstructionMemory().GetElapsedTime().count();
 			long long mmemus = pCPU->GetMainMemory().GetElapsedTime().count();
-			std::cout << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (avg time spent: " << imemus / imemcycle << "us)" << std::endl;
-			std::cout << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (avg time spent: " << mmemus / mmemcycle << "us)" << std::endl;
-
-			
+			ss << "Instruction Mem updating at " << (1.0 * imemcycle) / ms << "kHz (avg time spent: " << imemus / imemcycle << "us)" << std::endl;
+			ss << "Main Mem updating at " << (1.0 * mmemcycle) / ms << "kHz (avg time spent: " << mmemus / mmemcycle << "us)" << std::endl;
 		}
+		std::cout << ss.str();
 	}
 }
 
