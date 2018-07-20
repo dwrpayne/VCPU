@@ -40,6 +40,7 @@ private:
 	AndGate servicedRead;
 	AndGate servicedWrite;
 	NorGate userdataBusAddr;
+	Register<N> mDataFromBusBuffer;
 
 	Decoder<NUM_LINES> addrDecoder;
 
@@ -87,6 +88,7 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 	}
 	servicedRead.Connect(incomingRequest.Out(), busConnector.ReadRequest());
 	servicedWrite.Connect(incomingRequest.Out(), busConnector.WriteRequest());
+	mDataFromBusBuffer.Connect(busConnector.GetData(), servicedWrite.Out());
 
 	auto cachelineAddr = busConnector.GetAddr().Range<CACHELINE_INDEX_LEN>(CACHELINE_ADDR_BITS);
 
@@ -96,8 +98,7 @@ inline void Memory<N, BYTES>::Connect(SystemBus& bus)
 
 	for (int i = 0; i < NUM_LINES; ++i)
 	{
-		unsigned int line_bit_index = (NUM_LINES * N) % N;
-		cachelines[i].Connect(busConnector.GetData().Range<N>(line_bit_index), addrDecoder.Out()[i]);
+		cachelines[i].Connect(mDataFromBusBuffer.Out(), addrDecoder.Out()[i]);
 		lineOuts->at(i).Connect(0, cachelines[i].Out());
 	}
 
@@ -128,6 +129,7 @@ inline void Memory<N, BYTES>::Update()
 #endif
 	servicedRead.Update();
 	servicedWrite.Update();
+	mDataFromBusBuffer.Update();
 
 #if DEBUG
 	if (servicedWrite.Out().On())
