@@ -433,14 +433,14 @@ void Debugger::PrintTiming(bool force)
 		{
 			std::cout << "Instruction Cache Misses" << std::endl;
 			std::cout << "\t\tTotal count: " << pCPU->ins_cachemisses << std::endl;
-			std::cout << "\t\tCycles per miss: " << pCPU->ins_cachemiss_cycles / pCPU->ins_cachemisses << std::endl;
+			std::cout << "\t\tCycles per miss: " << 1.0 * pCPU->ins_cachemiss_cycles / pCPU->ins_cachemisses << std::endl;
 			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->ins_cachemisses) / pCPU->instructions << std::endl;
 		}
 		if (pCPU->data_cachemisses)
 		{
 			std::cout << "Data Cache Misses" << std::endl;
 			std::cout << "\t\tTotal count: " << pCPU->data_cachemisses << std::endl;
-			std::cout << "\t\tCycles per miss: " << pCPU->data_cachemiss_cycles / pCPU->data_cachemisses << std::endl;
+			std::cout << "\t\tCycles per miss: " << 1.0 * pCPU->data_cachemiss_cycles / pCPU->data_cachemisses << std::endl;
 			std::cout << "\t\t% of instructions that missed: " << (100.0*pCPU->data_cachemisses) / pCPU->instructions << std::endl;
 		}
 
