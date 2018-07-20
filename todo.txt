@@ -1,0 +1,15 @@
+Bus Arbitrator  -> no junction/lock needed
+
+Cache serve reads from write buffer -> can serve reads while write buffer is pending
+
+MMU in front of the memory on the bus. Consolidate I-Mem and D-mem.
+
+associative cache
+
+OpcodeDecoder refactor
+
+Interlock/HazardUnit cleanup
+
+Exceptions
+
+Interrupts
