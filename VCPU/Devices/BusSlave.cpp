@@ -23,7 +23,7 @@ void BusSlaveBase::Connect(SystemBus& bus, const BundleAny& data, const Wire & a
 	writeRequest.Connect(request.Out(), pSystemBus->OutCtrl().Write());
 
 	mAckBuffer.Connect(pSystemBus->OutCtrl().Req(), ack, mAckBuffer.Cout());
-	mAckBuffer2.Connect(Wire::ON, mAckBuffer.Cout());
+	mAckBuffer2.Connect(pSystemBus->OutCtrl().Req(), mAckBuffer.Cout());
 }
 
 void BusSlaveBase::Update()
@@ -37,6 +37,6 @@ void BusSlaveBase::Update()
 void BusSlaveBase::PostUpdate()
 {
 	mAckBuffer.Update();
-	UpdateDataBuffer();
+	UpdateDataToBusBuffer();
 	mAckBuffer2.Update();
 }

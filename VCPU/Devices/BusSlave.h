@@ -24,7 +24,7 @@ public:
 	const Wire& ReadRequest() { return readRequest.Out(); }
 
 protected:
-	virtual void UpdateDataBuffer() = 0;
+	virtual void UpdateDataToBusBuffer() = 0;
 
 	SystemBus * pSystemBus;
 	const BundleAny* mData;
@@ -48,21 +48,21 @@ public:
 
 	void Connect(SystemBus& bus, const DataBundle& data, const Wire& ack);
 	const DataBundle GetData() { return pSystemBus->OutData().Range<N>(); }
-	void UpdateDataBuffer();
+	void UpdateDataToBusBuffer();
 
 private:
-	RegisterEnable<N> mDataBuffer;
+	RegisterEnable<N> mDataToBusBuffer;
 };
 
 template<unsigned int N>
 inline void BusSlaveConnector<N>::Connect(SystemBus & bus, const DataBundle & data, const Wire & ack)
 {
-	BusSlaveBase::Connect(bus, mDataBuffer.Out(), ack);
-	mDataBuffer.Connect(data, ack, mAckBuffer.Cout());
+	BusSlaveBase::Connect(bus, mDataToBusBuffer.Out(), ack);
+	mDataToBusBuffer.Connect(data, ack, mAckBuffer.Cout());
 }
 
 template<unsigned int N>
-inline void BusSlaveConnector<N>::UpdateDataBuffer()
+inline void BusSlaveConnector<N>::UpdateDataToBusBuffer()
 {
-	mDataBuffer.Update();
+	mDataToBusBuffer.Update();
 }
