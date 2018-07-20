@@ -339,15 +339,15 @@ void CPU::Connect()
 void CPU::Update()
 {
 	stage1->DoOneUpdate();
+	stage4->DoOneUpdate();
 	stage2->DoOneUpdate();
 	stage3->DoOneUpdate();
-	stage4->DoOneUpdate();
-
+	
 	stage1->WaitUntilDone();
+	stage4->WaitUntilDone();
 	stage2->WaitUntilDone();
 	stage3->WaitUntilDone();
-	stage4->WaitUntilDone();
-	
+
 	interlock.Update();
 
 	stage4->PostUpdate();

@@ -46,6 +46,7 @@ void ThreadedAsyncComponent::StopUpdating()
 void ThreadedAsyncComponent::WaitUntilDone()
 {
 	assert(!mUpdatingUntilExit || mExit && "Not safe to call WaitUntilDone when updating forever and not exit yet!");
+	if (mUpdating)
 	{
 		std::unique_lock<std::mutex> lk(mMutex);
 		mCV.wait(lk, [this] {return !mUpdating; });
