@@ -230,7 +230,7 @@ void Debugger::SaveMemoryToDisk()
 {
 	for (int i = 0; i < 1000; i++)
 	{
-		std::string filename = cur_filename + std::to_string(i) + ".bin";
+		std::string filename = "logs\\" + cur_filename + std::to_string(i) + ".bin";
 		std::ifstream ifs(filename);
 		if (ifs.is_open()) continue;
 

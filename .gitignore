@@ -38,5 +38,4 @@ Release/
 # Visual Studio
 .vs/
 enc_temp_folder/
-*.bin
-VCPU/busout.txt
+logs/

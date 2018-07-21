@@ -67,7 +67,7 @@ public:
 		static std::ofstream f;
 		if (!f.is_open())
 		{
-			f.open("busout.txt", std::ofstream::out);
+			f.open("logs\\busout.txt", std::ofstream::out);
 		}
 		f << ToString();
 		f.flush();
