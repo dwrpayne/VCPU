@@ -111,5 +111,6 @@
     <ClInclude Include="Devices\BusRequestBuffer.h" />
     <ClInclude Include="Devices\BusSlave.h" />
     <ClInclude Include="Devices\BusArbitrator.h" />
+    <ClInclude Include="Control\Selector.h" />
   </ItemGroup>
 </Project>

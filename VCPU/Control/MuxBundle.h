@@ -3,8 +3,10 @@
 #include "Component.h"
 #include "Bundle.h"
 #include "Decoder.h"
+#include "Selector.h"
 #include "MultiGate.h"
 #include "OrGate.h"
+#include "TriStateBuffer.h"
 #include <type_traits>
 
 template <unsigned int N, unsigned int Ninput>
@@ -26,16 +28,15 @@ public:
 
 	void Update();
 
-	const DataBundle& Out() const { return orOut.Out(); }
+	const DataBundle& Out() const { return select.Out(); }
 
 private:
 #if DEBUG || 1
 	std::array<DataBundle, Ninput> in_bundles;
-	Bundle<BITS> select;
+	Bundle<BITS> in_select;
 #endif
-	Decoder<Ninput> selectDec;
-	std::array<MultiGate<AndGate, N>, Ninput> ands;
-	MultiOrGate orOut;
+	Decoder<Ninput> decoder;
+	Selector<N, Ninput> select;
 };
 
 template <unsigned int N, unsigned int Ninput>
@@ -43,33 +44,18 @@ inline void MuxBundle<N, Ninput>::Connect(const std::array<DataBundle, Ninput> i
 {
 #if DEBUG || 1
 	in_bundles = in;
-	select = sel;
+	in_select = sel;
 #endif
 
-	selectDec.Connect(sel, Wire::ON);
-	std::array<Bundle<Ninput>, N> bundles;
-
-	for (int i = 0; i < Ninput; i++)
-	{
-		ands[i].Connect(in[i], DataBundle(selectDec.Out()[i]));
-
-		for (int bit = 0; bit < N; bit++)
-		{
-			bundles[bit].Connect(i, ands[i].Out()[bit]);
-		}
-	}
-	orOut.Connect(bundles);
+	decoder.Connect(sel, Wire::ON);
+	select.Connect(in, decoder.Out());
 }
 
 template <unsigned int N, unsigned int Ninput>
 inline void MuxBundle<N, Ninput>::Update()
 {
-	selectDec.Update();
-	for (auto& and : ands)
-	{
-		and.Update();
-	}
-	orOut.Update();
+	decoder.Update();
+	select.Update();
 }
 
 
@@ -84,7 +70,7 @@ public:
 	const DataBundle& Out() const { return buffer.Out(); }
 
 private:
-	MultiGate<AndGate, N> buffer;
+	MultiGate<TriState, N> buffer;
 };
 
 template <unsigned int N>

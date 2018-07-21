@@ -30,6 +30,7 @@
 #include "Masker.h"
 #include "Comparator.h"
 #include "MuxBundle.h"
+#include "Selector.h"
 #include "Decoder.h"
 #include "ALU.h"
 #include "RegisterFile.h"
@@ -721,6 +722,43 @@ bool TestMuxBundle(Verbosity verbosity)
 	sel.Set(true);
 	test.Update();
 	success &= TestState(i++, 9876, test.Out().Read(), verbosity);
+	return success;
+}
+
+bool TestSelector(Verbosity verbosity)
+{
+	int i = 0;
+	bool success = true;
+
+	Selector<32, 4> test;
+	MagicBundle<32> a,b,c,d;
+	MagicBundle<4> sel;
+	test.Connect({ a,b,c,d }, sel);
+	a.Write(1111);
+	b.Write(2222);
+	c.Write(3333);
+	d.Write(5555);
+	
+	sel.Write(0);
+	test.Update();
+	success &= TestState(i++, 0, test.Out().Read(), verbosity);
+	
+	sel.Write(1);
+	test.Update();
+	success &= TestState(i++, 1111, test.Out().Read(), verbosity);
+	
+	sel.Write(2);
+	test.Update();
+	success &= TestState(i++, 2222, test.Out().Read(), verbosity);
+	
+	sel.Write(4);
+	test.Update();
+	success &= TestState(i++, 3333, test.Out().Read(), verbosity);
+	
+	sel.Write(8U);
+	test.Update();
+	success &= TestState(i++, 5555, test.Out().Read(), verbosity);
+
 	return success;
 }
 
@@ -1486,6 +1524,7 @@ bool RunAllTests()
 	RUN_AUTO_TEST(TestOneWireComponent, TestMultiplexer2, FAIL_ONLY);
 	RUN_AUTO_TEST(TestTwoWireComponent, TestMultiplexer4, FAIL_ONLY);
 	RUN_TEST(TestMuxBundle, FAIL_ONLY);
+	RUN_TEST(TestSelector, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder4, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestEncoder8, FAIL_ONLY);
 	RUN_AUTO_TEST(TestThreeWireComponent, TestMultiplexer8, FAIL_ONLY);

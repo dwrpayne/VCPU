@@ -173,6 +173,7 @@
     <ClInclude Include="Control\Junction.h" />
     <ClInclude Include="Control\Multiplexer.h" />
     <ClInclude Include="Control\MuxBundle.h" />
+    <ClInclude Include="Control\Selector.h" />
     <ClInclude Include="Control\SubWordSelector.h" />
     <ClInclude Include="Control\TriStateBuffer.h" />
     <ClInclude Include="Control\Wire.h" />
