@@ -20,17 +20,12 @@ void BusArbitrator::Connect(SystemBus& bus)
 		nextGrantInvs[i].Connect(nextGrants[i].Out());
 		outGrants[i].Connect(nextGrants[i].Out(), busFree.Out());
 		pSystemBus->ConnectCtrl(outGrants[i].Out(), SystemBus::GetBusGrant(i));
-
 	}
 }
 
 void BusArbitrator::Update()
 {
 	busFree.Update();
-	if (pSystemBus->OutCtrl().BusReq(0).On() && pSystemBus->OutCtrl().BusReq(1).On())
-	{
-		//__debugbreak();
-	}
 	for (int i = 0; i < N; i++)
 	{
 		reqs[i].Update();
