@@ -7,6 +7,7 @@
 #include "Memory.h"
 #include "HazardUnit.h"
 #include "Interlock.h"
+#include "BusArbitrator.h"
 #include "KeyboardController.h"
 #include "TerminalController.h"
 
@@ -100,6 +101,7 @@ private:
 	HazardUnit hazardIFID;
 	HazardUnit hazardEXMEM;
 	Interlock interlock;
+	BusArbitrator busArbitrator;
 
 	bool mIsMissingInsCache;
 	bool mIsMissingDataCache;

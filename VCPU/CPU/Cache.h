@@ -1,6 +1,5 @@
 #pragma once
 #include <future>
-#include <mutex>
 #include <condition_variable>
 #include <thread>
 #include <sstream>
@@ -84,6 +83,7 @@ public:
 	typedef Bundle<CACHE_INDEX_BITS> CacheIndexBundle;
 	typedef Bundle<TAG_BITS> TagBundle;
 
+	Cache(bool maincache = false);
 	void Connect(const AddrBundle& addr, const DataBundle& data, const Wire& write, const Wire& read, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus);
 	void Update();
 	void UpdateUntilNoStall(bool flush = false);
@@ -163,8 +163,9 @@ private:
 	OrGate needStall;
 	Inverter needStallInv;
 	int cycles;
+	bool mIsMainCache;
 
-#if DEBUG
+#if DEBUG || 1
 	CacheAddrBundle DEBUG_addr;
 	DataBundle DEBUG_data;
 	const Wire* DEBUG_read;
@@ -174,12 +175,18 @@ private:
 	friend class Debugger;
 };
 
+template<unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
+inline Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Cache(bool maincache)
+	: mIsMainCache(maincache)
+{
+}
+
 template <unsigned int CACHE_SIZE_BYTES, unsigned int CACHE_LINE_BITS>
 void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, const DataBundle& data, const Wire& read,
 	const Wire& write, const Wire& bytewrite, const Wire& halfwrite, SystemBus & bus)
 {
 	CacheAddrBundle address(addr);
-#if DEBUG
+#if DEBUG || 1
 	DEBUG_addr = address;
 	DEBUG_data = data;
 	DEBUG_read = &read;
@@ -251,7 +258,7 @@ void Cache<CACHE_SIZE_BYTES, CACHE_LINE_BITS>::Connect(const AddrBundle& addr, c
 	outDataMux.Connect({ outCacheDataMux.Out(), uncachedBuffer.Out() }, unCacheableAddr.Out());
 	memAddrMux.Connect({ addr, evictedCacheAddr }, evictedDirty.Out());
 
-	busBuffer.Connect(bus, outDataToBusMux.Out(), memAddrMux.Out(), addr, shouldSendWriteReq.Out(), shouldSendReadReq.Out());
+	busBuffer.Connect(bus, outDataToBusMux.Out(), memAddrMux.Out(), addr, shouldSendWriteReq.Out(), shouldSendReadReq.Out(), mIsMainCache ? 1 : 0);
 	
 	// Stall the whole CPU pipeline if we have to.
 	needStall.Connect(busBuffer.WriteFailed(), shouldSendReadReq.Out());

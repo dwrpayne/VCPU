@@ -1,5 +1,4 @@
 #pragma once
-#include <mutex>
 #include <bitset>
 #include <iomanip>
 #include <sstream>
@@ -16,15 +15,20 @@ public:
 		Write,
 		Req,
 		Ack,
-		BusReq,
-		BusGrant,
 		IRQ,
+		BusReq0,
+		BusGrant0,
+		BusReq1,
+		BusGrant1,
 		MAX,
 	};
 	static const int Nctrl = CtrlBit::MAX;
 	static const int Naddr = 32;
 	static const int Ndata = 256;
+	static const int NReqLines = (CtrlBit::MAX - CtrlBit::BusReq0) / 2;
 
+	static CtrlBit GetBusReq(int which) { return (CtrlBit)((int)BusReq0 + 2 * which); }
+	static CtrlBit GetBusGrant(int which) { return (CtrlBit)((int)BusGrant0 + 2 * which); }
 
 	class ControlBundle : public Bus<Nctrl>
 	{
@@ -34,9 +38,17 @@ public:
 		const Wire& Write() const { return Get(CtrlBit::Write); }
 		const Wire& Req() const { return Get(CtrlBit::Req); }
 		const Wire& Ack() const { return Get(CtrlBit::Ack); }
-		const Wire& BusReq() const { return Get(CtrlBit::BusReq); }
-		const Wire& BusGrant() const { return Get(CtrlBit::BusGrant); }
 		const Wire& IRQ() const { return Get(CtrlBit::IRQ); }
+		const Wire& BusReq(int which) const { return Get(SystemBus::GetBusReq(which) ); }
+		const Wire& BusGrant(int which) const { return Get(SystemBus::GetBusGrant(which)); }
+
+		void print(std::ostream& s) const
+		{
+			for (int i = CtrlBit::MAX - 1; i >= 0; i--)
+			{
+				s << "   " << Get(i);
+			}
+		}
 	};
 	
 	void ConnectData(const BundleAny& b, int start = 0);
@@ -58,6 +70,7 @@ public:
 			f.open("busout.txt", std::ofstream::out);
 		}
 		f << ToString();
+		f.flush();
 	}
 
 	void PrintBus(bool lock = true)
@@ -68,21 +81,16 @@ public:
 	inline std::string ToString()
 	{
 		std::stringstream ss;
-		ss << " Address | Ctrl: IGBKQWR (irq, grant, busreq, ack, req, write, read) ----- Data (by word) ----------" << std::endl;
-		ss << std::hex << std::left << std::setw(8) << OutAddr().UnsignedRead() << "    |    ";
-		ss << std::bitset<Nctrl>(OutCtrl().UnsignedRead()) << "     |    ";
+		ss << "  Address  |  G1  R1  G0  R0  IRQ ACK REQ  W  RD  | ----- Data (by word) ----------" << std::endl;
+		ss << "  " << std::hex << std::left << std::setw(8) << OutAddr().UnsignedRead() << " |";
+		OutCtrl().print(ss);
+		ss << "  |  ";
 		OutData().print(ss);
-		ss << std::endl;
+		ss << std::dec << std::endl;
 		return ss.str();
 	}
-
-	// This is a hack, need a bus arbitrator.
-	void LockForBusRequest();
-	void UnlockForBusRequest();
 	
 private:
-	std::mutex mBusMutex;
-
 	Bus<Ndata> data;
 	Bus<Naddr> addr;
 	ControlBundle ctrl;
@@ -124,14 +132,4 @@ inline void SystemBus::DisconnectAddr(const Bundle<N>& b, int start)
 inline void SystemBus::DisconnectCtrl(const Wire& wire, CtrlBit start)
 {
 	ctrl.Remove(Bundle<1>(wire), start);
-}
-
-inline void SystemBus::LockForBusRequest()
-{
-	mBusMutex.lock();
-}
-
-inline void SystemBus::UnlockForBusRequest()
-{
-	mBusMutex.unlock();
 }

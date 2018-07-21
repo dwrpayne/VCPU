@@ -22,7 +22,7 @@ Debugger::Debugger(const std::string& source_filename, Verbosity verbosity)
 	bPrintDataForward = verbosity >= VERBOSE;
 	bPrintTiming = verbosity >= TIMING;
 	bPrintStack = verbosity >= NORMAL;
-	bPrintBus = verbosity >= NORMAL; 
+	bPrintBus = verbosity >= VERBOSE; 
 
 	pAssembler = new Assembler();
 	pProgram = pAssembler->Assemble(source_filename);
@@ -42,7 +42,6 @@ void Debugger::Start(int cycles)
 	while (cycles != 0)
 	{
 		Step();
-		//pCPU->GetSystemBus().WriteBus();
 		if (bSingleStep && !pCPU->PipelineFreeze())
 		{
 			__debugbreak();
@@ -155,6 +154,7 @@ void Debugger::PrintCycle()
 	{
 		PrintBus();
 	}
+	pCPU->GetSystemBus().WriteBus();
 }
 
 int Debugger::GetRegisterVal(int reg)

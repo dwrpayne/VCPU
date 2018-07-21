@@ -25,7 +25,7 @@ public:
 	typedef Bundle<Naddr> AddrBundle;
 
 	~BusRequestBuffer();
-	void Connect(SystemBus& bus, const DataBundle& data, const AddrBundle& writeaddr, const AddrBundle& readaddr, const Wire& write, const Wire& read);
+	void Connect(SystemBus& bus, const DataBundle& data, const AddrBundle& writeaddr, const AddrBundle& readaddr, const Wire& write, const Wire& read, int bus_master_num = 0);
 	void PreUpdate();
 	void Update();
 
@@ -52,9 +52,10 @@ private:
 	AndGate receivedReadAck;
 	Register<N> readDataReg;
 
-	EdgeDetector shouldPopEdge;
+	EdgeDetector grantedBus;
 	AndGate shouldPopRead;
 	AndGate shouldPopWrite;
+	JKFlipFlop activeBusRequest;
 
 	JKFlipFlop waitingForRead;
 	OrGate readRequested;
@@ -65,13 +66,7 @@ private:
 
 	OrGate havePendingReadRequest;
 	OrGate havePendingRequests;
-	TriState shouldOutputOnBus;
 	TriState shouldOutputOnDataBus;
-
-	NorGateN<3> busIsFree;
-	AndGate wantTakeBus;
-	AndGate wantReleaseBus;
-	JKFlipFlop haveBusOwnership;
 
 	Inverter didNotWrite;
 	AndGate writeFailed;
@@ -82,12 +77,14 @@ private:
 	TriStateN<N> dataRequestBuf;
 	TriState readRequestBuf;
 	TriState writeRequestBuf;
-	TriState busRequestBuf;
+	AndGate busRequestBuf;
+	TriState requestBuf;
 
 	AddrBundle DEBUG_addr;
 	DataBundle DEBUG_data;
-};
 
+	int mBusMasterNum;
+};
 
 // Flush writes before read? Query is an optimization.
 // Case: write buffer empty
@@ -106,13 +103,11 @@ private:
 
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
-inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const DataBundle& data, 
-	const AddrBundle& writeaddr, const AddrBundle& readaddr, const Wire& write, const Wire& read)
+inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const DataBundle& data,
+	const AddrBundle& writeaddr, const AddrBundle& readaddr, const Wire& write, const Wire& read, int bus_master_num)
 {
+	mBusMasterNum = bus_master_num;
 	ConnectToBus(bus);
-#if DEBUG
-	assert(!(read.On() && write.On()));
-#endif
 	DEBUG_addr = writeaddr;
 	DEBUG_data = data;
 
@@ -126,11 +121,14 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 	receivedReadAck.Connect(waitingForRead.Q(), ackBuffer.Out());
 	readDataReg.Connect(pSystemBus->OutData().Range<N>(), receivedReadAck.Out());
 
-	// Decide if we should pop, and if so where. Only if we have bus ownership already.
+	// Decide if we should pop, and if so where. Only if we have been granted the bus
 	// Only pop a read if we don't have any pending writes.
-	shouldPopEdge.Connect(haveBusOwnership.Q());
-	shouldPopRead.Connect(shouldPopEdge.Rise(), writeBuffer.Empty());
-	shouldPopWrite.Connect(shouldPopEdge.Rise(), writeBuffer.NonEmpty());
+	grantedBus.Connect(pSystemBus->OutCtrl().BusGrant(bus_master_num));
+	shouldPopRead.Connect(grantedBus.Rise(), writeBuffer.Empty());
+	shouldPopWrite.Connect(grantedBus.Rise(), writeBuffer.NonEmpty());
+
+	// If we were granted, we have an active request until we get ack. We can write to the data/addr lines and set REQ
+	activeBusRequest.Connect(grantedBus.Rise(), ackBuffer.Out());
 
 	// waitingFor -> "We are sending to the bus now and waiting on a response".
 	waitingForRead.Connect(shouldPopRead.Out(), ackBuffer.Out());
@@ -152,29 +150,26 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Connect(SystemBus& bus, const Data
 	// Check if we can use the bus.
 	havePendingReadRequest.Connect(readBuffer.NonEmpty(), waitingForRead.Q());
 	havePendingRequests.Connect(writeBuffer.NonEmpty(), readBuffer.NonEmpty());
-	shouldOutputOnBus.Connect(noAckOnBus.Out(), haveBusOwnership.Q());
-	shouldOutputOnDataBus.Connect(shouldOutputOnBus.Out(), waitingForWrite.Q());
+	shouldOutputOnDataBus.Connect(activeBusRequest.Q(), waitingForWrite.Q());
 		
 	// Actually acquire the bus.
-	busIsFree.Connect({&pSystemBus->OutCtrl().BusReq(), &ackBuffer.Out(), &pSystemBus->OutCtrl().Ack()});
-	wantTakeBus.Connect(busIsFree.Out(), havePendingRequests.Out());
-	wantReleaseBus.Connect(haveBusOwnership.Q(), ackBuffer.Out());
-	haveBusOwnership.Connect(wantTakeBus.Out(), wantReleaseBus.Out());
-
+	// If we have pending requests, we want to request the bus unless we already have it
+	busRequestBuf.Connect(havePendingRequests.Out(), activeBusRequest.NotQ());
+	
 	// Status flags
 	didNotWrite.Connect(writeBuffer.DidPush());
 	writeFailed.Connect(didNotWrite.Out(), newWrite.Out());
-	busy.Connect(haveBusOwnership.Q(), havePendingRequests.Out());
+	busy.Connect(activeBusRequest.Q(), havePendingRequests.Out());
 
 	// Output buffers
 	addrMux.Connect({ writeBuffer.Out().Range<Naddr>(), readBuffer.Out() }, waitingForRead.Q());
-	addrRequestBuf.Connect(addrMux.Out(), shouldOutputOnBus.Out());
+	addrRequestBuf.Connect(addrMux.Out(), activeBusRequest.Q());
 	dataRequestBuf.Connect(writeBuffer.Out().Range<N>(Naddr), shouldOutputOnDataBus.Out());
-	readRequestBuf.Connect(waitingForRead.Q(), shouldOutputOnBus.Out());
+	readRequestBuf.Connect(waitingForRead.Q(), activeBusRequest.Q());
 	writeRequestBuf.Connect(waitingForWrite.Q(), shouldOutputOnDataBus.Out());
-	busRequestBuf.Connect(Wire::ON, shouldOutputOnBus.Out());	
+	requestBuf.Connect(activeBusRequest.Q(), Wire::ON);
 	
-	haveBusOwnership.Update();
+	activeBusRequest.Update();
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
@@ -210,9 +205,11 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 	}
 #endif
 	
-	shouldPopEdge.Update();
+	grantedBus.Update();
 	shouldPopRead.Update();
 	shouldPopWrite.Update();
+
+	activeBusRequest.Update();
 
 	waitingForRead.Update();
 	waitingForWrite.Update();
@@ -223,18 +220,9 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 
 	havePendingReadRequest.Update();
 	havePendingRequests.Update();
-	shouldOutputOnBus.Update();
 	shouldOutputOnDataBus.Update();
 
-	{
-		// Bus locking is a hack to get around my lack of bus arbitration.
-		pSystemBus->LockForBusRequest();
-			busIsFree.Update();
-			wantTakeBus.Update();
-			wantReleaseBus.Update();
-			haveBusOwnership.Update();
-		pSystemBus->UnlockForBusRequest();
-	}
+	busRequestBuf.Update();
 
 	didNotWrite.Update();
 	writeFailed.Update();
@@ -264,8 +252,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::Update()
 	dataRequestBuf.Update();
 	readRequestBuf.Update();
 	writeRequestBuf.Update();
-	busRequestBuf.Update();
-
+	requestBuf.Update();
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
@@ -282,8 +269,8 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::ConnectToBus(SystemBus& bus)
 	pSystemBus->ConnectData(dataRequestBuf.Out());
 	pSystemBus->ConnectCtrl(readRequestBuf.Out(), SystemBus::CtrlBit::Read);
 	pSystemBus->ConnectCtrl(writeRequestBuf.Out(), SystemBus::CtrlBit::Write);
-	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
-	pSystemBus->ConnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+	pSystemBus->ConnectCtrl(requestBuf.Out(), SystemBus::CtrlBit::Req);
+	pSystemBus->ConnectCtrl(busRequestBuf.Out(), SystemBus::GetBusReq(mBusMasterNum));
 }
 
 template<unsigned int N, unsigned int Naddr, unsigned int Nbuf>
@@ -295,7 +282,7 @@ inline void BusRequestBuffer<N, Naddr, Nbuf>::DisconnectFromBus()
 		pSystemBus->DisconnectData(dataRequestBuf.Out());
 		pSystemBus->DisconnectCtrl(readRequestBuf.Out(), SystemBus::CtrlBit::Read);
 		pSystemBus->DisconnectCtrl(writeRequestBuf.Out(), SystemBus::CtrlBit::Write);
-		pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::CtrlBit::Req);
-		pSystemBus->DisconnectCtrl(haveBusOwnership.Q(), SystemBus::CtrlBit::BusReq);
+		pSystemBus->DisconnectCtrl(requestBuf.Out(), SystemBus::CtrlBit::Req);
+		pSystemBus->DisconnectCtrl(busRequestBuf.Out(), SystemBus::GetBusReq(mBusMasterNum));
 	}
 }

@@ -83,6 +83,11 @@ private:
 class CPU::Stage4 : public ThreadedAsyncComponent
 {
 public:
+	CPU::Stage4(const wchar_t* name)
+		: ThreadedAsyncComponent(name)
+		, cache(true)
+	{}
+
 	using ThreadedAsyncComponent::ThreadedAsyncComponent;
 	void Connect(const BufferEXMEM& stage3, const HazardUnit& hazard, const Wire& proceed, SystemBus& systembus);
 	void Update();
@@ -302,6 +307,8 @@ CPU::CPU()
 		stage2->Out().RS.Out(), stage2->Out().RT.Out(),	stage3->Out().Rwrite.Out(), 
 		stage3->Out().OpcodeControl().LoadOp(), stage2->Out().OpcodeControl().StoreOp());
 
+	busArbitrator.Connect(systemBus);
+
 	mInsMemory->Connect(systemBus);
 	mMainMemory->Connect(systemBus);
 	mKeyboard.Connect(systemBus);
@@ -349,6 +356,7 @@ void CPU::Update()
 	stage3->WaitUntilDone();
 
 	interlock.Update();
+	busArbitrator.Update();
 
 	stage4->PostUpdate();
 	stage3->PostUpdate();

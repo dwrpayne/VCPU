@@ -39,3 +39,4 @@ Release/
 .vs/
 enc_temp_folder/
 *.bin
+VCPU/busout.txt
